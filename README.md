@@ -1,0 +1,36 @@
+# CompEngChula Graduation Checklist & Roadmap
+
+Checklist และ roadmap เงื่อนไขการจบการศึกษา ที่เอาไอเดียจากวิชา 2110211 Data Structure และ 2110327 Algorithm Design มาใช้
+โดยมองหลักสูตรเป็นกราฟ: วิชา = node, วิชาบังคับก่อน = edge
+
+## ไฟล์
+
+| ไฟล์ | ใช้ทำอะไร |
+|---|---|
+| `data/cp-2022.json` | ข้อมูลหลักสูตร 1 หลักสูตร (วิชา, หน่วยกิต, หมวด, เทอมตามแผน, prereq) |
+| `data/index.json` | รายชื่อหลักสูตรทั้งหมดที่เว็บโหลดได้ |
+| `cp52_checklist_graduation.py` | เวอร์ชัน Python อ่านง่าย มีคำอธิบายทุกอัลกอริทึม |
+| `index.html` | หน้าเว็บ (HTML + JS ล้วน ไม่ต้อง build) |
+
+## รันเวอร์ชัน Python
+
+```bash
+python3 cp52_checklist_graduation.py --passed 2110101,2110215,2110211
+python3 cp52_checklist_graduation.py --passed-file my_passed.txt --why 2110327
+```
+
+## เปิดหน้าเว็บในเครื่อง
+
+```bash
+python3 -m http.server 8000
+# แล้วเปิด http://localhost:8000
+```
+
+ถ้าจะ deploy ให้เปิด GitHub Pages ที่ Settings → Pages → Deploy from branch → `main` / root
+
+## เพิ่มหลักสูตรใหม่
+
+1. คัดลอก `data/cp-2022.json` เป็นไฟล์ใหม่ แล้วแก้รายวิชา
+2. เพิ่มบรรทัดใน `data/index.json`
+
+> ข้อมูล `cp-2022.json` ถอดจากแผนภาพหลักสูตร prerequisite ใส่เฉพาะตามลูกศรในรูป ควรตรวจกับเอกสารทางการอีกครั้ง

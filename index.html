@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>CP Graduation Roadmap</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anuphan:wght@500;700&family=IBM+Plex+Sans+Thai:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: แถบสรุปหน่วยกิตด้านบน → ตาราง roadmap 8 เทอม (เลื่อนแนวนอนได้) → แผงวิชาที่ลงได้ + แผนแนะนำ */
+:root {
+  --bg: #f6f5f8;
+  --surface: #ffffff;
+  --fg: #1d1b22;
+  --muted: #6b6676;
+  --line: #e3e0ea;
+  --accent: #9b1c4a;
+  --ok: #1f8a4c;
+  --warn: #c2620a;
+  --year-band: #eceaf1;
+  --font-display: "Anuphan", "IBM Plex Sans Thai", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans Thai", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #141218; --surface: #1e1b24; --fg: #ece9f2; --muted: #a29cae;
+    --line: #34303d; --accent: #f06b9b; --ok: #4cc67e; --warn: #f0a050; --year-band: #1a1720;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #141218; --surface: #1e1b24; --fg: #ece9f2; --muted: #a29cae;
+  --line: #34303d; --accent: #f06b9b; --ok: #4cc67e; --warn: #f0a050; --year-band: #1a1720;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--fg);
+  font: 15px/1.55 var(--font-body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 24px 48px;
+}
+.wrap { max-width: 1320px; margin: 0 auto; display: grid; gap: 20px; }
+h1, h2 { font-family: var(--font-display); text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(1.4rem, 1rem + 1.6vw, 2rem); line-height: 1.2; }
+h2 { font-size: 1.05rem; }
+.muted { color: var(--muted); }
+code, .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+header { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: end; justify-content: space-between; }
+header > div { min-width: 0; }
+.controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+select, button {
+  font: inherit; font-size: 14px; color: var(--fg); background: var(--surface);
+  border: 1px solid var(--line); border-radius: 8px; padding: 6px 12px; cursor: pointer;
+}
+button:hover { border-color: var(--accent); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.summary { display: grid; grid-template-columns: minmax(0, 260px) minmax(0, 1fr); gap: 20px; align-items: start; }
+.total { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; display: grid; gap: 6px; }
+.total .big { font-family: var(--font-display); font-size: 2.4rem; line-height: 1; font-variant-numeric: tabular-nums; }
+.total .big small { font-size: 1rem; color: var(--muted); }
+.meter { height: 8px; border-radius: 99px; background: var(--line); overflow: hidden; }
+.meter > i { display: block; height: 100%; background: var(--accent); border-radius: inherit; transition: width .3s; }
+.cats { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px 20px; }
+.cat { display: grid; grid-template-columns: 12px minmax(0, 1fr) auto; gap: 4px 8px; align-items: center; font-size: 13.5px; }
+.cat .sw { width: 12px; height: 12px; border-radius: 3px; }
+.cat .meter { grid-column: 2 / 4; height: 6px; }
+.cat .num { font-variant-numeric: tabular-nums; color: var(--muted); }
+.cat.done .num { color: var(--ok); font-weight: 600; }
+
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend .chip { width: 22px; height: 14px; border-radius: 4px; border: 2px solid var(--muted); }
+.legend .chip.p { background: var(--muted); }
+.legend .chip.l { border-style: dashed; opacity: .5; }
+
+.board-scroll { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
+.board { position: relative; display: grid; grid-template-columns: repeat(8, minmax(150px, 1fr)); min-width: 1240px; }
+.board svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+.col { padding: 12px 10px 16px; display: flex; flex-direction: column; gap: 8px; }
+.col.odd-year { background: var(--year-band); }
+.col-head { display: grid; gap: 0; margin-bottom: 4px; }
+.col-head b { font-family: var(--font-display); font-size: 15px; }
+.col-head span { font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+.card {
+  position: relative; z-index: 1; text-align: left; display: grid; gap: 2px;
+  border-radius: 8px; padding: 7px 9px; border: 2px solid var(--c);
+  background: var(--surface); color: var(--fg); transition: opacity .15s, transform .15s, box-shadow .15s;
+}
+.card .nm { font-size: 12.5px; font-weight: 600; letter-spacing: .02em; line-height: 1.25; }
+.card .cd { font-family: var(--font-mono); font-size: 12px; display: flex; justify-content: space-between; gap: 6px; }
+.card.passed { background: var(--c); color: #fff; }
+.card.passed .cd::after { content: "✓"; font-family: var(--font-body); font-weight: 700; }
+.card.locked { border-style: dashed; opacity: .45; }
+.card.locked .cd::after { content: "ล็อก"; font-family: var(--font-body); font-size: 11px; }
+.card.broken { box-shadow: 0 0 0 3px var(--warn); }
+.card:hover { transform: translateY(-1px); border-color: var(--c); }
+.board.focusing .card { opacity: .22; }
+.board.focusing .card.hl-self, .board.focusing .card.hl-pre, .board.focusing .card.hl-post { opacity: 1; }
+.card.hl-self { box-shadow: 0 0 0 3px var(--fg); }
+.card.hl-pre { box-shadow: 0 0 0 3px var(--accent); }
+.card.hl-post { box-shadow: 0 0 0 3px var(--warn); }
+path.edge { fill: none; stroke: var(--muted); stroke-width: 1.6; opacity: .55; }
+path.edge.on { stroke: var(--accent); opacity: 1; stroke-width: 2.4; }
+marker path { fill: var(--muted); }
+
+.panels { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; align-items: start; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; display: grid; gap: 12px; min-width: 0; }
+.panel p { margin: 0; }
+.list { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.list li { display: grid; grid-template-columns: 10px auto minmax(0, 1fr) auto; gap: 8px; align-items: baseline; font-size: 14px; }
+.list .dot { width: 10px; height: 10px; border-radius: 50%; align-self: center; }
+.list .cr { color: var(--muted); font-variant-numeric: tabular-nums; }
+.term { display: grid; gap: 6px; padding-top: 10px; border-top: 1px solid var(--line); }
+.term:first-of-type { border-top: 0; padding-top: 0; }
+.term h3 { margin: 0; font-size: 14px; font-family: var(--font-display); display: flex; justify-content: space-between; }
+.algo { font-size: 12.5px; color: var(--muted); border-left: 3px solid var(--line); padding-left: 10px; }
+.info { min-height: 3em; }
+.info b { font-family: var(--font-display); }
+.note { font-size: 12.5px; color: var(--muted); }
+
+@media (max-width: 720px) {
+  .summary { grid-template-columns: minmax(0, 1fr); }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Graduation Roadmap</h1>
+      <div class="muted" id="cur-name">กำลังโหลดหลักสูตร…</div>
+    </div>
+    <div class="controls">
+      <label class="muted" for="cur-select">หลักสูตร</label>
+      <select id="cur-select"></select>
+      <button id="btn-sample" type="button">ตัวอย่าง: จบปี 1</button>
+      <button id="btn-reset" type="button">ล้างทั้งหมด</button>
+    </div>
+  </header>
+
+  <section class="summary" aria-label="สรุปหน่วยกิต">
+    <div class="total">
+      <span class="muted">หน่วยกิตที่ผ่านแล้ว</span>
+      <div class="big"><span id="total-got">0</span> <small>/ <span id="total-need">0</span></small></div>
+      <div class="meter"><i id="total-bar" style="width:0"></i></div>
+      <span class="muted" id="total-note"></span>
+    </div>
+    <div class="cats" id="cats"></div>
+  </section>
+
+  <div class="legend">
+    <span><i class="chip p"></i>ผ่านแล้ว</span>
+    <span><i class="chip"></i>ลงได้ตอนนี้</span>
+    <span><i class="chip l"></i>ยังล็อก (prereq ไม่ครบ)</span>
+    <span>คลิกการ์ด = ติ๊กผ่าน/ยกเลิก · ชี้หรือโฟกัส = ดูสาย prereq</span>
+  </div>
+
+  <div class="board-scroll">
+    <div class="board" id="board"><svg id="edges" aria-hidden="true"></svg></div>
+  </div>
+
+  <div class="panels">
+    <section class="panel">
+      <h2>วิชาที่เลือกดู</h2>
+      <div class="info" id="info"><span class="muted">ชี้หรือแตะการ์ดวิชาเพื่อดูว่าต้องผ่านอะไรก่อน และถ้าตกจะกระทบวิชาไหน</span></div>
+      <p class="algo">DFS ย้อนกลับหาวิชาที่ต้องผ่านก่อน · BFS ไปข้างหน้าหาวิชาที่จะโดนล็อก</p>
+    </section>
+    <section class="panel">
+      <h2>ลงได้ตอนนี้ <span class="muted" id="avail-count"></span></h2>
+      <ul class="list" id="avail"></ul>
+      <p class="algo">วิชาที่ยังไม่ผ่าน และ prereq ทุกตัวผ่านแล้ว (in-degree ที่เหลือ = 0)</p>
+    </section>
+    <section class="panel">
+      <h2>แผนแนะนำเทอมที่เหลือ</h2>
+      <div id="plan"></div>
+      <p class="algo">Topological sort + Greedy ด้วย priority queue: เทอมตามแผนก่อน แล้วตามความยาวสาย prereq ที่ต่อจากวิชานั้น (DP บน DAG)</p>
+    </section>
+  </div>
+
+  <p class="note" id="cur-note"></p>
+</div>
+
+<script>
+// ---------- graph (ตรงกับ cp52_checklist_graduation.py) ----------
+function buildGraph(cur) {
+  const courses = new Map(cur.courses.map(c => [c.id, c]));
+  const prereqs = new Map(cur.courses.map(c => [c.id, c.prereq]));
+  const unlocks = new Map(cur.courses.map(c => [c.id, []]));
+  for (const [id, pres] of prereqs) for (const p of pres) unlocks.get(p).push(id);
+  return { courses, prereqs, unlocks };
+}
+
+function topoSort({ prereqs, unlocks }) {
+  const indeg = new Map([...prereqs].map(([k, v]) => [k, v.length]));
+  const q = [...prereqs.keys()].filter(k => indeg.get(k) === 0);
+  const order = [];
+  for (let i = 0; i < q.length; i++) {
+    const u = q[i]; order.push(u);
+    for (const v of unlocks.get(u)) { indeg.set(v, indeg.get(v) - 1); if (indeg.get(v) === 0) q.push(v); }
+  }
+  return order;
+}
+
+function prereqChain(prereqs, target) {
+  const seen = new Set(), stack = [target];
+  while (stack.length) for (const p of prereqs.get(stack.pop())) if (!seen.has(p)) { seen.add(p); stack.push(p); }
+  return seen;
+}
+
+function affected(unlocks, target) {
+  const seen = new Set(), q = [target];
+  for (let i = 0; i < q.length; i++) for (const v of unlocks.get(q[i])) if (!seen.has(v)) { seen.add(v); q.push(v); }
+  return seen;
+}
+
+function chainDepth(order, unlocks, remaining) {
+  const depth = new Map();
+  for (const v of [...order].reverse()) {
+    if (!remaining.has(v)) continue;
+    let best = 0;
+    for (const w of unlocks.get(v)) if (remaining.has(w)) best = Math.max(best, depth.get(w));
+    depth.set(v, best + 1);
+  }
+  return depth;
+}
+
+function planRemaining(g, order, passed, maxCredits) {
+  const done = new Set(passed);
+  const remaining = new Set([...g.courses.keys()].filter(c => !done.has(c)));
+  const depth = chainDepth(order, g.unlocks, remaining);
+  const plan = [];
+  while (remaining.size) {
+    // priority: เทอมตามแผน → สายยาวกว่า → หน่วยกิตมากกว่า (เรียง array แทน heap ก็ได้ผลเท่ากัน)
+    const ready = [...remaining].filter(c => g.prereqs.get(c).every(p => done.has(p)));
+    ready.sort((a, b) => {
+      const A = g.courses.get(a), B = g.courses.get(b);
+      return A.semester.localeCompare(B.semester) || depth.get(b) - depth.get(a) || B.credits - A.credits;
+    });
+    const term = []; let credits = 0;
+    for (const c of ready) {
+      const cr = g.courses.get(c).credits;
+      if (credits + cr <= maxCredits) { term.push(c); credits += cr; }
+    }
+    if (!term.length) break;
+    plan.push({ term, credits });
+    for (const c of term) { done.add(c); remaining.delete(c); }
+  }
+  return plan;
+}
+
+// ---------- state ----------
+const SEMS = ["1/1", "1/2", "2/1", "2/2", "3/1", "3/2", "4/1", "4/2"];
+let cur, g, order, passed = new Set(), focusId = null;
+
+const store = {
+  get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+};
+const save = () => store.set("passed:" + cur.id, [...passed]);
+const $ = id => document.getElementById(id);
+const color = c => cur.categories[c.category].color;
+const codeOf = c => c.code || c.id;
+
+function statusOf(id) {
+  const ok = g.prereqs.get(id).every(p => passed.has(p));
+  if (passed.has(id)) return ok ? "passed" : "passed broken";
+  return ok ? "available" : "locked";
+}
+
+// ---------- render ----------
+function renderBoard() {
+  const board = $("board");
+  board.querySelectorAll(".col").forEach(n => n.remove());
+  SEMS.forEach((sem, i) => {
+    const col = document.createElement("div");
+    col.className = "col" + (Math.floor(i / 2) % 2 === 0 ? " odd-year" : "");
+    const list = cur.courses.filter(c => c.semester === sem);
+    const cr = list.reduce((s, c) => s + c.credits, 0);
+    col.innerHTML = `<div class="col-head"><b>ปี ${sem[0]} เทอม ${sem[2]}</b><span>${cr} หน่วยกิต</span></div>`;
+    for (const c of list) {
+      const b = document.createElement("button");
+      b.type = "button"; b.dataset.id = c.id;
+      b.style.setProperty("--c", color(c));
+      b.innerHTML = `<span class="nm">${c.name}</span><span class="cd"><span>${codeOf(c)} (${c.credits})</span></span>`;
+      b.addEventListener("click", () => { passed.has(c.id) ? passed.delete(c.id) : passed.add(c.id); focusId = c.id; save(); update(); });
+      b.addEventListener("mouseenter", () => setFocus(c.id));
+      b.addEventListener("focus", () => setFocus(c.id));
+      b.addEventListener("mouseleave", () => setFocus(null));
+      b.addEventListener("blur", () => setFocus(null));
+      col.appendChild(b);
+    }
+    board.appendChild(col);
+  });
+}
+
+function drawEdges() {
+  const svg = $("edges"), board = $("board"), box = board.getBoundingClientRect();
+  const pos = id => board.querySelector(`[data-id="${id}"]`).getBoundingClientRect();
+  let out = `<defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z"/></marker></defs>`;
+  for (const c of cur.courses) for (const p of c.prereq) {
+    const a = pos(p), b = pos(c.id);
+    const x1 = a.right - box.left, y1 = a.top + a.height / 2 - box.top;
+    const x2 = b.left - box.left - 2, y2 = b.top + b.height / 2 - box.top;
+    const dx = Math.max(30, (x2 - x1) / 2);
+    out += `<path class="edge" data-from="${p}" data-to="${c.id}" marker-end="url(#arr)" d="M${x1} ${y1}C${x1 + dx} ${y1} ${x2 - dx} ${y2} ${x2} ${y2}"/>`;
+  }
+  svg.innerHTML = out;
+  applyFocus();
+}
+
+function setFocus(id) { focusId = id; applyFocus(); }
+
+function applyFocus() {
+  const board = $("board");
+  const pre = focusId ? prereqChain(g.prereqs, focusId) : new Set();
+  const post = focusId ? affected(g.unlocks, focusId) : new Set();
+  board.classList.toggle("focusing", !!focusId);
+  board.querySelectorAll(".card").forEach(el => {
+    const id = el.dataset.id;
+    el.classList.toggle("hl-self", id === focusId);
+    el.classList.toggle("hl-pre", pre.has(id));
+    el.classList.toggle("hl-post", post.has(id));
+  });
+  const chain = new Set([focusId, ...pre, ...post]);
+  board.querySelectorAll("path.edge").forEach(e =>
+    e.classList.toggle("on", !!focusId && chain.has(e.dataset.from) && chain.has(e.dataset.to)));
+
+  const info = $("info");
+  if (!focusId) return;
+  const c = g.courses.get(focusId);
+  const names = s => [...s].map(id => `${codeOf(g.courses.get(id))} ${g.courses.get(id).name}`).join(", ") || "ไม่มี";
+  const st = { passed: "ผ่านแล้ว", "passed broken": "ติ๊กผ่านแล้ว แต่ prereq ยังไม่ครบ", available: "ลงได้ตอนนี้", locked: "ยังล็อก" }[statusOf(focusId)];
+  info.innerHTML = `<p><b>${codeOf(c)} ${c.name}</b> · ${c.credits} หน่วยกิต · ${cur.categories[c.category].label}</p>
+    <p class="muted">สถานะ: ${st}</p>
+    <p><span style="color:var(--accent)">ต้องผ่านก่อน:</span> ${names(pre)}</p>
+    <p><span style="color:var(--warn)">ถ้าตก จะกระทบ:</span> ${names(post)}</p>`;
+}
+
+function update() {
+  $("board").querySelectorAll("button[data-id]").forEach(el => {
+    el.className = "card " + statusOf(el.dataset.id);
+  });
+
+  // credits per category (hash map นับ)
+  const got = Object.fromEntries(Object.keys(cur.categories).map(k => [k, 0]));
+  for (const id of passed) { const c = g.courses.get(id); got[c.category] += c.credits; }
+  const total = Object.values(got).reduce((a, b) => a + b, 0);
+  $("total-got").textContent = total;
+  $("total-need").textContent = cur.totalCredits;
+  $("total-bar").style.width = Math.min(100, 100 * total / cur.totalCredits) + "%";
+  const left = cur.totalCredits - total;
+  $("total-note").textContent = left > 0 ? `เหลืออีก ${left} หน่วยกิต` : "หน่วยกิตครบตามหลักสูตรแล้ว";
+  $("cats").innerHTML = Object.entries(cur.categories).map(([k, c]) => `
+    <div class="cat ${got[k] >= c.required ? "done" : ""}">
+      <i class="sw" style="background:${c.color}"></i><span>${c.label}</span>
+      <span class="num">${got[k]}/${c.required}</span>
+      <div class="meter"><i style="width:${Math.min(100, 100 * got[k] / c.required)}%;background:${c.color}"></i></div>
+    </div>`).join("");
+
+  const avail = cur.courses.filter(c => statusOf(c.id) === "available");
+  $("avail-count").textContent = `(${avail.length})`;
+  $("avail").innerHTML = avail.slice(0, 14).map(c =>
+    `<li><i class="dot" style="background:${color(c)}"></i><code>${codeOf(c)}</code><span>${c.name}</span><span class="cr">${c.semester}</span></li>`).join("")
+    + (avail.length > 14 ? `<li><span></span><span></span><span class="muted">และอีก ${avail.length - 14} วิชา</span></li>` : "");
+
+  const plan = planRemaining(g, order, passed, cur.maxCreditsPerSemester);
+  $("plan").innerHTML = plan.length ? plan.map((t, i) => `
+    <div class="term"><h3><span>เทอมถัดไปที่ ${i + 1}</span><span class="muted">${t.credits} หน่วยกิต</span></h3>
+      <ul class="list">${t.term.map(id => { const c = g.courses.get(id);
+        return `<li><i class="dot" style="background:${color(c)}"></i><code>${codeOf(c)}</code><span>${c.name}</span><span class="cr">${c.credits}</span></li>`; }).join("")}</ul>
+    </div>`).join("") : `<p>ผ่านครบทุกวิชาแล้ว</p>`;
+
+  applyFocus();
+}
+
+async function loadCurriculum(file) {
+  cur = await (await fetch("data/" + file)).json();
+  g = buildGraph(cur);
+  order = topoSort(g);
+  passed = new Set((store.get("passed:" + cur.id) ?? sampleYear1()).filter(id => g.courses.has(id)));
+  $("cur-name").textContent = cur.name;
+  $("cur-note").textContent = cur.note || "";
+  focusId = null;
+  renderBoard();
+  update();
+  drawEdges();
+}
+
+const sampleYear1 = () => cur.courses.filter(c => c.semester.startsWith("1/")).map(c => c.id);
+
+async function init() {
+  const list = await (await fetch("data/index.json")).json();
+  const sel = $("cur-select");
+  sel.innerHTML = list.map(c => `<option value="${c.file}">${c.name}</option>`).join("");
+  sel.addEventListener("change", () => loadCurriculum(sel.value));
+  $("btn-sample").addEventListener("click", () => { passed = new Set(sampleYear1()); save(); update(); });
+  $("btn-reset").addEventListener("click", () => { passed.clear(); save(); update(); });
+  new ResizeObserver(() => cur && drawEdges()).observe($("board"));
+  await loadCurriculum(list[0].file);
+}
+init().catch(err => { $("cur-name").textContent = "โหลดข้อมูลหลักสูตรไม่สำเร็จ: " + err.message; });
+</script>
+</body>
+</html>
