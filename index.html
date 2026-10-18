@@ -67,6 +67,13 @@ header > div { min-width: 0; }
 .titlebar #cur-name { color: var(--brand-fg); opacity: .85; }
 .check { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; cursor: pointer; }
 .check input { width: 16px; height: 16px; accent-color: var(--brand); margin: 0; }
+.palette { grid-column: 1 / -1; border: 1px dashed var(--line); border-radius: 12px; padding: 12px 14px; display: grid; gap: 10px; }
+.palette-head { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; }
+.palette-head button { margin-left: auto; }
+.palette-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 8px 16px; }
+.pal { display: flex; align-items: center; gap: 8px; font-size: 13.5px; cursor: pointer; min-width: 0; }
+.pal input { width: 34px; height: 26px; padding: 0; border: 1px solid var(--line); border-radius: 6px; background: none; cursor: pointer; flex: none; }
+html.printing .palette { display: none !important; }
 .groups { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12.5px; color: var(--muted); grid-column: 1 / -1; }
 .groups span { display: inline-flex; align-items: center; gap: 6px; }
 .groups i { width: 12px; height: 12px; border-radius: 3px; }
@@ -268,6 +275,7 @@ html.printing .panel, html.printing .notices { break-inside: avoid; }
       <label class="check"><input type="checkbox" id="auto-shift"> ย้ายแล้วเลื่อนวิชาที่ต่อเนื่องตามอัตโนมัติ</label>
       <button id="btn-png" type="button">บันทึกรูป PNG</button>
       <button id="btn-pdf" type="button">บันทึก PDF</button>
+      <button id="btn-palette" type="button" aria-expanded="false" aria-controls="palette">ปรับสีวิชา</button>
     </div>
   </header>
 
@@ -280,6 +288,11 @@ html.printing .panel, html.printing .notices { break-inside: avoid; }
       <span class="extra-note" id="extra-note" hidden></span>
     </div>
     <div class="cats" id="cats"></div>
+    <div class="palette" id="palette" hidden>
+      <div class="palette-head"><b>ปรับสีวิชา</b><span class="muted">เลือกสีของแต่ละหมวด/กลุ่ม บันทึกไว้ในเบราว์เซอร์นี้</span>
+        <button type="button" id="btn-palette-reset">คืนสีตามตารางหลักสูตร</button></div>
+      <div class="palette-grid" id="palette-grid"></div>
+    </div>
   </section>
 
   <details class="notices" id="notices" open hidden>
@@ -447,10 +460,12 @@ const groupOptions = sel => EXTRA_GROUPS.filter(k => k === "extra" || cur.catego
 const catOf = c => cur.categories[c.category] ?? EXTRA;
 // สีการ์ด: ใช้สีกลุ่มย่อยก่อน (เช่น แกนสาขา Programming / Hardware / System / Software) แล้วค่อยสีหมวด
 // สีดำของวิชาเลือกเสรีใช้ token --ink เพื่อให้ยังเห็นได้ใน dark mode
-const color = c => {
-  const hex = (cur.groups?.[c.group] ?? catOf(c)).color;
-  return /^#(000000|111111)$/i.test(hex) ? "var(--ink)" : hex;
-};
+// สีที่ผู้ใช้เลือกเอง (กล่อง "ปรับสีวิชา") ทับสีจากไฟล์หลักสูตร  key = "cat:core" หรือ "group:prog"
+let colorOverrides = {};
+const ink = hex => /^#(000000|111111)$/i.test(hex) ? "var(--ink)" : hex;
+const catColor = k => colorOverrides["cat:" + k] ?? (cur.categories[k] ?? EXTRA).color;
+const groupColor = k => colorOverrides["group:" + k] ?? cur.groups[k].color;
+const color = c => ink(cur.groups?.[c.group] ? groupColor(c.group) : catColor(c.category));
 const allCourses = () => [...cur.courses, ...extras];
 function rebuild() { g = buildGraph(allCourses()); order = topoSort(g); }
 // ช่องวิชาเลือก (ELECTIVE / APPROVED / FREE) แสดงวิชาที่ผู้ใช้เลือกแทนชื่อช่อง
@@ -641,9 +656,23 @@ function applyFocus() {
 
 // กลุ่มย่อยของหมวดแกนสาขา (สีหลายสีในตารางหลักสูตร) — หมวดที่มีกลุ่มย่อยใช้แถบสีไล่ตามกลุ่ม
 const subGroups = () => Object.entries(cur.groups ?? {}).filter(([k]) => cur.courses.some(c => c.group === k && c.category === "core"));
-function swatch(k, c) {
-  const cols = [...new Set(cur.courses.filter(x => x.category === k && x.group).map(x => cur.groups[x.group].color))];
-  if (cols.length < 2) return /^#(000000|111111)$/i.test(c.color) ? "var(--ink)" : c.color;
+function renderPalette() {
+  const rows = [
+    ...Object.entries(cur.categories).filter(([k]) => !subGroups().length || k !== "core").map(([k, c]) => ["cat:" + k, c.label, catColor(k)]),
+    ...Object.entries(cur.groups ?? {}).map(([k, gr]) => ["group:" + k, gr.label, groupColor(k)]),
+  ];
+  $("palette-grid").innerHTML = rows.map(([key, lab, hex], i) => `
+    <label class="pal" for="pal-${i}"><input type="color" id="pal-${i}" data-key="${key}" value="${hex}"><span>${esc(lab)}</span></label>`).join("");
+  $("palette-grid").querySelectorAll("input").forEach(inp => inp.addEventListener("input", e => {
+    colorOverrides[e.target.dataset.key] = e.target.value;
+    store.set("colors:" + cur.id, colorOverrides);
+    renderBoard(); update();
+  }));
+}
+
+function swatch(k) {
+  const cols = [...new Set(cur.courses.filter(x => x.category === k && x.group).map(x => groupColor(x.group)))];
+  if (cols.length < 2) return ink(catColor(k));
   return `linear-gradient(90deg, ${cols.map((col, i) => `${col} ${100 * i / cols.length}% ${100 * (i + 1) / cols.length}%`).join(", ")})`;
 }
 
@@ -787,11 +816,11 @@ function update() {
   $("total-note").textContent = (left > 0 ? `เหลืออีก ${left} หน่วยกิต` : "หน่วยกิตครบตามหลักสูตรแล้ว") + ` · จบ${semName(last)}`;
   $("cats").innerHTML = Object.entries(cur.categories).map(([k, c]) => `
     <div class="cat ${got[k] >= c.required ? "done" : ""}">
-      <i class="sw" style="background:${swatch(k, c)}"></i><span>${c.label}</span>
+      <i class="sw" style="background:${swatch(k)}"></i><span>${c.label}</span>
       <span class="num">${got[k]}/${c.required}${got[k] > c.required ? ` (+${got[k] - c.required})` : ""}</span>
-      <div class="meter"><i style="width:${Math.min(100, 100 * got[k] / c.required)}%;background:${swatch(k, c)}"></i></div>
+      <div class="meter"><i style="width:${Math.min(100, 100 * got[k] / c.required)}%;background:${swatch(k)}"></i></div>
     </div>`).join("")
-    + (subGroups().length ? `<div class="groups">${subGroups().map(([, gr]) => `<span><i style="background:${gr.color}"></i>${gr.label}</span>`).join("")}</div>` : "");
+    + (subGroups().length ? `<div class="groups">${subGroups().map(([k, gr]) => `<span><i style="background:${groupColor(k)}"></i>${gr.label}</span>`).join("")}</div>` : "");
 
   const avail = allCourses().filter(c => statusOf(c.id) === "available");
   $("avail-count").textContent = `(${avail.length})`;
@@ -814,7 +843,7 @@ function update() {
 async function loadNotices(files) {
   const box = $("notices"), list = $("notice-list");
   const texts = await Promise.all((files || []).map(f =>
-    fetch("data/" + f).then(r => r.ok ? r.text() : null).catch(() => null)));
+    fetch("data/" + f, { cache: "no-cache" }).then(r => r.ok ? r.text() : null).catch(() => null)));
   const ok = texts.filter(Boolean);
   box.hidden = !ok.length;
   list.innerHTML = ok.map(t => `<article class="notice">${renderMarkdown(t)}</article>`).join("");
@@ -968,10 +997,11 @@ function printPage() {
 }
 
 async function loadCurriculum(file) {
-  cur = await (await fetch("data/" + file)).json();
+  cur = await (await fetch("data/" + file, { cache: "no-cache" })).json();
   extras = (store.get("extra:" + cur.id) ?? []).filter(c => c && c.id && SEMS.includes(c.semester))
     .map(c => ({ ...c, category: cur.categories[c.category] ? c.category : "extra", prereq: [], extra: true }));
   rebuild();
+  colorOverrides = store.get("colors:" + cur.id) ?? {};
   passed = cleanPassed(new Set(store.get("passed:" + cur.id) ?? sampleYear1()));
   place = { ...defaultPlace(), ...(store.get("place:" + cur.id) ?? {}) };
   choices = store.get("choice:" + cur.id) ?? {};
@@ -981,6 +1011,7 @@ async function loadCurriculum(file) {
   $("cur-name").textContent = cur.name;
   $("cur-note").textContent = cur.note || "";
   selectedId = hoverId = addingSem = null;
+  renderPalette();
   renderBoard();
   update();
 }
@@ -988,7 +1019,7 @@ async function loadCurriculum(file) {
 const sampleYear1 = () => cur.courses.filter(c => c.semester.startsWith("1/")).map(c => c.id);
 
 async function init() {
-  const list = await (await fetch("data/index.json")).json();
+  const list = await (await fetch("data/index.json", { cache: "no-cache" })).json();
   const sel = $("cur-select");
   sel.innerHTML = list.map(c => `<option value="${c.file}">${c.name}</option>`).join("");
   const pick = file => { loadNotices(list.find(c => c.file === file)?.notices); return loadCurriculum(file); };
@@ -1003,6 +1034,14 @@ async function init() {
   $("btn-shift-all").addEventListener("click", () => shift());
   $("auto-shift").checked = autoShift;
   $("auto-shift").addEventListener("change", e => { autoShift = e.target.checked; store.set("autoShift", autoShift); });
+  $("btn-palette").addEventListener("click", e => {
+    const box = $("palette"); box.hidden = !box.hidden;
+    e.target.setAttribute("aria-expanded", !box.hidden);
+  });
+  $("btn-palette-reset").addEventListener("click", () => {
+    colorOverrides = {}; store.set("colors:" + cur.id, colorOverrides);
+    renderPalette(); renderBoard(); update();
+  });
   $("btn-png").addEventListener("click", () => exportPng().catch(err => say("สร้างรูปไม่สำเร็จ: " + err.message, true)));
   $("btn-pdf").addEventListener("click", printPage);
   window.addEventListener("beforeprint", enterPrint);
