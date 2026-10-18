@@ -247,6 +247,63 @@ def plan_remaining(courses, prereqs, unlocks, order, passed, max_credits):
 
 
 # ---------------------------------------------------------------------------
+# 10) ย้ายวิชาไปเทอมอื่น + ตรวจลำดับ + เลื่อนวิชาที่ต่อเนื่องตามไป
+# ---------------------------------------------------------------------------
+#
+# placement : dict  id -> เทอมที่จะลง เช่น {"2110211": "3/1", ...}
+# กฎ: prereq ต้องอยู่ "ก่อน" วิชานั้นแบบเคร่ง (เทอมเดียวกันไม่ได้)
+
+SEMESTERS = ["1/1", "1/2", "2/1", "2/2", "3/1", "3/2", "4/1", "4/2", "5/1", "5/2"]
+
+
+def sem_index(sem):
+    return SEMESTERS.index(sem)
+
+
+def default_placement(courses):
+    return {cid: c["semester"] for cid, c in courses.items()}
+
+
+def find_conflicts(prereqs, placement):
+    """คืน list ของ (prereq, วิชา) ที่ prereq ไม่ได้อยู่เทอมก่อนหน้า"""
+    bad = []
+    for cid, pres in prereqs.items():
+        for p in pres:
+            if sem_index(placement[p]) >= sem_index(placement[cid]):
+                bad.append((p, cid))
+    return bad
+
+
+def shift_dependents(order, prereqs, placement, passed):
+    """
+    เดินตาม topological order (prereq มาก่อนเสมอ) แล้วดันวิชาที่ผิดลำดับ
+    ไปไว้ "เทอมถัดจาก prereq ที่ช้าที่สุด" — เดินรอบเดียวก็พอ
+    เพราะตอนถึงวิชา v, prereq ของ v ถูกจัดที่เรียบร้อยแล้วทุกตัว
+    วิชาที่ผ่านแล้วไม่ย้าย (เรียนไปแล้ว)
+    คืน (placement ใหม่, list ของ (วิชา, เทอมเดิม, เทอมใหม่))
+    """
+    new = dict(placement)
+    moved = []
+    for v in order:
+        if v in passed or not prereqs[v]:
+            continue
+        need = max(sem_index(new[p]) for p in prereqs[v]) + 1
+        if sem_index(new[v]) < need:
+            if need >= len(SEMESTERS):
+                raise ValueError(f"เลื่อน {v} เกินปี 5 แล้ว")
+            moved.append((v, new[v], SEMESTERS[need]))
+            new[v] = SEMESTERS[need]
+    return new, moved
+
+
+def credits_per_semester(courses, placement):
+    load = {}
+    for cid, sem in placement.items():
+        load[sem] = load.get(sem, 0) + courses[cid]["credits"]
+    return load
+
+
+# ---------------------------------------------------------------------------
 # แสดงผล
 # ---------------------------------------------------------------------------
 
@@ -276,12 +333,47 @@ def read_passed(args, courses):
     return passed
 
 
+def show_moves(args, courses, prereqs, order, passed, max_credits):
+    placement = default_placement(courses)
+    print("\n=== ย้ายวิชา ===")
+    for m in args.move:
+        cid, _, sem = m.partition("=")
+        if cid not in courses or sem not in SEMESTERS:
+            print(f"! รูปแบบไม่ถูก: {m} (ตัวอย่าง 2110211=3/1)")
+            continue
+        print(f"  ย้าย {label(courses[cid])}: {placement[cid]} -> {sem}")
+        placement[cid] = sem
+
+    conflicts = find_conflicts(prereqs, placement)
+    if not conflicts:
+        print("  ลำดับ prereq ยังถูกต้องทั้งหมด")
+    for p, c in conflicts:
+        print(f"  ✗ {label(courses[c])} อยู่ {placement[c]} แต่ prereq {label(courses[p])} อยู่ {placement[p]}")
+
+    if conflicts and args.shift:
+        placement, moved = shift_dependents(order, prereqs, placement, passed)
+        print("  เลื่อนตามอัตโนมัติ:")
+        for cid, old, new in moved:
+            print(f"     {label(courses[cid])}: {old} -> {new}")
+
+    load = credits_per_semester(courses, placement)
+    print("  หน่วยกิตต่อเทอมหลังย้าย:")
+    for sem in SEMESTERS:
+        if sem in load:
+            warn = f"  ← เกิน {max_credits}" if load[sem] > max_credits else ""
+            print(f"     {sem}: {load[sem]}{warn}")
+
+
 def main():
     ap = argparse.ArgumentParser(description="Graduation checklist & roadmap")
     ap.add_argument("--curriculum", default=DEFAULT_CURRICULUM, help="ไฟล์ JSON ของหลักสูตร")
     ap.add_argument("--passed", help="รหัสวิชาที่ผ่านแล้ว คั่นด้วย , เช่น 2110101,2110215")
     ap.add_argument("--passed-file", help="ไฟล์ที่มีรหัสวิชาบรรทัดละ 1 วิชา")
     ap.add_argument("--why", help="ดูว่าวิชานี้ต้องผ่านอะไรก่อน และถ้าตกจะกระทบอะไร")
+    ap.add_argument("--move", action="append", default=[], metavar="ID=เทอม",
+                    help="ย้ายวิชา เช่น --move 2110211=3/1 (ใส่ซ้ำได้หลายครั้ง)")
+    ap.add_argument("--shift", action="store_true",
+                    help="หลังย้าย ให้เลื่อนวิชาที่ต่อเนื่องตามไปอัตโนมัติ")
     args = ap.parse_args()
 
     cur = load_curriculum(args.curriculum)
@@ -317,6 +409,9 @@ def main():
         print(f"  เทอมที่ {i} ({credits} หน่วยกิต)")
         for cid in term:
             print(f"     {label(courses[cid])}")
+
+    if args.move:
+        show_moves(args, courses, prereqs, order, passed, cur["maxCreditsPerSemester"])
 
     if args.why:
         cid = args.why

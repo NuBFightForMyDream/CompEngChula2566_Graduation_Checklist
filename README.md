@@ -17,6 +17,9 @@ Checklist และ roadmap เงื่อนไขการจบการศ�
 ```bash
 python3 cp52_checklist_graduation.py --passed 2110101,2110215,2110211
 python3 cp52_checklist_graduation.py --passed-file my_passed.txt --why 2110327
+
+# ย้ายวิชาไปเทอมอื่น แล้วให้เลื่อนวิชาที่ต่อเนื่องตามไปอัตโนมัติ
+python3 cp52_checklist_graduation.py --move 2110211=3/1 --shift
 ```
 
 ## เปิดหน้าเว็บในเครื่อง
