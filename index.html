@@ -153,7 +153,7 @@ button.primary { background: var(--bad); border-color: var(--bad); color: #fff; 
 .card.conflict { outline: 3px solid var(--bad); outline-offset: 1px; }
 .card:hover { transform: translateY(-1px); }
 .card.dragging { opacity: .4; }
-.board.focusing .card { opacity: .25; }
+.board.focusing .card { opacity: .35; }
 .board.focusing .card.hl-self, .board.focusing .card.hl-pre, .board.focusing .card.hl-post, .board.focusing .card.conflict { opacity: 1; }
 .card.hl-self { box-shadow: 0 0 0 3px var(--fg); }
 .card.hl-pre { box-shadow: 0 0 0 3px var(--accent); }
@@ -310,7 +310,7 @@ html.printing .panel, html.printing .notices { break-inside: avoid; }
     <span><i class="chip"></i>ลงได้ตอนนี้</span>
     <span><i class="chip l"></i>ยังล็อก</span>
     <span><i class="chip x"></i>ลงก่อนวิชาบังคับก่อน</span>
-    <span>วงกลมขวา = ติ๊กผ่าน (วิชาที่ล็อกติ๊กไม่ได้) · คลิกชื่อ = เลือกดู/ย้ายเทอม · ลากการ์ดไปวางเทอมอื่นได้ · "+ เพิ่มวิชา" = เรียนเพิ่ม (เลือกได้ว่านับเข้าหมวดไหน) · วิชาแกนสาขาเลื่อนข้ามปีได้ แต่ข้ามเทอมไม่ได้</span>
+    <span>คลิกที่ว่างหรือกด Esc = ยกเลิกการเลือก · วงกลมขวา = ติ๊กผ่าน (วิชาที่ล็อกติ๊กไม่ได้) · คลิกชื่อ = เลือกดู/ย้ายเทอม · ลากการ์ดไปวางเทอมอื่นได้ · "+ เพิ่มวิชา" = เรียนเพิ่ม (เลือกได้ว่านับเข้าหมวดไหน) · วิชาแกนสาขาเลื่อนข้ามปีได้ แต่ข้ามเทอมไม่ได้</span>
   </div>
 
   <p class="toast" id="toast" role="status" aria-live="polite"></p>
@@ -491,7 +491,7 @@ function moveCourse(id, sem) {
     return;
   }
   if (c.extra) c.semester = sem;
-  place[id] = sem; selectedId = id;
+  place[id] = sem;
   let res = null;
   if (autoShift) { res = shiftDependents(order, g.prereqs, place, new Set(affected(g.unlocks, id)), g.courses); place = res.place; }
   save(); renderBoard(); update();
@@ -502,6 +502,7 @@ function moveCourse(id, sem) {
 // ---------- render ----------
 function renderBoard() {
   const board = $("board");
+  hoverId = null;   // การ์ดถูกสร้างใหม่ทั้งหมด การ์ดเดิมจะไม่ได้รับ mouseleave
   board.querySelectorAll(".col").forEach(n => n.remove());
   SEMS.forEach((sem, i) => {
     const col = document.createElement("div");
@@ -584,7 +585,7 @@ function makeCard(c) {
     $("board").querySelectorAll(".col").forEach(col => col.classList.toggle("nodrop", !offeredIn(c, col.dataset.sem)));
   });
   el.addEventListener("dragend", () => {
-    dragId = null; el.classList.remove("dragging");
+    dragId = null; hoverId = null; el.classList.remove("dragging");
     $("board").querySelectorAll(".col").forEach(col => col.classList.remove("nodrop", "drop"));
   });
   return el;
@@ -1041,6 +1042,12 @@ async function init() {
   $("btn-palette-reset").addEventListener("click", () => {
     colorOverrides = {}; store.set("colors:" + cur.id, colorOverrides);
     renderPalette(); renderBoard(); update();
+  });
+  $("board").addEventListener("click", e => {
+    if (!e.target.closest(".card, .add-slot") && selectedId) { selectedId = null; applyFocus(); renderInfo(); }
+  });
+  document.addEventListener("keydown", e => {
+    if (e.key === "Escape" && (selectedId || hoverId)) { selectedId = hoverId = null; applyFocus(); renderInfo(); }
   });
   $("btn-png").addEventListener("click", () => exportPng().catch(err => say("สร้างรูปไม่สำเร็จ: " + err.message, true)));
   $("btn-pdf").addEventListener("click", printPage);
