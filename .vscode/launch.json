@@ -1,0 +1,13 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "C/C++ Runner: Debug Session",
+      "type": "lldb",
+      "request": "launch",
+      "args": [],
+      "cwd": "/Users/nubfightformydream/Documents/Personal Projects/Intania Chula Graduation Checklist",
+      "program": "/Users/nubfightformydream/Documents/Personal Projects/Intania Chula Graduation Checklist/build/Debug/outDebug"
+    }
+  ]
+}
