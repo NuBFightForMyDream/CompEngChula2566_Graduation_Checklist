@@ -108,6 +108,19 @@ def available_courses(prereqs, passed):
             if cid not in passed and all(p in passed for p in pres)]
 
 
+def clean_passed(order, prereqs, passed):
+    """
+    ล็อกวิชา: จะนับว่าผ่านได้ ก็ต่อเมื่อ prereq ทุกตัวผ่านแล้ว
+    เดินตาม topological order รอบเดียว — prereq ถูกตัดสินก่อนเสมอ
+    คืน (ที่ผ่านจริง, ที่ถูกตัดออก)
+    """
+    ok = set()
+    for v in order:
+        if v in passed and all(p in ok for p in prereqs[v]):
+            ok.add(v)
+    return ok, passed - ok
+
+
 # ---------------------------------------------------------------------------
 # 4) DFS ย้อนกลับ: "จะลงวิชานี้ ต้องผ่านอะไรมาก่อนบ้าง" (ทุกชั้น)
 # ---------------------------------------------------------------------------
@@ -386,6 +399,10 @@ def main():
 
     passed = read_passed(args, courses)
     order = topological_sort(prereqs, unlocks)
+    passed, dropped = clean_passed(order, prereqs, passed)
+    for cid in dropped:
+        missing = [label(courses[p]) for p in prereqs[cid] if p not in passed]
+        print(f"! นับ {label(courses[cid])} ว่าผ่านไม่ได้ ต้องผ่าน {', '.join(missing) or 'วิชาก่อนหน้า'} ก่อน")
 
     print(f"\n=== {cur['name']} ===\n")
 

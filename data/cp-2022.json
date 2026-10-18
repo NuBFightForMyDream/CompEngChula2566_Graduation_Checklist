@@ -14,6 +14,38 @@
     "elective": { "label": "วิชาเลือก",                    "required": 18, "color": "#6ab42d" },
     "free":     { "label": "วิชาเลือกเสรี",                 "required": 6,  "color": "#111111" }
   },
+  "pools": {
+    "elective": {
+      "label": "วิชาเลือก (2110xxx)",
+      "note": "รายการตัวอย่าง — ให้แทนด้วยรายชื่อวิชาเลือกจริงจากประกาศภาควิชา",
+      "options": [
+        { "id": "ex-ml",       "code": "2110xxx", "name": "ตัวอย่าง: Machine Learning",            "credits": 3 },
+        { "id": "ex-security", "code": "2110xxx", "name": "ตัวอย่าง: Computer Security",           "credits": 3 },
+        { "id": "ex-cloud",    "code": "2110xxx", "name": "ตัวอย่าง: Cloud Computing",             "credits": 3 },
+        { "id": "ex-graphics", "code": "2110xxx", "name": "ตัวอย่าง: Computer Graphics",           "credits": 3 },
+        { "id": "ex-nlp",      "code": "2110xxx", "name": "ตัวอย่าง: Natural Language Processing", "credits": 3 },
+        { "id": "ex-compiler", "code": "2110xxx", "name": "ตัวอย่าง: Compiler Construction",       "credits": 3 }
+      ]
+    },
+    "approved": {
+      "label": "วิชาเลือกที่ภาคอนุมัติ (2110yyy)",
+      "note": "รายการตัวอย่าง — ให้แทนด้วยรายชื่อวิชาจริงจากประกาศภาควิชา",
+      "options": [
+        { "id": "ex-datasci", "code": "2110yyy", "name": "ตัวอย่าง: Data Science",                "credits": 3 },
+        { "id": "ex-web",     "code": "2110yyy", "name": "ตัวอย่าง: Web Application Development", "credits": 3 },
+        { "id": "ex-mobile",  "code": "2110yyy", "name": "ตัวอย่าง: Mobile Application",          "credits": 3 }
+      ]
+    },
+    "free": {
+      "label": "วิชาเลือกเสรี (วิชาใดก็ได้ในมหาวิทยาลัย)",
+      "note": "รายการตัวอย่าง — ส่วนใหญ่ใช้ช่องกรอกเองจะสะดวกกว่า",
+      "options": [
+        { "id": "ex-japanese", "code": "xxx", "name": "ตัวอย่าง: ภาษาญี่ปุ่น 1",       "credits": 3 },
+        { "id": "ex-finance",  "code": "xxx", "name": "ตัวอย่าง: การเงินส่วนบุคคล",   "credits": 3 },
+        { "id": "ex-music",    "code": "xxx", "name": "ตัวอย่าง: ดนตรีไทย",           "credits": 2 }
+      ]
+    }
+  },
   "courses": [
     { "id": "2110101", "name": "COMP PROG",          "credits": 3, "category": "engfund", "semester": "1/1", "prereq": [] },
     { "id": "2110111", "name": "EXPL ENG WORLD",     "credits": 3, "category": "gened",   "semester": "1/1", "prereq": [] },
@@ -52,27 +84,27 @@
     { "id": "2110318", "name": "DIS SYS",            "credits": 1, "category": "core",    "semester": "3/1", "prereq": [] },
     { "id": "2110471", "name": "COMP NETWORK",       "credits": 3, "category": "core",    "semester": "3/1", "prereq": [] },
     { "id": "2110366", "name": "EMBEDDED SYS LAB I", "credits": 1, "category": "core",    "semester": "3/1", "prereq": ["2110263"] },
-    { "id": "ELEC-1",  "code": "2110xxx", "name": "ELECTIVE",   "credits": 3, "category": "elective", "semester": "3/1", "prereq": [] },
+    { "id": "ELEC-1", "pool": "elective",  "code": "2110xxx", "name": "ELECTIVE",   "credits": 3, "category": "elective", "semester": "3/1", "prereq": [] },
     { "id": "GENED-2", "code": "xxx",     "name": "GENERAL ED", "credits": 3, "category": "gened",    "semester": "3/1", "prereq": [] },
 
-    { "id": "APPR-1",  "code": "2110yyy", "name": "APPROVED ELEC.", "credits": 3, "category": "it",     "semester": "3/2", "prereq": [] },
+    { "id": "APPR-1", "pool": "approved",  "code": "2110yyy", "name": "APPROVED ELEC.", "credits": 3, "category": "it",     "semester": "3/2", "prereq": [] },
     { "id": "C21-1",   "code": "2100xxx", "name": "21st CENTURY",   "credits": 3, "category": "c21",    "semester": "3/2", "prereq": [] },
-    { "id": "FREE-1",  "code": "xxx",     "name": "FREE ELECTIVE",  "credits": 3, "category": "free",   "semester": "3/2", "prereq": [] },
-    { "id": "ELEC-2",  "code": "2110xxx", "name": "ELECTIVE",       "credits": 3, "category": "elective", "semester": "3/2", "prereq": [] },
+    { "id": "FREE-1", "pool": "free",  "code": "xxx",     "name": "FREE ELECTIVE",  "credits": 3, "category": "free",   "semester": "3/2", "prereq": [] },
+    { "id": "ELEC-2", "pool": "elective",  "code": "2110xxx", "name": "ELECTIVE",       "credits": 3, "category": "elective", "semester": "3/2", "prereq": [] },
     { "id": "5500308", "name": "TECH WRIT ENG",      "credits": 3, "category": "gened",   "semester": "3/2", "prereq": ["5500208"] },
     { "id": "2100301", "name": "ENG PRACTICE",       "credits": 2, "category": "engfund", "semester": "3/2", "prereq": [] },
 
     { "id": "2110488", "name": "CAP PROJ I",         "credits": 2, "category": "core",    "semester": "4/1", "prereq": [] },
-    { "id": "APPR-2",  "code": "2110yyy", "name": "APPROVED ELEC.", "credits": 3, "category": "it",     "semester": "4/1", "prereq": [] },
-    { "id": "ELEC-3",  "code": "2110xxx", "name": "ELECTIVE",       "credits": 3, "category": "elective", "semester": "4/1", "prereq": [] },
-    { "id": "ELEC-4",  "code": "2110xxx", "name": "ELECTIVE",       "credits": 3, "category": "elective", "semester": "4/1", "prereq": [] },
+    { "id": "APPR-2", "pool": "approved",  "code": "2110yyy", "name": "APPROVED ELEC.", "credits": 3, "category": "it",     "semester": "4/1", "prereq": [] },
+    { "id": "ELEC-3", "pool": "elective",  "code": "2110xxx", "name": "ELECTIVE",       "credits": 3, "category": "elective", "semester": "4/1", "prereq": [] },
+    { "id": "ELEC-4", "pool": "elective",  "code": "2110xxx", "name": "ELECTIVE",       "credits": 3, "category": "elective", "semester": "4/1", "prereq": [] },
     { "id": "GENED-3", "code": "xxx",     "name": "GENERAL ED",     "credits": 3, "category": "gened",    "semester": "4/1", "prereq": [] },
     { "id": "GENED-4", "code": "xxx",     "name": "GENERAL ED",     "credits": 3, "category": "gened",    "semester": "4/1", "prereq": [] },
 
     { "id": "2110489", "name": "CAP PROJ II",        "credits": 3, "category": "core",    "semester": "4/2", "prereq": ["2110488"] },
     { "id": "C21-2",   "code": "2100xxx", "name": "21st CENTURY",   "credits": 3, "category": "c21",    "semester": "4/2", "prereq": [] },
-    { "id": "ELEC-5",  "code": "2110xxx", "name": "ELECTIVE",       "credits": 3, "category": "elective", "semester": "4/2", "prereq": [] },
-    { "id": "ELEC-6",  "code": "2110xxx", "name": "ELECTIVE",       "credits": 3, "category": "elective", "semester": "4/2", "prereq": [] },
-    { "id": "FREE-2",  "code": "xxx",     "name": "FREE ELECTIVE",  "credits": 3, "category": "free",   "semester": "4/2", "prereq": [] }
+    { "id": "ELEC-5", "pool": "elective",  "code": "2110xxx", "name": "ELECTIVE",       "credits": 3, "category": "elective", "semester": "4/2", "prereq": [] },
+    { "id": "ELEC-6", "pool": "elective",  "code": "2110xxx", "name": "ELECTIVE",       "credits": 3, "category": "elective", "semester": "4/2", "prereq": [] },
+    { "id": "FREE-2", "pool": "free",  "code": "xxx",     "name": "FREE ELECTIVE",  "credits": 3, "category": "free",   "semester": "4/2", "prereq": [] }
   ]
 }

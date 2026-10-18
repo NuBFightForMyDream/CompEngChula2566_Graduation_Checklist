@@ -39,6 +39,7 @@
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 body {
   margin: 0; background: var(--bg); color: var(--fg);
   font: 15px/1.55 var(--font-body);
@@ -156,6 +157,15 @@ marker path { fill: var(--muted); }
 .actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .bad-text { color: var(--bad); }
 .note { font-size: 12.5px; color: var(--muted); }
+.toast { margin: -8px 0 0; min-height: 1.5em; font-size: 14px; }
+.card .tick[aria-disabled="true"] { cursor: not-allowed; }
+.card .tick[aria-disabled="true"]::before { content: "🔒"; border: 0; width: auto; height: auto; font-size: 11px; opacity: .6; }
+.card .slot-tag { font-size: 10.5px; letter-spacing: .04em; opacity: .75; }
+.choose { display: grid; gap: 8px; padding: 10px 12px; border: 1px dashed var(--line); border-radius: 10px; }
+.choose select { max-width: 100%; }
+.custom { display: grid; grid-template-columns: minmax(0, 7em) minmax(0, 1fr) 4.5em auto; gap: 6px; }
+.custom input { font: inherit; font-size: 14px; color: var(--fg); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; min-width: 0; }
+@media (max-width: 480px) { .custom { grid-template-columns: minmax(0, 1fr) 4.5em; } .custom #choice-name { grid-column: 1 / -1; order: -1; } }
 
 @media (max-width: 720px) {
   .summary { grid-template-columns: minmax(0, 1fr); }
@@ -200,8 +210,10 @@ marker path { fill: var(--muted); }
     <span><i class="chip"></i>ลงได้ตอนนี้</span>
     <span><i class="chip l"></i>ยังล็อก</span>
     <span><i class="chip x"></i>ลงก่อนวิชาบังคับก่อน</span>
-    <span>วงกลมขวา = ติ๊กผ่าน · คลิกชื่อ = เลือกดู/ย้ายเทอม · ลากการ์ดไปวางเทอมอื่นได้</span>
+    <span>วงกลมขวา = ติ๊กผ่าน (วิชาที่ล็อกติ๊กไม่ได้) · คลิกชื่อ = เลือกดู/ย้ายเทอม · ลากการ์ดไปวางเทอมอื่นได้</span>
   </div>
+
+  <p class="toast" id="toast" role="status" aria-live="polite"></p>
 
   <div class="board-scroll">
     <div class="board" id="board"><svg id="edges" aria-hidden="true"></svg></div>
@@ -295,7 +307,7 @@ function shiftDependents(order, prereqs, place, passed, only) {
   return { place: next, moved };
 }
 
-function planRemaining(g, order, passed, place, maxCredits) {
+function planRemaining(g, order, passed, place, maxCredits, credOf) {
   const done = new Set(passed);
   const remaining = new Set([...g.courses.keys()].filter(c => !done.has(c)));
   const depth = chainDepth(order, g.unlocks, remaining);
@@ -304,10 +316,10 @@ function planRemaining(g, order, passed, place, maxCredits) {
     // priority: เทอมบนกระดาน → สายยาวกว่า → หน่วยกิตมากกว่า
     const ready = [...remaining].filter(c => g.prereqs.get(c).every(p => done.has(p)));
     ready.sort((a, b) =>
-      semIdx(place[a]) - semIdx(place[b]) || depth.get(b) - depth.get(a) || g.courses.get(b).credits - g.courses.get(a).credits);
+      semIdx(place[a]) - semIdx(place[b]) || depth.get(b) - depth.get(a) || credOf(b) - credOf(a));
     const term = []; let credits = 0;
     for (const c of ready) {
-      const cr = g.courses.get(c).credits;
+      const cr = credOf(c);
       if (credits + cr <= maxCredits) { term.push(c); credits += cr; }
     }
     if (!term.length) break;
@@ -318,17 +330,21 @@ function planRemaining(g, order, passed, place, maxCredits) {
 }
 
 // ---------- state ----------
-let cur, g, order, passed = new Set(), place = {}, selectedId = null, hoverId = null, conflicts = [];
+let cur, g, order, passed = new Set(), place = {}, choices = {}, selectedId = null, hoverId = null, conflicts = [];
 
 const store = {
   get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } },
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
 };
-const save = () => { store.set("passed:" + cur.id, [...passed]); store.set("place:" + cur.id, place); };
+const save = () => { store.set("passed:" + cur.id, [...passed]); store.set("place:" + cur.id, place); store.set("choice:" + cur.id, choices); };
 const $ = id => document.getElementById(id);
 const color = c => cur.categories[c.category].color;
-const codeOf = c => c.code || c.id;
-const label = id => { const c = g.courses.get(id); return `${codeOf(c)} ${c.name}`; };
+// ช่องวิชาเลือก (ELECTIVE / APPROVED / FREE) แสดงวิชาที่ผู้ใช้เลือกแทนชื่อช่อง
+const codeOf = c => choices[c.id]?.code ?? (c.code || c.id);
+const nameOf = c => choices[c.id]?.name ?? c.name;
+const creditsOf = id => choices[id]?.credits ?? g.courses.get(id).credits;
+const label = id => { const c = g.courses.get(id); return `${codeOf(c)} ${nameOf(c)}`; };
+const esc = s => String(s).replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[ch]);
 const defaultPlace = () => Object.fromEntries(cur.courses.map(c => [c.id, c.semester]));
 const semName = s => `ปี ${s[0]} เทอม ${s[2]}`;
 
@@ -370,9 +386,10 @@ function makeCard(c) {
   const el = document.createElement("div");
   el.className = "card"; el.dataset.id = c.id; el.draggable = true;
   el.style.setProperty("--c", color(c));
-  el.innerHTML = `<button type="button" class="sel"><span class="nm">${c.name}</span><span class="cd"><span>${codeOf(c)} (${c.credits})</span></span></button>
-    <button type="button" class="tick" aria-label="ติ๊กว่าผ่าน ${codeOf(c)}"></button>`;
-  el.querySelector(".sel").addEventListener("click", () => { selectedId = selectedId === c.id ? null : c.id; applyFocus(); });
+  const slot = c.pool ? `<span class="slot-tag">${choices[c.id] ? c.name : "ยังไม่ได้เลือกวิชา"}</span>` : "";
+  el.innerHTML = `<button type="button" class="sel">${slot}<span class="nm">${esc(nameOf(c))}</span><span class="cd"><span>${esc(codeOf(c))} (${creditsOf(c.id)})</span></span></button>
+    <button type="button" class="tick" aria-label="ติ๊กว่าผ่าน ${esc(label(c.id))}"></button>`;
+  el.querySelector(".sel").addEventListener("click", () => { selectedId = selectedId === c.id ? null : c.id; applyFocus(); renderInfo(); });
   el.querySelector(".tick").addEventListener("click", () => togglePassed(c.id));
   el.addEventListener("mouseenter", () => { hoverId = c.id; applyFocus(); });
   el.addEventListener("mouseleave", () => { hoverId = null; applyFocus(); });
@@ -381,9 +398,33 @@ function makeCard(c) {
   return el;
 }
 
+// ติ๊กได้เฉพาะวิชาที่ prereq ผ่านครบแล้ว / ยกเลิกติ๊กแล้ววิชาที่ต่อจากนี้ (BFS) ถูกยกเลิกตามด้วย
 function togglePassed(id) {
-  passed.has(id) ? passed.delete(id) : passed.add(id);
+  if (passed.has(id)) {
+    const hit = [...affected(g.unlocks, id)].filter(x => passed.has(x));
+    passed.delete(id);
+    hit.forEach(x => passed.delete(x));
+    say(hit.length ? `ยกเลิก ${label(id)} แล้ว และยกเลิกวิชาที่ต่อจากนี้ด้วย: ${hit.map(label).join(", ")}` : "");
+  } else {
+    const miss = g.prereqs.get(id).filter(p => !passed.has(p));
+    if (miss.length) { say(`ติ๊ก ${label(id)} ไม่ได้ ต้องผ่าน ${miss.map(label).join(", ")} ก่อน`, true); return; }
+    passed.add(id);
+    say("");
+  }
   save(); update();
+}
+
+function say(msg, bad) {
+  const el = $("toast");
+  el.textContent = msg;
+  el.classList.toggle("bad-text", !!bad);
+}
+
+// ตัดวิชาที่ติ๊กไว้แต่ prereq ไม่ผ่าน (เดินตาม topological order รอบเดียว)
+function cleanPassed(set) {
+  const ok = new Set();
+  for (const v of order) if (set.has(v) && g.prereqs.get(v).every(p => ok.has(p))) ok.add(v);
+  return ok;
 }
 
 function drawEdges() {
@@ -419,7 +460,6 @@ function applyFocus() {
   const chain = new Set([focusId, ...pre, ...post]);
   board.querySelectorAll("path.edge").forEach(e =>
     e.classList.toggle("on", !!focusId && chain.has(e.dataset.from) && chain.has(e.dataset.to)));
-  renderInfo();
 }
 
 function renderInfo() {
@@ -431,20 +471,21 @@ function renderInfo() {
   }
   const c = g.courses.get(id);
   const pre = prereqChain(g.prereqs, id), post = affected(g.unlocks, id);
-  const names = s => [...s].map(label).join(", ") || "ไม่มี";
+  const names = s => [...s].map(x => esc(label(x))).join(", ") || "ไม่มี";
   const st = { passed: "ผ่านแล้ว", "passed broken": "ติ๊กผ่านแล้ว แต่ prereq ยังไม่ครบ", available: "ลงได้ตอนนี้", locked: "ยังล็อก" }[statusOf(id)];
   const mine = conflicts.filter(([p, v]) => p === id || v === id);
   const moved = place[id] !== c.semester;
   info.innerHTML = `
-    <p><b>${label(id)}</b> · ${c.credits} หน่วยกิต · ${cur.categories[c.category].label}</p>
+    <p><b>${esc(label(id))}</b> · ${creditsOf(id)} หน่วยกิต · ${cur.categories[c.category].label}</p>
     <p class="muted">สถานะ: ${st} · แผนเดิม ${semName(c.semester)}${moved ? ` · ย้ายไป ${semName(place[id])}` : ""}</p>
     <p><span style="color:var(--accent)">ต้องผ่านก่อน:</span> ${names(pre)}</p>
     <p><span style="color:var(--warn)">ถ้าตก จะกระทบ:</span> ${names(post)}</p>
-    ${mine.map(([p, v]) => `<p class="bad-text">✗ ${label(v)} อยู่ ${place[v]} แต่วิชาบังคับก่อน ${label(p)} อยู่ ${place[p]}</p>`).join("")}
+    ${mine.map(([p, v]) => `<p class="bad-text">✗ ${esc(label(v))} อยู่ ${place[v]} แต่วิชาบังคับก่อน ${esc(label(p))} อยู่ ${place[p]}</p>`).join("")}
+    ${c.pool ? choiceUI(id, c) : ""}
     <div class="actions">
       <label for="move-sel">ย้ายไป</label>
       <select id="move-sel">${SEMS.map(s => `<option value="${s}" ${s === place[id] ? "selected" : ""}>${semName(s)}</option>`).join("")}</select>
-      <button type="button" id="btn-tick">${passed.has(id) ? "ยกเลิกติ๊กผ่าน" : "ติ๊กว่าผ่านแล้ว"}</button>
+      <button type="button" id="btn-tick" ${statusOf(id) === "locked" ? 'aria-disabled="true"' : ""}>${passed.has(id) ? "ยกเลิกติ๊กผ่าน" : "ติ๊กว่าผ่านแล้ว"}</button>
       ${moved ? `<button type="button" id="btn-back">คืนเทอมเดิม</button>` : ""}
       ${mine.length ? `<button type="button" class="primary" id="btn-shift-one">เลื่อนวิชาที่ต่อจากนี้ตามไป</button>` : ""}
     </div>`;
@@ -452,6 +493,46 @@ function renderInfo() {
   $("btn-tick").addEventListener("click", () => togglePassed(id));
   $("btn-back")?.addEventListener("click", () => moveCourse(id, c.semester));
   $("btn-shift-one")?.addEventListener("click", () => shift(new Set([id, ...post])));
+  if (c.pool) bindChoice(id, c);
+}
+
+// ---------- เลือกวิชาให้ช่อง ELECTIVE / APPROVED / FREE ----------
+function choiceUI(id, c) {
+  const pool = cur.pools[c.pool], ch = choices[id];
+  const used = new Set(Object.entries(choices).filter(([k]) => k !== id).map(([, v]) => v.id).filter(Boolean));
+  const custom = ch && !ch.id;
+  return `<div class="choose">
+    <label for="choice-sel"><b>เลือกวิชาสำหรับช่องนี้</b> <span class="muted">· ${pool.label}</span></label>
+    <select id="choice-sel">
+      <option value="">— ยังไม่เลือก —</option>
+      ${pool.options.map(o => `<option value="${o.id}" ${ch?.id === o.id ? "selected" : ""} ${used.has(o.id) ? "disabled" : ""}>${esc(o.code)} ${esc(o.name)} (${o.credits})${used.has(o.id) ? " · เลือกในช่องอื่นแล้ว" : ""}</option>`).join("")}
+      <option value="__custom" ${custom ? "selected" : ""}>กรอกรหัสและชื่อวิชาเอง…</option>
+    </select>
+    <form class="custom" id="choice-form" ${custom ? "" : "hidden"}>
+      <input id="choice-code" placeholder="รหัสวิชา" value="${custom ? esc(ch.code) : ""}" required>
+      <input id="choice-name" placeholder="ชื่อวิชา" value="${custom ? esc(ch.name) : ""}" required>
+      <input id="choice-credits" type="number" min="1" max="6" value="${custom ? ch.credits : c.credits}" aria-label="หน่วยกิต" required>
+      <button type="submit">บันทึก</button>
+    </form>
+    ${pool.note ? `<p class="note">${pool.note}</p>` : ""}
+  </div>`;
+}
+
+function bindChoice(id, c) {
+  const pool = cur.pools[c.pool];
+  const apply = val => { val ? (choices[id] = val) : delete choices[id]; save(); renderBoard(); update(); };
+  $("choice-sel").addEventListener("change", e => {
+    const v = e.target.value;
+    if (v === "__custom") { $("choice-form").hidden = false; $("choice-code").focus(); return; }
+    const o = pool.options.find(o => o.id === v);
+    apply(o ? { id: o.id, code: o.code, name: o.name, credits: o.credits } : null);
+  });
+  $("choice-form").addEventListener("submit", e => {
+    e.preventDefault();
+    const code = $("choice-code").value.trim(), name = $("choice-name").value.trim();
+    const credits = Math.max(1, Math.min(6, parseInt($("choice-credits").value, 10) || c.credits));
+    if (code && name) apply({ id: null, code, name, credits });
+  });
 }
 
 function shift(only) {
@@ -464,6 +545,9 @@ function update() {
   const badIds = new Set(conflicts.flat());
   $("board").querySelectorAll(".card").forEach(el => {
     const id = el.dataset.id;
+    const tick = el.querySelector(".tick");
+    tick.setAttribute("aria-disabled", statusOf(id) === "locked");
+    tick.title = statusOf(id) === "locked" ? "ต้องผ่านวิชาบังคับก่อนก่อน" : "";
     el.className = "card " + statusOf(id)
       + (badIds.has(id) ? " conflict" : "")
       + (place[id] !== g.courses.get(id).semester ? " moved" : "");
@@ -471,7 +555,7 @@ function update() {
 
   // หน่วยกิตต่อเทอม
   $("board").querySelectorAll(".col").forEach(col => {
-    const cr = cur.courses.filter(c => place[c.id] === col.dataset.sem).reduce((s, c) => s + c.credits, 0);
+    const cr = cur.courses.filter(c => place[c.id] === col.dataset.sem).reduce((s, c) => s + creditsOf(c.id), 0);
     const span = col.querySelector(".col-head span");
     const over = cr > cur.maxCreditsPerSemester;
     span.textContent = cr ? `${cr} หน่วยกิต${over ? ` · เกิน ${cur.maxCreditsPerSemester}` : ""}` : "ว่าง";
@@ -483,12 +567,12 @@ function update() {
   banner.hidden = !conflicts.length;
   if (conflicts.length) {
     $("banner-text").innerHTML = `<b>ลำดับวิชาผิด ${conflicts.length} คู่:</b> `
-      + conflicts.map(([p, v]) => `${label(v)} (${place[v]}) ลงก่อน ${label(p)} (${place[p]})`).join(" · ");
+      + conflicts.map(([p, v]) => `${esc(label(v))} (${place[v]}) ลงก่อน ${esc(label(p))} (${place[p]})`).join(" · ");
   }
 
   // credits per category (hash map นับ)
   const got = Object.fromEntries(Object.keys(cur.categories).map(k => [k, 0]));
-  for (const id of passed) { const c = g.courses.get(id); got[c.category] += c.credits; }
+  for (const id of passed) { const c = g.courses.get(id); got[c.category] += creditsOf(id); }
   const total = Object.values(got).reduce((a, b) => a + b, 0);
   $("total-got").textContent = total;
   $("total-need").textContent = cur.totalCredits;
@@ -506,25 +590,28 @@ function update() {
   const avail = cur.courses.filter(c => statusOf(c.id) === "available");
   $("avail-count").textContent = `(${avail.length})`;
   $("avail").innerHTML = avail.slice(0, 14).map(c =>
-    `<li><i class="dot" style="background:${color(c)}"></i><code>${codeOf(c)}</code><span>${c.name}</span><span class="cr">${place[c.id]}</span></li>`).join("")
+    `<li><i class="dot" style="background:${color(c)}"></i><code>${esc(codeOf(c))}</code><span>${esc(nameOf(c))}</span><span class="cr">${place[c.id]}</span></li>`).join("")
     + (avail.length > 14 ? `<li><span></span><span></span><span class="muted">และอีก ${avail.length - 14} วิชา</span></li>` : "");
 
-  const plan = planRemaining(g, order, passed, place, cur.maxCreditsPerSemester);
+  const plan = planRemaining(g, order, passed, place, cur.maxCreditsPerSemester, creditsOf);
   $("plan").innerHTML = plan.length ? plan.map((t, i) => `
     <div class="term"><h3><span>เทอมถัดไปที่ ${i + 1}</span><span class="muted">${t.credits} หน่วยกิต</span></h3>
       <ul class="list">${t.term.map(id => { const c = g.courses.get(id);
-        return `<li><i class="dot" style="background:${color(c)}"></i><code>${codeOf(c)}</code><span>${c.name}</span><span class="cr">${c.credits}</span></li>`; }).join("")}</ul>
+        return `<li><i class="dot" style="background:${color(c)}"></i><code>${esc(codeOf(c))}</code><span>${esc(nameOf(c))}</span><span class="cr">${creditsOf(id)}</span></li>`; }).join("")}</ul>
     </div>`).join("") : `<p>ผ่านครบทุกวิชาแล้ว</p>`;
 
   drawEdges();
+  renderInfo();
 }
 
 async function loadCurriculum(file) {
   cur = await (await fetch("data/" + file)).json();
   g = buildGraph(cur);
   order = topoSort(g);
-  passed = new Set((store.get("passed:" + cur.id) ?? sampleYear1()).filter(id => g.courses.has(id)));
+  passed = cleanPassed(new Set(store.get("passed:" + cur.id) ?? sampleYear1()));
   place = { ...defaultPlace(), ...(store.get("place:" + cur.id) ?? {}) };
+  choices = store.get("choice:" + cur.id) ?? {};
+  for (const id of Object.keys(choices)) if (!g.courses.get(id)?.pool) delete choices[id];
   for (const id of Object.keys(place)) if (!g.courses.has(id) || !SEMS.includes(place[id])) delete place[id];
   $("cur-name").textContent = cur.name;
   $("cur-note").textContent = cur.note || "";
@@ -541,7 +628,7 @@ async function init() {
   sel.innerHTML = list.map(c => `<option value="${c.file}">${c.name}</option>`).join("");
   sel.addEventListener("change", () => loadCurriculum(sel.value));
   $("btn-sample").addEventListener("click", () => { passed = new Set(sampleYear1()); save(); update(); });
-  $("btn-reset").addEventListener("click", () => { passed.clear(); place = defaultPlace(); selectedId = null; save(); renderBoard(); update(); });
+  $("btn-reset").addEventListener("click", () => { passed.clear(); place = defaultPlace(); choices = {}; selectedId = null; save(); renderBoard(); update(); });
   $("btn-reset-plan").addEventListener("click", () => { place = defaultPlace(); save(); renderBoard(); update(); });
   $("btn-demo-move").addEventListener("click", () => {
     if (!g.courses.has("2110211")) return;
