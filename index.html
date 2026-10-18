@@ -151,7 +151,9 @@ button.primary { background: var(--bad); border-color: var(--bad); color: #fff; 
 .card.passed.moved .nm::after { color: #fff; }
 .card.broken { box-shadow: 0 0 0 3px var(--warn); }
 .card.conflict { outline: 3px solid var(--bad); outline-offset: 1px; }
-.card:hover { transform: translateY(-1px); }
+.card:hover { box-shadow: 0 2px 8px rgb(0 0 0 / .12); }
+.card .tick { cursor: pointer; }
+.board.is-dragging, .board.is-dragging .card { cursor: grabbing; }
 .card.dragging { opacity: .4; }
 .board.focusing .card { opacity: .35; }
 .board.focusing .card.hl-self, .board.focusing .card.hl-pre, .board.focusing .card.hl-post, .board.focusing .card.conflict { opacity: 1; }
@@ -502,7 +504,7 @@ function moveCourse(id, sem) {
 // ---------- render ----------
 function renderBoard() {
   const board = $("board");
-  hoverId = null;   // การ์ดถูกสร้างใหม่ทั้งหมด การ์ดเดิมจะไม่ได้รับ mouseleave
+  hoverId = null; clearTimeout(hoverTimer);   // การ์ดถูกสร้างใหม่ทั้งหมด การ์ดเดิมจะไม่ได้รับ mouseleave
   board.querySelectorAll(".col").forEach(n => n.remove());
   SEMS.forEach((sem, i) => {
     const col = document.createElement("div");
@@ -575,23 +577,41 @@ function makeCard(c) {
     : c.extra ? `<span class="slot-tag">เรียนเพิ่ม · ${catOf(c).label}</span>` : "";
   el.innerHTML = `<button type="button" class="sel">${slot}<span class="nm">${esc(nameOf(c))}</span><span class="cd"><span>${esc(codeOf(c))} (${creditsOf(c.id)})</span></span></button>
     <button type="button" class="tick" aria-label="ติ๊กว่าผ่าน ${esc(label(c.id))}"></button>`;
-  el.querySelector(".sel").addEventListener("click", () => { selectedId = selectedId === c.id ? null : c.id; applyFocus(); renderInfo(); });
+  el.querySelector(".sel").addEventListener("click", () => {
+    clearTimeout(hoverTimer); hoverId = null;
+    selectedId = selectedId === c.id ? null : c.id; applyFocus(); renderInfo();
+  });
   el.querySelector(".tick").addEventListener("click", () => togglePassed(c.id));
-  el.addEventListener("mouseenter", () => { hoverId = c.id; applyFocus(); });
-  el.addEventListener("mouseleave", () => { hoverId = null; applyFocus(); });
+  el.addEventListener("pointerenter", e => { if (e.pointerType === "mouse") hoverStart(c.id); });
+  el.addEventListener("pointerleave", e => { if (e.pointerType === "mouse") hoverEnd(); });
   el.addEventListener("dragstart", e => {
-    dragId = c.id;
+    dragId = c.id; clearTimeout(hoverTimer); hoverId = null; applyFocus();
+    $("board").classList.add("is-dragging");
     e.dataTransfer.setData("text/plain", c.id); e.dataTransfer.effectAllowed = "move"; el.classList.add("dragging");
     $("board").querySelectorAll(".col").forEach(col => col.classList.toggle("nodrop", !offeredIn(c, col.dataset.sem)));
   });
   el.addEventListener("dragend", () => {
     dragId = null; hoverId = null; el.classList.remove("dragging");
+    $("board").classList.remove("is-dragging");
     $("board").querySelectorAll(".col").forEach(col => col.classList.remove("nodrop", "drop"));
   });
   return el;
 }
 
 // ติ๊กได้เฉพาะวิชาที่ prereq ผ่านครบแล้ว / ยกเลิกติ๊กแล้ววิชาที่ต่อจากนี้ (BFS) ถูกยกเลิกตามด้วย
+// ชี้เมาส์ค้างไว้ครู่หนึ่งถึงจะไฮไลต์สายวิชา (กันทั้งตารางกระพริบตอนลากเมาส์ผ่าน)
+// ถ้ามีวิชาที่คลิกเลือกไว้ การชี้เมาส์จะไม่ไปทับ · จอสัมผัสใช้การคลิกเลือกอย่างเดียว
+let hoverTimer = null;
+function hoverStart(id) {
+  clearTimeout(hoverTimer);
+  if (selectedId || dragId) return;
+  hoverTimer = setTimeout(() => { hoverId = id; applyFocus(); }, hoverId ? 0 : 180);
+}
+function hoverEnd() {
+  clearTimeout(hoverTimer);
+  hoverTimer = setTimeout(() => { if (hoverId) { hoverId = null; applyFocus(); } }, 60);
+}
+
 function togglePassed(id) {
   if (passed.has(id)) {
     const hit = [...affected(g.unlocks, id)].filter(x => passed.has(x));
@@ -639,7 +659,7 @@ function drawEdges() {
 }
 
 function applyFocus() {
-  const focusId = hoverId || selectedId;
+  const focusId = selectedId || hoverId;
   const board = $("board");
   const pre = focusId ? prereqChain(g.prereqs, focusId) : new Set();
   const post = focusId ? affected(g.unlocks, focusId) : new Set();
