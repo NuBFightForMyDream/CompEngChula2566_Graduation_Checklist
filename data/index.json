@@ -1,3 +1,8 @@
 [
-  { "id": "cp-2022", "name": "Computer Engineering (2022) — 138 หน่วยกิต", "file": "cp-2022.json" }
+  {
+    "id": "cp-2022",
+    "name": "Computer Engineering (2022) — 138 หน่วยกิต",
+    "file": "cp-2022.json",
+    "notices": ["notices/cp-department.md", "notices/cp-2022.md"]
+  }
 ]

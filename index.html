@@ -21,6 +21,7 @@
   --warn: #c2620a;
   --bad: #d0312d;
   --year-band: #eceaf1;
+  --extra: #5f6b7a;
   --font-display: "Anuphan", "IBM Plex Sans Thai", system-ui, sans-serif;
   --font-body: "IBM Plex Sans Thai", system-ui, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, monospace;
@@ -29,13 +30,13 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --bg: #141218; --surface: #1e1b24; --fg: #ece9f2; --muted: #a29cae;
-    --line: #34303d; --accent: #f06b9b; --ok: #4cc67e; --warn: #f0a050; --bad: #ff6b66; --year-band: #1a1720;
+    --line: #34303d; --accent: #f06b9b; --ok: #4cc67e; --warn: #f0a050; --bad: #ff6b66; --year-band: #1a1720; --extra: #8d9aab;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
   --bg: #141218; --surface: #1e1b24; --fg: #ece9f2; --muted: #a29cae;
-  --line: #34303d; --accent: #f06b9b; --ok: #4cc67e; --warn: #f0a050; --bad: #ff6b66; --year-band: #1a1720;
+  --line: #34303d; --accent: #f06b9b; --ok: #4cc67e; --warn: #f0a050; --bad: #ff6b66; --year-band: #1a1720; --extra: #8d9aab;
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
@@ -158,6 +159,28 @@ marker path { fill: var(--muted); }
 .actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .bad-text { color: var(--bad); }
 .note { font-size: 12.5px; color: var(--muted); }
+.notices { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px 18px; }
+.notices summary { cursor: pointer; display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; list-style: none; }
+.notices summary::-webkit-details-marker { display: none; }
+.notices summary h2::before { content: "▸ "; color: var(--muted); }
+.notices[open] summary h2::before { content: "▾ "; }
+.notice-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px 28px; margin-top: 12px; }
+.notice { min-width: 0; font-size: 14px; }
+.notice h3 { font-family: var(--font-display); font-size: 1rem; margin: 0 0 6px; }
+.notice h4, .notice h5 { font-size: 14px; margin: 12px 0 4px; }
+.notice p { margin: 4px 0; max-width: 65ch; }
+.notice ul { margin: 4px 0; padding-left: 20px; }
+.notice .quote { color: var(--muted); border-left: 3px solid var(--line); padding-left: 10px; font-size: 13px; }
+.notice a { color: var(--accent); }
+.extra-note { font-size: 13px; color: var(--extra); font-weight: 500; }
+.add-btn { width: 100%; font-size: 12.5px; color: var(--muted); background: none; border: 1px dashed var(--line); padding: 6px; }
+.add-btn:hover { color: var(--fg); }
+.add-form { display: grid; gap: 6px; padding: 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); position: relative; z-index: 2; }
+.add-form input { font: inherit; font-size: 13px; color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 5px 7px; min-width: 0; width: 100%; }
+.add-form select { font-size: 13px; padding: 5px 6px; width: 100%; }
+.add-form .row { display: flex; gap: 6px; }
+.add-form .row button { flex: 1; padding: 5px 6px; font-size: 13px; }
+.card.extra-card { border-style: dotted; }
 .toast { margin: -8px 0 0; min-height: 1.5em; font-size: 14px; }
 .card .tick[aria-disabled="true"] { cursor: not-allowed; }
 .card .tick[aria-disabled="true"]::before { content: "🔒"; border: 0; width: auto; height: auto; font-size: 11px; opacity: .6; }
@@ -197,9 +220,15 @@ marker path { fill: var(--muted); }
       <div class="big"><span id="total-got">0</span> <small>/ <span id="total-need">0</span></small></div>
       <div class="meter"><i id="total-bar" style="width:0"></i></div>
       <span class="muted" id="total-note"></span>
+      <span class="extra-note" id="extra-note" hidden></span>
     </div>
     <div class="cats" id="cats"></div>
   </section>
+
+  <details class="notices" id="notices" open hidden>
+    <summary><h2>ประกาศและเงื่อนไขเพิ่มเติม</h2><span class="muted">เขียนเองในไฟล์ <code>data/notices/</code></span></summary>
+    <div class="notice-list" id="notice-list"></div>
+  </details>
 
   <div class="banner" id="banner" hidden>
     <p id="banner-text"></p>
@@ -211,7 +240,7 @@ marker path { fill: var(--muted); }
     <span><i class="chip"></i>ลงได้ตอนนี้</span>
     <span><i class="chip l"></i>ยังล็อก</span>
     <span><i class="chip x"></i>ลงก่อนวิชาบังคับก่อน</span>
-    <span>วงกลมขวา = ติ๊กผ่าน (วิชาที่ล็อกติ๊กไม่ได้) · คลิกชื่อ = เลือกดู/ย้ายเทอม · ลากการ์ดไปวางเทอมอื่นได้ · วิชาแกนสาขาเลื่อนข้ามปีได้ แต่ข้ามเทอมไม่ได้</span>
+    <span>วงกลมขวา = ติ๊กผ่าน (วิชาที่ล็อกติ๊กไม่ได้) · คลิกชื่อ = เลือกดู/ย้ายเทอม · ลากการ์ดไปวางเทอมอื่นได้ · "+ เพิ่มวิชา" = เรียนเพิ่ม (เลือกได้ว่านับเข้าหมวดไหน) · วิชาแกนสาขาเลื่อนข้ามปีได้ แต่ข้ามเทอมไม่ได้</span>
   </div>
 
   <p class="toast" id="toast" role="status" aria-live="polite"></p>
@@ -249,10 +278,10 @@ const semAt = i => `${Math.floor(i / 2) + 1}/${i % 2 + 1}`;
 // offered = ["1"] เปิดเฉพาะเทอมต้น, ["2"] เฉพาะเทอมปลาย, ไม่ใส่ = ทุกเทอม (ข้ามปีได้ ข้ามเทอมไม่ได้)
 const offeredIn = (course, sem) => !course.offered || course.offered.includes(sem[2]);
 
-function buildGraph(cur) {
-  const courses = new Map(cur.courses.map(c => [c.id, c]));
-  const prereqs = new Map(cur.courses.map(c => [c.id, c.prereq]));
-  const unlocks = new Map(cur.courses.map(c => [c.id, []]));
+function buildGraph(list) {
+  const courses = new Map(list.map(c => [c.id, c]));
+  const prereqs = new Map(list.map(c => [c.id, c.prereq]));
+  const unlocks = new Map(list.map(c => [c.id, []]));
   for (const [id, pres] of prereqs) for (const p of pres) unlocks.get(p).push(id);
   return { courses, prereqs, unlocks };
 }
@@ -341,22 +370,31 @@ function planRemaining(g, order, passed, place, maxCredits, credOf) {
 
 // ---------- state ----------
 let dragId = null;
-let cur, g, order, passed = new Set(), place = {}, choices = {}, selectedId = null, hoverId = null, conflicts = [];
+let cur, g, order, passed = new Set(), place = {}, choices = {}, extras = [], addingSem = null, selectedId = null, hoverId = null, conflicts = [];
 
 const store = {
   get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } },
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
 };
-const save = () => { store.set("passed:" + cur.id, [...passed]); store.set("place:" + cur.id, place); store.set("choice:" + cur.id, choices); };
+const save = () => { store.set("passed:" + cur.id, [...passed]); store.set("place:" + cur.id, place); store.set("choice:" + cur.id, choices); store.set("extra:" + cur.id, extras); };
 const $ = id => document.getElementById(id);
-const color = c => cur.categories[c.category].color;
+// วิชาเรียนเพิ่ม: node ที่ไม่มีลูกศร prereq เลือกได้ว่านับเข้าหมวดไหน (category "extra" = ไม่นับในหลักสูตร)
+// นับเป็นภาระหน่วยกิตต่อเทอมเสมอ
+const EXTRA = { label: "นอกหลักสูตร (ไม่นับ)", color: "var(--extra)" };
+const EXTRA_GROUPS = ["gened", "elective", "free", "c21", "it", "extra"];
+const groupOptions = sel => EXTRA_GROUPS.filter(k => k === "extra" || cur.categories[k])
+  .map(k => `<option value="${k}" ${k === sel ? "selected" : ""}>${(cur.categories[k] ?? EXTRA).label}</option>`).join("");
+const catOf = c => cur.categories[c.category] ?? EXTRA;
+const color = c => catOf(c).color;
+const allCourses = () => [...cur.courses, ...extras];
+function rebuild() { g = buildGraph(allCourses()); order = topoSort(g); }
 // ช่องวิชาเลือก (ELECTIVE / APPROVED / FREE) แสดงวิชาที่ผู้ใช้เลือกแทนชื่อช่อง
 const codeOf = c => choices[c.id]?.code ?? (c.code || c.id);
 const nameOf = c => choices[c.id]?.name ?? c.name;
 const creditsOf = id => choices[id]?.credits ?? g.courses.get(id).credits;
 const label = id => { const c = g.courses.get(id); return `${codeOf(c)} ${nameOf(c)}`; };
 const esc = s => String(s).replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[ch]);
-const defaultPlace = () => Object.fromEntries(cur.courses.map(c => [c.id, c.semester]));
+const defaultPlace = () => Object.fromEntries(allCourses().map(c => [c.id, c.semester]));
 const semName = s => `ปี ${s[0]} เทอม ${s[2]}`;
 
 function statusOf(id) {
@@ -373,6 +411,7 @@ function moveCourse(id, sem) {
     return;
   }
   say("");
+  if (c.extra) c.semester = sem;
   place[id] = sem; selectedId = id; save(); renderBoard(); update();
 }
 
@@ -385,9 +424,10 @@ function renderBoard() {
     col.className = "col" + (Math.floor(i / 2) % 2 === 0 ? " odd-year" : "");
     col.dataset.sem = sem;
     col.innerHTML = `<div class="col-head"><b>${semName(sem)}</b><span></span></div>`;
-    const list = cur.courses.filter(c => place[c.id] === sem);
+    const list = allCourses().filter(c => place[c.id] === sem);
     if (!list.length) col.insertAdjacentHTML("beforeend", `<div class="hint">ลากวิชามาวางที่นี่</div>`);
     for (const c of list) col.appendChild(makeCard(c));
+    col.appendChild(addSlot(sem));
     col.addEventListener("dragover", e => {
       if (!dragId || !offeredIn(g.courses.get(dragId), sem)) return;   // ไม่ preventDefault = วางไม่ได้
       e.preventDefault(); col.classList.add("drop");
@@ -402,11 +442,51 @@ function renderBoard() {
   });
 }
 
+// ---------- วิชาเรียนเพิ่ม ----------
+function addSlot(sem) {
+  const wrap = document.createElement("div");
+  if (addingSem !== sem) {
+    wrap.innerHTML = `<button type="button" class="add-btn">+ เพิ่มวิชา</button>`;
+    wrap.firstChild.addEventListener("click", () => { addingSem = sem; renderBoard(); update(); $("add-code").focus(); });
+    return wrap;
+  }
+  wrap.innerHTML = `<form class="add-form" id="add-form">
+      <input id="add-code" placeholder="รหัสวิชา" aria-label="รหัสวิชา" required>
+      <input id="add-name" placeholder="ชื่อวิชา" aria-label="ชื่อวิชา" required>
+      <input id="add-credits" type="number" min="1" max="6" value="3" aria-label="หน่วยกิต" required>
+      <select id="add-cat" aria-label="นับเข้าหมวด">${groupOptions("free")}</select>
+      <div class="row"><button type="submit">เพิ่ม</button><button type="button" id="add-cancel">ยกเลิก</button></div>
+    </form>`;
+  wrap.querySelector("form").addEventListener("submit", e => {
+    e.preventDefault();
+    const code = $("add-code").value.trim(), name = $("add-name").value.trim();
+    const credits = Math.max(1, Math.min(6, parseInt($("add-credits").value, 10) || 3));
+    if (!code || !name) return;
+    const id = "X-" + Date.now().toString(36);
+    extras.push({ id, code, name, credits, category: $("add-cat").value, semester: sem, prereq: [], extra: true });
+    place[id] = sem; addingSem = null; selectedId = id;
+    rebuild(); save(); renderBoard(); update();
+    say(`เพิ่ม ${code} ${name} ใน${semName(sem)} แล้ว · นับเป็น ${catOf(g.courses.get(id)).label}`);
+  });
+  wrap.querySelector("#add-cancel").addEventListener("click", () => { addingSem = null; renderBoard(); update(); });
+  return wrap;
+}
+
+function removeExtra(id) {
+  const c = g.courses.get(id);
+  extras = extras.filter(x => x.id !== id);
+  passed.delete(id); delete place[id];
+  if (selectedId === id) selectedId = null;
+  rebuild(); save(); renderBoard(); update();
+  say(`ลบ ${c.code} ${c.name} แล้ว`);
+}
+
 function makeCard(c) {
   const el = document.createElement("div");
   el.className = "card"; el.dataset.id = c.id; el.draggable = true;
   el.style.setProperty("--c", color(c));
-  const slot = c.pool ? `<span class="slot-tag">${choices[c.id] ? c.name : "ยังไม่ได้เลือกวิชา"}</span>` : "";
+  const slot = c.pool ? `<span class="slot-tag">${choices[c.id] ? c.name : "ยังไม่ได้เลือกวิชา"}</span>`
+    : c.extra ? `<span class="slot-tag">เรียนเพิ่ม · ${catOf(c).label}</span>` : "";
   el.innerHTML = `<button type="button" class="sel">${slot}<span class="nm">${esc(nameOf(c))}</span><span class="cd"><span>${esc(codeOf(c))} (${creditsOf(c.id)})</span></span></button>
     <button type="button" class="tick" aria-label="ติ๊กว่าผ่าน ${esc(label(c.id))}"></button>`;
   el.querySelector(".sel").addEventListener("click", () => { selectedId = selectedId === c.id ? null : c.id; applyFocus(); renderInfo(); });
@@ -503,7 +583,7 @@ function renderInfo() {
   const mine = conflicts.filter(([p, v]) => p === id || v === id);
   const moved = place[id] !== c.semester;
   info.innerHTML = `
-    <p><b>${esc(label(id))}</b> · ${creditsOf(id)} หน่วยกิต · ${cur.categories[c.category].label}</p>
+    <p><b>${esc(label(id))}</b> · ${creditsOf(id)} หน่วยกิต · ${catOf(c).label}</p>
     <p class="muted">สถานะ: ${st} · ${c.offered ? `เปิดสอนเฉพาะเทอม ${c.offered.join(", ")}` : "เปิดทุกเทอม"} · แผนเดิม ${semName(c.semester)}${moved ? ` · ย้ายไป ${semName(place[id])}` : ""}</p>
     <p><span style="color:var(--accent)">ต้องผ่านก่อน:</span> ${names(pre)}</p>
     <p><span style="color:var(--warn)">ถ้าตก จะกระทบ:</span> ${names(post)}</p>
@@ -514,11 +594,15 @@ function renderInfo() {
       <select id="move-sel">${SEMS.map(s => `<option value="${s}" ${s === place[id] ? "selected" : ""} ${offeredIn(c, s) ? "" : "disabled"}>${semName(s)}${offeredIn(c, s) ? "" : " · ไม่เปิดสอน"}</option>`).join("")}</select>
       <button type="button" id="btn-tick" ${statusOf(id) === "locked" ? 'aria-disabled="true"' : ""}>${passed.has(id) ? "ยกเลิกติ๊กผ่าน" : "ติ๊กว่าผ่านแล้ว"}</button>
       ${moved ? `<button type="button" id="btn-back">คืนเทอมเดิม</button>` : ""}
+      ${c.extra ? `<label for="extra-cat">นับเป็น</label><select id="extra-cat">${groupOptions(c.category)}</select>
+        <button type="button" id="btn-remove">ลบวิชานี้</button>` : ""}
       ${mine.length ? `<button type="button" class="primary" id="btn-shift-one">เลื่อนวิชาที่ต่อจากนี้ตามไป</button>` : ""}
     </div>`;
   $("move-sel").addEventListener("change", e => moveCourse(id, e.target.value));
   $("btn-tick").addEventListener("click", () => togglePassed(id));
   $("btn-back")?.addEventListener("click", () => moveCourse(id, c.semester));
+  $("btn-remove")?.addEventListener("click", () => removeExtra(id));
+  $("extra-cat")?.addEventListener("change", e => { c.category = e.target.value; save(); renderBoard(); update(); });
   $("btn-shift-one")?.addEventListener("click", () => shift(new Set([id, ...post])));
   if (c.pool) bindChoice(id, c);
 }
@@ -575,14 +659,14 @@ function update() {
     const tick = el.querySelector(".tick");
     tick.setAttribute("aria-disabled", statusOf(id) === "locked");
     tick.title = statusOf(id) === "locked" ? "ต้องผ่านวิชาบังคับก่อนก่อน" : "";
-    el.className = "card " + statusOf(id)
+    el.className = "card " + statusOf(id) + (g.courses.get(id).extra ? " extra-card" : "")
       + (badIds.has(id) ? " conflict" : "")
       + (place[id] !== g.courses.get(id).semester ? " moved" : "");
   });
 
   // หน่วยกิตต่อเทอม
   $("board").querySelectorAll(".col").forEach(col => {
-    const cr = cur.courses.filter(c => place[c.id] === col.dataset.sem).reduce((s, c) => s + creditsOf(c.id), 0);
+    const cr = allCourses().filter(c => place[c.id] === col.dataset.sem).reduce((s, c) => s + creditsOf(c.id), 0);
     const span = col.querySelector(".col-head span");
     const over = cr > cur.maxCreditsPerSemester;
     span.textContent = cr ? `${cr} หน่วยกิต${over ? ` · เกิน ${cur.maxCreditsPerSemester}` : ""}` : "ว่าง";
@@ -599,22 +683,27 @@ function update() {
 
   // credits per category (hash map นับ)
   const got = Object.fromEntries(Object.keys(cur.categories).map(k => [k, 0]));
-  for (const id of passed) { const c = g.courses.get(id); got[c.category] += creditsOf(id); }
+  for (const id of passed) { const c = g.courses.get(id); if (c.category in got) got[c.category] += creditsOf(id); }
   const total = Object.values(got).reduce((a, b) => a + b, 0);
+  const exIn = extras.filter(c => c.category in got).reduce((a, c) => a + c.credits, 0);
+  const exOut = extras.filter(c => !(c.category in got)).reduce((a, c) => a + c.credits, 0);
+  $("extra-note").hidden = !extras.length;
+  $("extra-note").textContent = `เรียนเพิ่ม ${extras.length} วิชา · นับเข้าหมวด ${exIn} หน่วยกิต`
+    + (exOut ? ` · นอกหลักสูตร ${exOut} หน่วยกิต` : "");
   $("total-got").textContent = total;
   $("total-need").textContent = cur.totalCredits;
   $("total-bar").style.width = Math.min(100, 100 * total / cur.totalCredits) + "%";
   const left = cur.totalCredits - total;
-  const last = SEMS.filter(s => cur.courses.some(c => place[c.id] === s)).pop();
+  const last = SEMS.filter(s => allCourses().some(c => place[c.id] === s)).pop();
   $("total-note").textContent = (left > 0 ? `เหลืออีก ${left} หน่วยกิต` : "หน่วยกิตครบตามหลักสูตรแล้ว") + ` · จบ${semName(last)}`;
   $("cats").innerHTML = Object.entries(cur.categories).map(([k, c]) => `
     <div class="cat ${got[k] >= c.required ? "done" : ""}">
       <i class="sw" style="background:${c.color}"></i><span>${c.label}</span>
-      <span class="num">${got[k]}/${c.required}</span>
+      <span class="num">${got[k]}/${c.required}${got[k] > c.required ? ` (+${got[k] - c.required})` : ""}</span>
       <div class="meter"><i style="width:${Math.min(100, 100 * got[k] / c.required)}%;background:${c.color}"></i></div>
     </div>`).join("");
 
-  const avail = cur.courses.filter(c => statusOf(c.id) === "available");
+  const avail = allCourses().filter(c => statusOf(c.id) === "available");
   $("avail-count").textContent = `(${avail.length})`;
   $("avail").innerHTML = avail.slice(0, 14).map(c =>
     `<li><i class="dot" style="background:${color(c)}"></i><code>${esc(codeOf(c))}</code><span>${esc(nameOf(c))}</span><span class="cr">${place[c.id]}</span></li>`).join("")
@@ -631,19 +720,52 @@ function update() {
   renderInfo();
 }
 
+// ประกาศ: ไฟล์ Markdown ที่เขียนมือ (ภาควิชา / หลักสูตร) ดึงมาแสดงตามที่ index.json ระบุ
+async function loadNotices(files) {
+  const box = $("notices"), list = $("notice-list");
+  const texts = await Promise.all((files || []).map(f =>
+    fetch("data/" + f).then(r => r.ok ? r.text() : null).catch(() => null)));
+  const ok = texts.filter(Boolean);
+  box.hidden = !ok.length;
+  list.innerHTML = ok.map(t => `<article class="notice">${renderMarkdown(t)}</article>`).join("");
+}
+
+// Markdown แบบย่อ: หัวข้อ, รายการ, ตัวหนา, โค้ด, ลิงก์, ย่อหน้า
+function renderMarkdown(md) {
+  const inline = t => esc(t)
+    .replace(/\*\*(.+?)\*\*/g, "<b>$1</b>")
+    .replace(/`([^`]+)`/g, "<code>$1</code>")
+    .replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+  const out = [];
+  let list = null;
+  const flush = () => { if (list) { out.push(`<ul>${list.join("")}</ul>`); list = null; } };
+  for (const raw of md.split(/\r?\n/)) {
+    const line = raw.trimEnd();
+    let m;
+    if ((m = line.match(/^(#{1,3})\s+(.*)/))) { flush(); const h = m[1].length + 2; out.push(`<h${h}>${inline(m[2])}</h${h}>`); }
+    else if ((m = line.match(/^\s*[-*]\s+(.*)/))) { (list ??= []).push(`<li>${inline(m[1])}</li>`); }
+    else if ((m = line.match(/^>\s?(.*)/))) { flush(); out.push(`<p class="quote">${inline(m[1])}</p>`); }
+    else if (!line.trim()) flush();
+    else { flush(); out.push(`<p>${inline(line)}</p>`); }
+  }
+  flush();
+  return out.join("");
+}
+
 async function loadCurriculum(file) {
   cur = await (await fetch("data/" + file)).json();
-  g = buildGraph(cur);
-  order = topoSort(g);
+  extras = (store.get("extra:" + cur.id) ?? []).filter(c => c && c.id && SEMS.includes(c.semester))
+    .map(c => ({ ...c, category: cur.categories[c.category] ? c.category : "extra", prereq: [], extra: true }));
+  rebuild();
   passed = cleanPassed(new Set(store.get("passed:" + cur.id) ?? sampleYear1()));
   place = { ...defaultPlace(), ...(store.get("place:" + cur.id) ?? {}) };
   choices = store.get("choice:" + cur.id) ?? {};
   for (const id of Object.keys(choices)) if (!g.courses.get(id)?.pool) delete choices[id];
   for (const id of Object.keys(place)) if (!g.courses.has(id) || !SEMS.includes(place[id])) delete place[id];
-  for (const c of cur.courses) if (!offeredIn(c, place[c.id])) place[c.id] = c.semester;
+  for (const c of allCourses()) if (!place[c.id] || !offeredIn(c, place[c.id])) place[c.id] = c.semester;
   $("cur-name").textContent = cur.name;
   $("cur-note").textContent = cur.note || "";
-  selectedId = hoverId = null;
+  selectedId = hoverId = addingSem = null;
   renderBoard();
   update();
 }
@@ -654,9 +776,10 @@ async function init() {
   const list = await (await fetch("data/index.json")).json();
   const sel = $("cur-select");
   sel.innerHTML = list.map(c => `<option value="${c.file}">${c.name}</option>`).join("");
-  sel.addEventListener("change", () => loadCurriculum(sel.value));
+  const pick = file => { loadNotices(list.find(c => c.file === file)?.notices); return loadCurriculum(file); };
+  sel.addEventListener("change", () => pick(sel.value));
   $("btn-sample").addEventListener("click", () => { passed = new Set(sampleYear1()); save(); update(); });
-  $("btn-reset").addEventListener("click", () => { passed.clear(); place = defaultPlace(); choices = {}; selectedId = null; save(); renderBoard(); update(); });
+  $("btn-reset").addEventListener("click", () => { passed.clear(); extras = []; rebuild(); place = defaultPlace(); choices = {}; selectedId = null; save(); renderBoard(); update(); });
   $("btn-reset-plan").addEventListener("click", () => { place = defaultPlace(); save(); renderBoard(); update(); });
   $("btn-demo-move").addEventListener("click", () => {
     if (!g.courses.has("2110211")) return;
@@ -664,7 +787,7 @@ async function init() {
   });
   $("btn-shift-all").addEventListener("click", () => shift());
   new ResizeObserver(() => cur && drawEdges()).observe($("board"));
-  await loadCurriculum(list[0].file);
+  await pick(list[0].file);
 }
 init().catch(err => { $("cur-name").textContent = "โหลดข้อมูลหลักสูตรไม่สำเร็จ: " + err.message; });
 </script>
