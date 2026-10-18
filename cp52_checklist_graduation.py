@@ -327,13 +327,13 @@ def shift_dependents(order, prereqs, placement, passed, courses):
     ไปไว้ "เทอมถัดจาก prereq ที่ช้าที่สุด" — เดินรอบเดียวก็พอ
     เพราะตอนถึงวิชา v, prereq ของ v ถูกจัดที่เรียบร้อยแล้วทุกตัว
     ถ้าเทอมนั้นไม่เปิดสอน ให้ขยับต่อไปจนเจอเทอมที่เปิด (ข้ามปี ไม่ข้ามเทอม)
-    วิชาที่ผ่านแล้วไม่ย้าย (เรียนไปแล้ว)
+    รวมวิชาที่ผ่านแล้วด้วย เพราะผู้ใช้เป็นคนจัดแผนเอง (ถ้าไม่ย้าย ลำดับจะผิดค้างอยู่)
     คืน (placement ใหม่, list ของ (วิชา, เทอมเดิม, เทอมใหม่))
     """
     new = dict(placement)
     moved = []
     for v in order:
-        if v in passed or not prereqs[v]:
+        if not prereqs[v]:
             continue
         need = max(sem_index(new[p]) for p in prereqs[v]) + 1
         while need < len(SEMESTERS) and not offered_in(courses[v], SEMESTERS[need]):

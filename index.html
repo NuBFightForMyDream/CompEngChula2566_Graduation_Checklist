@@ -11,17 +11,20 @@
 <style>
 /* Layout: แถบสรุปหน่วยกิตด้านบน → ตาราง roadmap 10 เทอม (เลื่อนแนวนอนได้, ลากวิชาย้ายเทอมได้) → แผงวิชาที่เลือก / ลงได้ / แผนแนะนำ */
 :root {
-  --bg: #f6f5f8;
+  --bg: #f4f4f4;
   --surface: #ffffff;
-  --fg: #1d1b22;
-  --muted: #6b6676;
-  --line: #e3e0ea;
-  --accent: #9b1c4a;
+  --fg: #1b1b1b;
+  --muted: #666666;
+  --line: #dddddd;
+  --accent: #a3001e;
+  --brand: #a3001e;
+  --brand-fg: #ffffff;
   --ok: #1f8a4c;
-  --warn: #c2620a;
-  --bad: #d0312d;
-  --year-band: #eceaf1;
+  --warn: #d97800;
+  --bad: #e0242b;
+  --year-band: #dedede;
   --extra: #5f6b7a;
+  --ink: #111111;
   --font-display: "Anuphan", "IBM Plex Sans Thai", system-ui, sans-serif;
   --font-body: "IBM Plex Sans Thai", system-ui, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, monospace;
@@ -29,14 +32,16 @@
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #141218; --surface: #1e1b24; --fg: #ece9f2; --muted: #a29cae;
-    --line: #34303d; --accent: #f06b9b; --ok: #4cc67e; --warn: #f0a050; --bad: #ff6b66; --year-band: #1a1720; --extra: #8d9aab;
+    --bg: #121212; --surface: #1c1c1c; --fg: #ececec; --muted: #a3a3a3;
+    --line: #333333; --accent: #ff5a73; --brand: #8c0019; --brand-fg: #ffffff; --ok: #4cc67e; --warn: #ffa53a; --bad: #ff5a5a;
+    --year-band: #262626; --extra: #8d9aab; --ink: #5c5c5c;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #141218; --surface: #1e1b24; --fg: #ece9f2; --muted: #a29cae;
-  --line: #34303d; --accent: #f06b9b; --ok: #4cc67e; --warn: #f0a050; --bad: #ff6b66; --year-band: #1a1720; --extra: #8d9aab;
+  --bg: #121212; --surface: #1c1c1c; --fg: #ececec; --muted: #a3a3a3;
+  --line: #333333; --accent: #ff5a73; --brand: #8c0019; --brand-fg: #ffffff; --ok: #4cc67e; --warn: #ffa53a; --bad: #ff5a5a;
+  --year-band: #262626; --extra: #8d9aab; --ink: #5c5c5c;
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
@@ -55,8 +60,16 @@ h2 { font-size: 1.05rem; }
 .muted { color: var(--muted); }
 code, .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
 
-header { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: end; justify-content: space-between; }
+header { display: grid; gap: 12px; }
 header > div { min-width: 0; }
+.titlebar { background: var(--brand); color: var(--brand-fg); border-radius: 12px; padding: 14px 20px; display: flex; flex-wrap: wrap; gap: 4px 16px; align-items: baseline; justify-content: space-between; }
+.titlebar h1 { color: var(--brand-fg); }
+.titlebar #cur-name { color: var(--brand-fg); opacity: .85; }
+.check { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; cursor: pointer; }
+.check input { width: 16px; height: 16px; accent-color: var(--brand); margin: 0; }
+.groups { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12.5px; color: var(--muted); grid-column: 1 / -1; }
+.groups span { display: inline-flex; align-items: center; gap: 6px; }
+.groups i { width: 12px; height: 12px; border-radius: 3px; }
 .controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 select, button {
   font: inherit; font-size: 14px; color: var(--fg); background: var(--surface);
@@ -228,8 +241,9 @@ html.printing .note { order: 7; }
 html.printing .panel, html.printing .notices { break-inside: avoid; }
 @media print {
   :root:not([data-theme="light"]), :root[data-theme="light"], :root[data-theme="dark"] {
-    --bg: #ffffff; --surface: #ffffff; --fg: #1d1b22; --muted: #6b6676; --line: #d9d5e1;
-    --accent: #9b1c4a; --ok: #1f8a4c; --warn: #c2620a; --bad: #d0312d; --year-band: #f1eff5; --extra: #5f6b7a;
+    --bg: #ffffff; --surface: #ffffff; --fg: #1b1b1b; --muted: #666666; --line: #dddddd;
+    --accent: #a3001e; --brand: #a3001e; --brand-fg: #ffffff; --ok: #1f8a4c; --warn: #d97800; --bad: #e0242b;
+    --year-band: #e6e6e6; --extra: #5f6b7a; --ink: #111111;
     color-scheme: light;
   }
   * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
@@ -240,9 +254,9 @@ html.printing .panel, html.printing .notices { break-inside: avoid; }
 <body>
 <div class="wrap">
   <header>
-    <div>
+    <div class="titlebar">
       <h1>Graduation Roadmap</h1>
-      <div class="muted" id="cur-name">กำลังโหลดหลักสูตร…</div>
+      <div id="cur-name">กำลังโหลดหลักสูตร…</div>
     </div>
     <div class="controls">
       <label class="muted" for="cur-select">หลักสูตร</label>
@@ -251,6 +265,7 @@ html.printing .panel, html.printing .notices { break-inside: avoid; }
       <button id="btn-demo-move" type="button">ตัวอย่าง: ย้าย Data Struct ไป 3/1</button>
       <button id="btn-reset-plan" type="button">คืนแผนเดิม</button>
       <button id="btn-reset" type="button">ล้างทั้งหมด</button>
+      <label class="check"><input type="checkbox" id="auto-shift"> ย้ายแล้วเลื่อนวิชาที่ต่อเนื่องตามอัตโนมัติ</label>
       <button id="btn-png" type="button">บันทึกรูป PNG</button>
       <button id="btn-pdf" type="button">บันทึก PDF</button>
     </div>
@@ -369,18 +384,21 @@ function findConflicts(prereqs, place) {
   return bad;
 }
 
-// เดินตาม topological order แล้วดันวิชาที่ผิดลำดับไปเทอมถัดจาก prereq ที่ช้าที่สุด (วิชาที่ผ่านแล้วไม่ย้าย)
-// only = ถ้าส่ง Set มา จะเลื่อนเฉพาะวิชาในเซตนั้น
-function shiftDependents(order, prereqs, place, passed, only, courses) {
-  const next = { ...place }, moved = [];
+// เดินตาม topological order แล้วดันวิชาที่ผิดลำดับไปเทอมถัดจาก prereq ที่ช้าที่สุด
+// (รวมวิชาที่ติ๊กผ่านแล้วด้วย เพราะผู้ใช้เป็นคนจัดแผนเอง) ถ้าเทอมนั้นไม่เปิดสอนให้ขยับต่อ
+// only = ถ้าส่ง Set มา จะเลื่อนเฉพาะวิชาในเซตนั้น · stuck = วิชาที่ต้องเลื่อนเกินปี 5 (เลื่อนไม่ได้)
+function shiftDependents(order, prereqs, place, only, courses) {
+  const next = { ...place }, moved = [], stuck = [];
   for (const v of order) {
     const pres = prereqs.get(v);
-    if (passed.has(v) || !pres.length || (only && !only.has(v))) continue;
+    if (!pres.length || (only && !only.has(v))) continue;
     let need = Math.max(...pres.map(p => semIdx(next[p]))) + 1;
     while (need < SEMS.length && !offeredIn(courses.get(v), SEMS[need])) need++;
-    if (semIdx(next[v]) < need && need < SEMS.length) { moved.push([v, next[v], SEMS[need]]); next[v] = SEMS[need]; }
+    if (semIdx(next[v]) >= need) continue;
+    if (need >= SEMS.length) { stuck.push(v); continue; }
+    moved.push([v, next[v], SEMS[need]]); next[v] = SEMS[need];
   }
-  return { place: next, moved };
+  return { place: next, moved, stuck };
 }
 
 function planRemaining(g, order, passed, place, maxCredits, credOf) {
@@ -427,7 +445,12 @@ const EXTRA_GROUPS = ["gened", "elective", "free", "c21", "it", "extra"];
 const groupOptions = sel => EXTRA_GROUPS.filter(k => k === "extra" || cur.categories[k])
   .map(k => `<option value="${k}" ${k === sel ? "selected" : ""}>${(cur.categories[k] ?? EXTRA).label}</option>`).join("");
 const catOf = c => cur.categories[c.category] ?? EXTRA;
-const color = c => catOf(c).color;
+// สีการ์ด: ใช้สีกลุ่มย่อยก่อน (เช่น แกนสาขา Programming / Hardware / System / Software) แล้วค่อยสีหมวด
+// สีดำของวิชาเลือกเสรีใช้ token --ink เพื่อให้ยังเห็นได้ใน dark mode
+const color = c => {
+  const hex = (cur.groups?.[c.group] ?? catOf(c)).color;
+  return /^#(000000|111111)$/i.test(hex) ? "var(--ink)" : hex;
+};
 const allCourses = () => [...cur.courses, ...extras];
 function rebuild() { g = buildGraph(allCourses()); order = topoSort(g); }
 // ช่องวิชาเลือก (ELECTIVE / APPROVED / FREE) แสดงวิชาที่ผู้ใช้เลือกแทนชื่อช่อง
@@ -452,9 +475,13 @@ function moveCourse(id, sem) {
     say(`ย้าย ${label(id)} ไป${semName(sem)} ไม่ได้ วิชานี้เปิดสอนเฉพาะเทอม ${c.offered.join(", ")} (เลื่อนข้ามปีได้ แต่ข้ามเทอมไม่ได้)`, true);
     return;
   }
-  say("");
   if (c.extra) c.semester = sem;
-  place[id] = sem; selectedId = id; save(); renderBoard(); update();
+  place[id] = sem; selectedId = id;
+  let res = null;
+  if (autoShift) { res = shiftDependents(order, g.prereqs, place, new Set(affected(g.unlocks, id)), g.courses); place = res.place; }
+  save(); renderBoard(); update();
+  if (res) reportShift(res, `ย้าย ${label(id)} ไป${semName(sem)} แล้ว${res.moved.length || res.stuck.length ? " · " : ""}`);
+  else say("");
 }
 
 // ---------- render ----------
@@ -612,6 +639,14 @@ function applyFocus() {
     e.classList.toggle("on", !!focusId && chain.has(e.dataset.from) && chain.has(e.dataset.to)));
 }
 
+// กลุ่มย่อยของหมวดแกนสาขา (สีหลายสีในตารางหลักสูตร) — หมวดที่มีกลุ่มย่อยใช้แถบสีไล่ตามกลุ่ม
+const subGroups = () => Object.entries(cur.groups ?? {}).filter(([k]) => cur.courses.some(c => c.group === k && c.category === "core"));
+function swatch(k, c) {
+  const cols = [...new Set(cur.courses.filter(x => x.category === k && x.group).map(x => cur.groups[x.group].color))];
+  if (cols.length < 2) return /^#(000000|111111)$/i.test(c.color) ? "var(--ink)" : c.color;
+  return `linear-gradient(90deg, ${cols.map((col, i) => `${col} ${100 * i / cols.length}% ${100 * (i + 1) / cols.length}%`).join(", ")})`;
+}
+
 function renderInfo() {
   const info = $("info");
   const id = selectedId;
@@ -690,9 +725,20 @@ function bindChoice(id, c) {
 }
 
 function shift(only) {
-  const res = shiftDependents(order, g.prereqs, place, passed, only, g.courses);
+  const res = shiftDependents(order, g.prereqs, place, only, g.courses);
   place = res.place; save(); renderBoard(); update();
+  reportShift(res);
 }
+
+function reportShift(res, prefix = "") {
+  const parts = [];
+  if (res.moved.length) parts.push("เลื่อนตาม: " + res.moved.map(([v, a, b]) => `${label(v)} ${a} → ${b}`).join(", "));
+  if (res.stuck.length) parts.push("เลื่อนไม่ได้เพราะเกินปี 5: " + res.stuck.map(label).join(", "));
+  say(prefix + parts.join(" · "), res.stuck.length > 0);
+}
+
+// ย้ายแล้วให้วิชาที่ต่อเนื่องเลื่อนตามทันที (ปิดได้ที่ช่องติ๊กด้านบน)
+let autoShift = store.get("autoShift") ?? true;
 
 function update() {
   conflicts = findConflicts(g.prereqs, place);
@@ -741,10 +787,11 @@ function update() {
   $("total-note").textContent = (left > 0 ? `เหลืออีก ${left} หน่วยกิต` : "หน่วยกิตครบตามหลักสูตรแล้ว") + ` · จบ${semName(last)}`;
   $("cats").innerHTML = Object.entries(cur.categories).map(([k, c]) => `
     <div class="cat ${got[k] >= c.required ? "done" : ""}">
-      <i class="sw" style="background:${c.color}"></i><span>${c.label}</span>
+      <i class="sw" style="background:${swatch(k, c)}"></i><span>${c.label}</span>
       <span class="num">${got[k]}/${c.required}${got[k] > c.required ? ` (+${got[k] - c.required})` : ""}</span>
-      <div class="meter"><i style="width:${Math.min(100, 100 * got[k] / c.required)}%;background:${c.color}"></i></div>
-    </div>`).join("");
+      <div class="meter"><i style="width:${Math.min(100, 100 * got[k] / c.required)}%;background:${swatch(k, c)}"></i></div>
+    </div>`).join("")
+    + (subGroups().length ? `<div class="groups">${subGroups().map(([, gr]) => `<span><i style="background:${gr.color}"></i>${gr.label}</span>`).join("")}</div>` : "");
 
   const avail = allCourses().filter(c => statusOf(c.id) === "available");
   $("avail-count").textContent = `(${avail.length})`;
@@ -954,6 +1001,8 @@ async function init() {
     place = defaultPlace(); passed.delete("2110211"); moveCourse("2110211", "3/1");
   });
   $("btn-shift-all").addEventListener("click", () => shift());
+  $("auto-shift").checked = autoShift;
+  $("auto-shift").addEventListener("change", e => { autoShift = e.target.checked; store.set("autoShift", autoShift); });
   $("btn-png").addEventListener("click", () => exportPng().catch(err => say("สร้างรูปไม่สำเร็จ: " + err.message, true)));
   $("btn-pdf").addEventListener("click", printPage);
   window.addEventListener("beforeprint", enterPrint);
