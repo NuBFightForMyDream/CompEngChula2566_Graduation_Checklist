@@ -101,6 +101,7 @@ button.primary { background: var(--bad); border-color: var(--bad); color: #fff; 
 .board svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
 .col { padding: 12px 10px 16px; display: flex; flex-direction: column; gap: 8px; transition: background .15s; }
 .col.odd-year { background: var(--year-band); }
+.col.nodrop { opacity: .35; }
 .col.drop { background: color-mix(in srgb, var(--accent) 14%, var(--surface)); }
 .col-head { display: grid; gap: 0; margin-bottom: 4px; }
 .col-head b { font-family: var(--font-display); font-size: 15px; }
@@ -210,7 +211,7 @@ marker path { fill: var(--muted); }
     <span><i class="chip"></i>ลงได้ตอนนี้</span>
     <span><i class="chip l"></i>ยังล็อก</span>
     <span><i class="chip x"></i>ลงก่อนวิชาบังคับก่อน</span>
-    <span>วงกลมขวา = ติ๊กผ่าน (วิชาที่ล็อกติ๊กไม่ได้) · คลิกชื่อ = เลือกดู/ย้ายเทอม · ลากการ์ดไปวางเทอมอื่นได้</span>
+    <span>วงกลมขวา = ติ๊กผ่าน (วิชาที่ล็อกติ๊กไม่ได้) · คลิกชื่อ = เลือกดู/ย้ายเทอม · ลากการ์ดไปวางเทอมอื่นได้ · วิชาแกนสาขาเลื่อนข้ามปีได้ แต่ข้ามเทอมไม่ได้</span>
   </div>
 
   <p class="toast" id="toast" role="status" aria-live="polite"></p>
@@ -233,7 +234,7 @@ marker path { fill: var(--muted); }
     <section class="panel">
       <h2>แผนแนะนำเทอมที่เหลือ</h2>
       <div id="plan"></div>
-      <p class="algo">Topological sort + Greedy ด้วย priority queue: เทอมบนกระดานก่อน แล้วตามความยาวสาย prereq ที่ต่อจากวิชานั้น (DP บน DAG)</p>
+      <p class="algo">เริ่มจากเทอมถัดจากวิชาที่ผ่านล่าสุด แต่ละเทอมหยิบเฉพาะวิชาที่เปิดสอน · Topological sort + Greedy ด้วย priority queue: เทอมบนกระดานก่อน แล้วตามความยาวสาย prereq ที่ต่อจากวิชานั้น (DP บน DAG)</p>
     </section>
   </div>
 
@@ -243,7 +244,10 @@ marker path { fill: var(--muted); }
 <script>
 // ---------- graph (ตรงกับ cp52_checklist_graduation.py) ----------
 const SEMS = ["1/1", "1/2", "2/1", "2/2", "3/1", "3/2", "4/1", "4/2", "5/1", "5/2"];
-const semIdx = s => SEMS.indexOf(s);
+const semIdx = s => (+s[0] - 1) * 2 + (+s[2] - 1);
+const semAt = i => `${Math.floor(i / 2) + 1}/${i % 2 + 1}`;
+// offered = ["1"] เปิดเฉพาะเทอมต้น, ["2"] เฉพาะเทอมปลาย, ไม่ใส่ = ทุกเทอม (ข้ามปีได้ ข้ามเทอมไม่ได้)
+const offeredIn = (course, sem) => !course.offered || course.offered.includes(sem[2]);
 
 function buildGraph(cur) {
   const courses = new Map(cur.courses.map(c => [c.id, c]));
@@ -296,12 +300,13 @@ function findConflicts(prereqs, place) {
 
 // เดินตาม topological order แล้วดันวิชาที่ผิดลำดับไปเทอมถัดจาก prereq ที่ช้าที่สุด (วิชาที่ผ่านแล้วไม่ย้าย)
 // only = ถ้าส่ง Set มา จะเลื่อนเฉพาะวิชาในเซตนั้น
-function shiftDependents(order, prereqs, place, passed, only) {
+function shiftDependents(order, prereqs, place, passed, only, courses) {
   const next = { ...place }, moved = [];
   for (const v of order) {
     const pres = prereqs.get(v);
     if (passed.has(v) || !pres.length || (only && !only.has(v))) continue;
-    const need = Math.max(...pres.map(p => semIdx(next[p]))) + 1;
+    let need = Math.max(...pres.map(p => semIdx(next[p]))) + 1;
+    while (need < SEMS.length && !offeredIn(courses.get(v), SEMS[need])) need++;
     if (semIdx(next[v]) < need && need < SEMS.length) { moved.push([v, next[v], SEMS[need]]); next[v] = SEMS[need]; }
   }
   return { place: next, moved };
@@ -312,9 +317,14 @@ function planRemaining(g, order, passed, place, maxCredits, credOf) {
   const remaining = new Set([...g.courses.keys()].filter(c => !done.has(c)));
   const depth = chainDepth(order, g.unlocks, remaining);
   const plan = [];
+  // เริ่มเทอมถัดจากเทอมสุดท้ายที่มีวิชาผ่านแล้ว แต่ละรอบ = เทอมจริง จึงหยิบเฉพาะวิชาที่เปิดเทอมนั้น
+  let now = passed.size ? Math.max(...[...passed].map(c => semIdx(place[c]))) + 1 : 0;
   while (remaining.size) {
+    const sem = semAt(now++);
     // priority: เทอมบนกระดาน → สายยาวกว่า → หน่วยกิตมากกว่า
-    const ready = [...remaining].filter(c => g.prereqs.get(c).every(p => done.has(p)));
+    const unlocked = [...remaining].filter(c => g.prereqs.get(c).every(p => done.has(p)));
+    if (!unlocked.length) break;
+    const ready = unlocked.filter(c => offeredIn(g.courses.get(c), sem));
     ready.sort((a, b) =>
       semIdx(place[a]) - semIdx(place[b]) || depth.get(b) - depth.get(a) || credOf(b) - credOf(a));
     const term = []; let credits = 0;
@@ -322,14 +332,15 @@ function planRemaining(g, order, passed, place, maxCredits, credOf) {
       const cr = credOf(c);
       if (credits + cr <= maxCredits) { term.push(c); credits += cr; }
     }
-    if (!term.length) break;
-    plan.push({ term, credits });
+    if (!term.length && ready.length) break;
+    plan.push({ sem, term, credits });
     for (const c of term) { done.add(c); remaining.delete(c); }
   }
   return plan;
 }
 
 // ---------- state ----------
+let dragId = null;
 let cur, g, order, passed = new Set(), place = {}, choices = {}, selectedId = null, hoverId = null, conflicts = [];
 
 const store = {
@@ -356,6 +367,12 @@ function statusOf(id) {
 
 function moveCourse(id, sem) {
   if (place[id] === sem) return;
+  const c = g.courses.get(id);
+  if (!offeredIn(c, sem)) {
+    say(`ย้าย ${label(id)} ไป${semName(sem)} ไม่ได้ วิชานี้เปิดสอนเฉพาะเทอม ${c.offered.join(", ")} (เลื่อนข้ามปีได้ แต่ข้ามเทอมไม่ได้)`, true);
+    return;
+  }
+  say("");
   place[id] = sem; selectedId = id; save(); renderBoard(); update();
 }
 
@@ -371,7 +388,10 @@ function renderBoard() {
     const list = cur.courses.filter(c => place[c.id] === sem);
     if (!list.length) col.insertAdjacentHTML("beforeend", `<div class="hint">ลากวิชามาวางที่นี่</div>`);
     for (const c of list) col.appendChild(makeCard(c));
-    col.addEventListener("dragover", e => { e.preventDefault(); col.classList.add("drop"); });
+    col.addEventListener("dragover", e => {
+      if (!dragId || !offeredIn(g.courses.get(dragId), sem)) return;   // ไม่ preventDefault = วางไม่ได้
+      e.preventDefault(); col.classList.add("drop");
+    });
     col.addEventListener("dragleave", e => { if (!col.contains(e.relatedTarget)) col.classList.remove("drop"); });
     col.addEventListener("drop", e => {
       e.preventDefault(); col.classList.remove("drop");
@@ -393,8 +413,15 @@ function makeCard(c) {
   el.querySelector(".tick").addEventListener("click", () => togglePassed(c.id));
   el.addEventListener("mouseenter", () => { hoverId = c.id; applyFocus(); });
   el.addEventListener("mouseleave", () => { hoverId = null; applyFocus(); });
-  el.addEventListener("dragstart", e => { e.dataTransfer.setData("text/plain", c.id); e.dataTransfer.effectAllowed = "move"; el.classList.add("dragging"); });
-  el.addEventListener("dragend", () => el.classList.remove("dragging"));
+  el.addEventListener("dragstart", e => {
+    dragId = c.id;
+    e.dataTransfer.setData("text/plain", c.id); e.dataTransfer.effectAllowed = "move"; el.classList.add("dragging");
+    $("board").querySelectorAll(".col").forEach(col => col.classList.toggle("nodrop", !offeredIn(c, col.dataset.sem)));
+  });
+  el.addEventListener("dragend", () => {
+    dragId = null; el.classList.remove("dragging");
+    $("board").querySelectorAll(".col").forEach(col => col.classList.remove("nodrop", "drop"));
+  });
   return el;
 }
 
@@ -477,14 +504,14 @@ function renderInfo() {
   const moved = place[id] !== c.semester;
   info.innerHTML = `
     <p><b>${esc(label(id))}</b> · ${creditsOf(id)} หน่วยกิต · ${cur.categories[c.category].label}</p>
-    <p class="muted">สถานะ: ${st} · แผนเดิม ${semName(c.semester)}${moved ? ` · ย้ายไป ${semName(place[id])}` : ""}</p>
+    <p class="muted">สถานะ: ${st} · ${c.offered ? `เปิดสอนเฉพาะเทอม ${c.offered.join(", ")}` : "เปิดทุกเทอม"} · แผนเดิม ${semName(c.semester)}${moved ? ` · ย้ายไป ${semName(place[id])}` : ""}</p>
     <p><span style="color:var(--accent)">ต้องผ่านก่อน:</span> ${names(pre)}</p>
     <p><span style="color:var(--warn)">ถ้าตก จะกระทบ:</span> ${names(post)}</p>
     ${mine.map(([p, v]) => `<p class="bad-text">✗ ${esc(label(v))} อยู่ ${place[v]} แต่วิชาบังคับก่อน ${esc(label(p))} อยู่ ${place[p]}</p>`).join("")}
     ${c.pool ? choiceUI(id, c) : ""}
     <div class="actions">
       <label for="move-sel">ย้ายไป</label>
-      <select id="move-sel">${SEMS.map(s => `<option value="${s}" ${s === place[id] ? "selected" : ""}>${semName(s)}</option>`).join("")}</select>
+      <select id="move-sel">${SEMS.map(s => `<option value="${s}" ${s === place[id] ? "selected" : ""} ${offeredIn(c, s) ? "" : "disabled"}>${semName(s)}${offeredIn(c, s) ? "" : " · ไม่เปิดสอน"}</option>`).join("")}</select>
       <button type="button" id="btn-tick" ${statusOf(id) === "locked" ? 'aria-disabled="true"' : ""}>${passed.has(id) ? "ยกเลิกติ๊กผ่าน" : "ติ๊กว่าผ่านแล้ว"}</button>
       ${moved ? `<button type="button" id="btn-back">คืนเทอมเดิม</button>` : ""}
       ${mine.length ? `<button type="button" class="primary" id="btn-shift-one">เลื่อนวิชาที่ต่อจากนี้ตามไป</button>` : ""}
@@ -536,7 +563,7 @@ function bindChoice(id, c) {
 }
 
 function shift(only) {
-  const res = shiftDependents(order, g.prereqs, place, passed, only);
+  const res = shiftDependents(order, g.prereqs, place, passed, only, g.courses);
   place = res.place; save(); renderBoard(); update();
 }
 
@@ -595,7 +622,7 @@ function update() {
 
   const plan = planRemaining(g, order, passed, place, cur.maxCreditsPerSemester, creditsOf);
   $("plan").innerHTML = plan.length ? plan.map((t, i) => `
-    <div class="term"><h3><span>เทอมถัดไปที่ ${i + 1}</span><span class="muted">${t.credits} หน่วยกิต</span></h3>
+    <div class="term"><h3><span>${semName(t.sem)}</span><span class="muted">${t.term.length ? t.credits + " หน่วยกิต" : "ไม่มีวิชาที่เปิดสอน"}</span></h3>
       <ul class="list">${t.term.map(id => { const c = g.courses.get(id);
         return `<li><i class="dot" style="background:${color(c)}"></i><code>${esc(codeOf(c))}</code><span>${esc(nameOf(c))}</span><span class="cr">${creditsOf(id)}</span></li>`; }).join("")}</ul>
     </div>`).join("") : `<p>ผ่านครบทุกวิชาแล้ว</p>`;
@@ -613,6 +640,7 @@ async function loadCurriculum(file) {
   choices = store.get("choice:" + cur.id) ?? {};
   for (const id of Object.keys(choices)) if (!g.courses.get(id)?.pool) delete choices[id];
   for (const id of Object.keys(place)) if (!g.courses.has(id) || !SEMS.includes(place[id])) delete place[id];
+  for (const c of cur.courses) if (!offeredIn(c, place[c.id])) place[c.id] = c.semester;
   $("cur-name").textContent = cur.name;
   $("cur-note").textContent = cur.note || "";
   selectedId = hoverId = null;

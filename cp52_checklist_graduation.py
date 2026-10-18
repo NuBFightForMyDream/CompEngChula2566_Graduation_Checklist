@@ -219,10 +219,42 @@ def credit_summary(curriculum, courses, passed):
 
 
 # ---------------------------------------------------------------------------
+# เทอม: "ปี/เทอม" <-> เลข index  (1/1 -> 0, 1/2 -> 1, 2/1 -> 2, ...)
+# ---------------------------------------------------------------------------
+
+SEMESTERS = ["1/1", "1/2", "2/1", "2/2", "3/1", "3/2", "4/1", "4/2", "5/1", "5/2"]
+
+
+def sem_index(sem):
+    year, term = sem.split("/")
+    return (int(year) - 1) * 2 + (int(term) - 1)
+
+
+def sem_name(i):
+    return f"{i // 2 + 1}/{i % 2 + 1}"
+
+
+def offered_in(course, sem):
+    """
+    วิชาเปิดสอนในเทอมนี้ไหม  offered = ["1"] เปิดเฉพาะเทอมต้น, ["2"] เฉพาะเทอมปลาย
+    ไม่ใส่ = เปิดทุกเทอม   — เลื่อนข้ามปีได้ แต่ข้ามเทอมไม่ได้
+    """
+    offered = course.get("offered")
+    return not offered or sem.split("/")[1] in offered
+
+
+# ---------------------------------------------------------------------------
 # 9) Greedy + Priority Queue: จัดแผนเทอมที่เหลือ
 # ---------------------------------------------------------------------------
 
-def plan_remaining(courses, prereqs, unlocks, order, passed, max_credits):
+def next_semester(passed, placement):
+    """เทอมถัดจากเทอมสุดท้ายที่มีวิชาผ่านแล้ว (ยังไม่ผ่านอะไรเลย = 1/1)"""
+    if not passed:
+        return 0
+    return max(sem_index(placement[c]) for c in passed) + 1
+
+
+def plan_remaining(courses, prereqs, unlocks, order, passed, max_credits, placement=None):
     """
     ทุกเทอม:
       - หยิบวิชาที่ลงได้ (prereq ผ่านหมด) ใส่ priority queue
@@ -232,15 +264,23 @@ def plan_remaining(courses, prereqs, unlocks, order, passed, max_credits):
         heapq ของ Python เป็น min-heap จึงใส่ค่าติดลบให้ข้อ 2
       - หยิบวิชาด่วนสุดใส่เทอมจนกว่าหน่วยกิตจะเต็ม
     วิชาที่ลงเทอมนี้ จะนับว่า "ผ่าน" ตอนเริ่มเทอมถัดไป
+    แต่ละเทอมของแผนคือเทอมจริง (เช่น 2/1) จึงหยิบเฉพาะวิชาที่ "เปิดสอนเทอมนั้น"
     (เป็น heuristic ไม่ได้รับประกันว่าดีที่สุดเสมอ แต่ใช้ได้ดีในทางปฏิบัติ)
+    คืน list ของ (ชื่อเทอม, [วิชา], หน่วยกิต)
     """
+    placement = placement or default_placement(courses)
     done = set(passed)
     remaining = set(courses) - done
     depth = chain_length_after(order, unlocks, remaining)
     plan = []
+    now = next_semester(passed, placement)
     while remaining:
-        heap = [(courses[c]["semester"], -depth[c], -courses[c]["credits"], c)
-                for c in remaining if all(p in done for p in prereqs[c])]
+        sem = sem_name(now)
+        ready = [c for c in remaining if all(p in done for p in prereqs[c])]
+        if not ready:
+            raise ValueError("จัดแผนไม่ได้: วิชาที่เหลือติด prereq ทั้งหมด")
+        heap = [(sem_index(placement[c]), -depth[c], -courses[c]["credits"], c)
+                for c in ready if offered_in(courses[c], sem)]
         heapq.heapify(heap)
         term, credits, skipped = [], 0, []
         while heap:
@@ -251,11 +291,12 @@ def plan_remaining(courses, prereqs, unlocks, order, passed, max_credits):
                 credits += courses[cid]["credits"]
             else:
                 skipped.append(item)
-        if not term:
+        if not term and heap:
             raise ValueError("จัดแผนไม่ได้: มีวิชาหน่วยกิตเกินเพดานต่อเทอม")
-        plan.append((term, credits))
+        plan.append((sem, term, credits))      # term ว่างได้ ถ้าเทอมนี้ไม่มีวิชาที่เปิด
         done.update(term)
         remaining.difference_update(term)
+        now += 1
     return plan
 
 
@@ -265,13 +306,6 @@ def plan_remaining(courses, prereqs, unlocks, order, passed, max_credits):
 #
 # placement : dict  id -> เทอมที่จะลง เช่น {"2110211": "3/1", ...}
 # กฎ: prereq ต้องอยู่ "ก่อน" วิชานั้นแบบเคร่ง (เทอมเดียวกันไม่ได้)
-
-SEMESTERS = ["1/1", "1/2", "2/1", "2/2", "3/1", "3/2", "4/1", "4/2", "5/1", "5/2"]
-
-
-def sem_index(sem):
-    return SEMESTERS.index(sem)
-
 
 def default_placement(courses):
     return {cid: c["semester"] for cid, c in courses.items()}
@@ -287,11 +321,12 @@ def find_conflicts(prereqs, placement):
     return bad
 
 
-def shift_dependents(order, prereqs, placement, passed):
+def shift_dependents(order, prereqs, placement, passed, courses):
     """
     เดินตาม topological order (prereq มาก่อนเสมอ) แล้วดันวิชาที่ผิดลำดับ
     ไปไว้ "เทอมถัดจาก prereq ที่ช้าที่สุด" — เดินรอบเดียวก็พอ
     เพราะตอนถึงวิชา v, prereq ของ v ถูกจัดที่เรียบร้อยแล้วทุกตัว
+    ถ้าเทอมนั้นไม่เปิดสอน ให้ขยับต่อไปจนเจอเทอมที่เปิด (ข้ามปี ไม่ข้ามเทอม)
     วิชาที่ผ่านแล้วไม่ย้าย (เรียนไปแล้ว)
     คืน (placement ใหม่, list ของ (วิชา, เทอมเดิม, เทอมใหม่))
     """
@@ -301,6 +336,8 @@ def shift_dependents(order, prereqs, placement, passed):
         if v in passed or not prereqs[v]:
             continue
         need = max(sem_index(new[p]) for p in prereqs[v]) + 1
+        while need < len(SEMESTERS) and not offered_in(courses[v], SEMESTERS[need]):
+            need += 1
         if sem_index(new[v]) < need:
             if need >= len(SEMESTERS):
                 raise ValueError(f"เลื่อน {v} เกินปี 5 แล้ว")
@@ -354,6 +391,9 @@ def show_moves(args, courses, prereqs, order, passed, max_credits):
         if cid not in courses or sem not in SEMESTERS:
             print(f"! รูปแบบไม่ถูก: {m} (ตัวอย่าง 2110211=3/1)")
             continue
+        if not offered_in(courses[cid], sem):
+            print(f"  ✗ ย้าย {label(courses[cid])} ไป {sem} ไม่ได้: เปิดสอนเฉพาะเทอม {', '.join(courses[cid]['offered'])}")
+            continue
         print(f"  ย้าย {label(courses[cid])}: {placement[cid]} -> {sem}")
         placement[cid] = sem
 
@@ -364,7 +404,7 @@ def show_moves(args, courses, prereqs, order, passed, max_credits):
         print(f"  ✗ {label(courses[c])} อยู่ {placement[c]} แต่ prereq {label(courses[p])} อยู่ {placement[p]}")
 
     if conflicts and args.shift:
-        placement, moved = shift_dependents(order, prereqs, placement, passed)
+        placement, moved = shift_dependents(order, prereqs, placement, passed, courses)
         print("  เลื่อนตามอัตโนมัติ:")
         for cid, old, new in moved:
             print(f"     {label(courses[cid])}: {old} -> {new}")
@@ -422,8 +462,8 @@ def main():
 
     plan = plan_remaining(courses, prereqs, unlocks, order, passed, cur["maxCreditsPerSemester"])
     print(f"แผนแนะนำ (ไม่เกิน {cur['maxCreditsPerSemester']} หน่วย/เทอม): {len(plan)} เทอม")
-    for i, (term, credits) in enumerate(plan, 1):
-        print(f"  เทอมที่ {i} ({credits} หน่วยกิต)")
+    for sem, term, credits in plan:
+        print(f"  ปี {sem[0]} เทอม {sem[2]} ({credits} หน่วยกิต)" + ("" if term else " — ไม่มีวิชาที่เปิดสอนเทอมนี้"))
         for cid in term:
             print(f"     {label(courses[cid])}")
 
