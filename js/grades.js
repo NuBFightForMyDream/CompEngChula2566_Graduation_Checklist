@@ -50,6 +50,7 @@ function gradeUI(id) {
     <span>เกรด</span>
     ${GRADES.map(gr => `<button type="button" class="grade-chip${grades[id] === gr ? " on" : ""}" data-grade="${gr}" aria-pressed="${grades[id] === gr}">${gr}</button>`).join("")}
     ${grades[id] ? `<button type="button" class="grade-chip clear" data-grade="">ล้าง</button>` : ""}
+    ${statusOf(id) === "locked" ? `<span class="muted grade-hint">ยังล็อกอยู่ ใส่ได้เฉพาะ F / U / W จนกว่าจะผ่านวิชาบังคับก่อน</span>` : ""}
   </div>`;
 }
 
@@ -94,7 +95,7 @@ function bindGradeImport() {
     const box = $("grade-import");
     box.hidden = !box.hidden;
     e.target.setAttribute("aria-expanded", !box.hidden);
-    if (!box.hidden) $("grade-text").focus();
+    if (!box.hidden) { box.scrollIntoView({ block: "nearest", behavior: "smooth" }); $("grade-text").focus({ preventScroll: true }); }
   });
   $("grade-import").addEventListener("submit", e => {
     e.preventDefault();

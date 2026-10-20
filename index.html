@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anuphan:wght@500;700&family=IBM+Plex+Sans+Thai:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
-<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/style.css?v=202610201310">
 </head>
 <body>
 <div class="wrap">
@@ -96,19 +96,21 @@
     </section>
   </div>
 
-  <p class="note" id="cur-note"></p>
+  <p class="note"><span id="cur-note"></span> <span class="version">· เวอร์ชันเว็บ 202610201310</span></p>
 </div>
 
-<!-- สคริปต์แบบธรรมดา (ไม่ใช่ module) ใช้ตัวแปรร่วมกันได้ ต้องเรียงตามลำดับนี้:
+<!-- ?v=... = เวอร์ชันไฟล์ แก้ไฟล์ใน css/ หรือ js/ แล้วต้องเปลี่ยนเลขนี้ทุกบรรทัด (ใช้ tools/bump-version.sh)
+     เบราว์เซอร์จะได้โหลดไฟล์ชุดใหม่ทั้งชุด ไม่ใช้ไฟล์เก่าในแคชปนกับไฟล์ใหม่
+     สคริปต์แบบธรรมดา (ไม่ใช่ module) ใช้ตัวแปรร่วมกันได้ ต้องเรียงตามลำดับนี้:
      graph → state → grades → board → panels → notices → export → animate → main -->
-<script src="js/graph.js"></script>
-<script src="js/state.js"></script>
-<script src="js/grades.js"></script>
-<script src="js/board.js"></script>
-<script src="js/panels.js"></script>
-<script src="js/notices.js"></script>
-<script src="js/export.js"></script>
-<script src="js/animate.js"></script>
-<script src="js/main.js"></script>
+<script src="js/graph.js?v=202610201310"></script>
+<script src="js/state.js?v=202610201310"></script>
+<script src="js/grades.js?v=202610201310"></script>
+<script src="js/board.js?v=202610201310"></script>
+<script src="js/panels.js?v=202610201310"></script>
+<script src="js/notices.js?v=202610201310"></script>
+<script src="js/export.js?v=202610201310"></script>
+<script src="js/animate.js?v=202610201310"></script>
+<script src="js/main.js?v=202610201310"></script>
 </body>
 </html>

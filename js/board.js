@@ -154,10 +154,14 @@ function unpass(id) {
   return hit;
 }
 
+// ข้อความแจ้งผล ลอยที่ขอบล่างจอ (เห็นได้ไม่ว่าจะเลื่อนหน้าไปตรงไหน) แล้วหายไปเอง
+let sayTimer = null;
 function say(msg, bad) {
   const el = $("toast");
   el.textContent = msg;
   el.classList.toggle("bad-text", !!bad);
+  clearTimeout(sayTimer);
+  if (msg) sayTimer = setTimeout(() => { el.textContent = ""; }, bad ? 9000 : 6000);
 }
 
 // ตัดวิชาที่ติ๊กไว้แต่ prereq ไม่ผ่าน (เดินตาม topological order รอบเดียว)

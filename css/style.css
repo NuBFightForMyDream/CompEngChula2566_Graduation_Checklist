@@ -196,7 +196,16 @@ marker path { fill: var(--muted); }
 .add-form .row { display: flex; gap: 6px; }
 .add-form .row button { flex: 1; padding: 5px 6px; font-size: 13px; }
 .card.extra-card { border-style: dotted; }
-.toast { margin: -8px 0 0; min-height: 1.5em; font-size: 14px; }
+.toast {
+  position: fixed; z-index: 50; left: 50%; transform: translateX(-50%);
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  width: max-content; max-width: min(760px, calc(100vw - 32px)); margin: 0;
+  padding: 10px 16px; border-radius: 10px; font-size: 14px; line-height: 1.5;
+  background: var(--fg); color: var(--bg); box-shadow: 0 6px 24px rgb(0 0 0 / .25);
+}
+.toast:empty { display: none; }
+.toast.bad-text { background: var(--bad); color: #fff; }
+.version { white-space: nowrap; }
 .card .tick[aria-disabled="true"] { cursor: not-allowed; }
 .card .tick[aria-disabled="true"]::before { content: "🔒"; border: 0; width: auto; height: auto; font-size: 11px; opacity: .6; }
 .card .slot-tag { font-size: 10.5px; letter-spacing: .04em; opacity: .75; }
@@ -216,6 +225,7 @@ marker path { fill: var(--muted); }
 .grade-row > span { margin-right: 4px; }
 .grade-chip { font-family: var(--font-mono); font-size: 13px; min-width: 2.6em; padding: 4px 8px; border-radius: 6px; }
 .grade-chip.on { background: var(--brand); border-color: var(--brand); color: var(--brand-fg); }
+.grade-hint { font-size: 12.5px; flex-basis: 100%; }
 .grade-chip.clear { font-family: var(--font-body); min-width: 0; color: var(--muted); }
 .card .tick[data-grade]::before { content: attr(data-grade); border: 0; width: auto; height: auto; border-radius: 0; opacity: 1; font-family: var(--font-mono); font-size: 12px; font-weight: 700; }
 .card .tick[data-grade="F"]::before, .card .tick[data-grade="U"]::before, .card .tick[data-grade="W"]::before { color: var(--bad); }
