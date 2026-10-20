@@ -10,6 +10,9 @@ async function loadCurriculum(file) {
   passed = cleanPassed(new Set(store.get("passed:" + cur.id) ?? sampleYear1()));
   place = { ...defaultPlace(), ...(store.get("place:" + cur.id) ?? {}) };
   choices = store.get("choice:" + cur.id) ?? {};
+  grades = store.get("grade:" + cur.id) ?? {};
+  for (const id of Object.keys(grades))
+    if (!g.courses.has(id) || !GRADES.includes(grades[id]) || (PASSING.has(grades[id]) && !passed.has(id))) delete grades[id];
   for (const id of Object.keys(choices)) if (!g.courses.get(id)?.pool) delete choices[id];
   for (const id of Object.keys(place)) if (!g.courses.has(id) || !SEMS.includes(place[id])) delete place[id];
   for (const c of allCourses()) if (!place[c.id] || !offeredIn(c, place[c.id])) place[c.id] = c.semester;
@@ -30,7 +33,7 @@ async function init() {
   const pick = file => { loadNotices(list.find(c => c.file === file)?.notices); return loadCurriculum(file); };
   sel.addEventListener("change", () => pick(sel.value));
   $("btn-sample").addEventListener("click", () => { passed = new Set(sampleYear1()); save(); update(); });
-  $("btn-reset").addEventListener("click", () => { passed.clear(); extras = []; rebuild(); place = defaultPlace(); choices = {}; selectedId = null; save(); renderBoard(); update(); });
+  $("btn-reset").addEventListener("click", () => { passed.clear(); extras = []; rebuild(); place = defaultPlace(); choices = {}; grades = {}; selectedId = null; save(); renderBoard(); update(); });
   $("btn-reset-plan").addEventListener("click", () => { place = defaultPlace(); save(); renderBoard(); update(); });
   $("btn-demo-move").addEventListener("click", () => {
     if (!g.courses.has("2110211")) return;
@@ -53,6 +56,7 @@ async function init() {
   document.addEventListener("keydown", e => {
     if (e.key === "Escape" && (selectedId || hoverId)) { selectedId = hoverId = null; applyFocus(); renderInfo(); }
   });
+  bindGradeImport();
   $("btn-png").addEventListener("click", () => exportPng().catch(err => say("สร้างรูปไม่สำเร็จ: " + err.message, true)));
   $("btn-pdf").addEventListener("click", printPage);
   window.addEventListener("beforeprint", enterPrint);

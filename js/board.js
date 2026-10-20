@@ -20,6 +20,7 @@ function moveCourse(id, sem) {
 // ---------- render ----------
 function renderBoard() {
   const board = $("board");
+  const before = cardPositions();   // animate.js: จำตำแหน่งเดิมไว้ทำแอนิเมชัน
   hoverId = null; clearTimeout(hoverTimer);   // การ์ดถูกสร้างใหม่ทั้งหมด การ์ดเดิมจะไม่ได้รับ mouseleave
   board.querySelectorAll(".col").forEach(n => n.remove());
   SEMS.forEach((sem, i) => {
@@ -39,10 +40,11 @@ function renderBoard() {
     col.addEventListener("drop", e => {
       e.preventDefault(); col.classList.remove("drop");
       const id = e.dataTransfer.getData("text/plain");
-      if (g.courses.has(id)) moveCourse(id, sem);
+      if (g.courses.has(id)) { droppedId = id; moveCourse(id, sem); }
     });
     board.appendChild(col);
   });
+  playBoardAnimation(before);
 }
 
 // ---------- วิชาเรียนเพิ่ม ----------
@@ -79,7 +81,7 @@ function addSlot(sem) {
 function removeExtra(id) {
   const c = g.courses.get(id);
   extras = extras.filter(x => x.id !== id);
-  passed.delete(id); delete place[id];
+  passed.delete(id); delete place[id]; delete grades[id];
   if (selectedId === id) selectedId = null;
   rebuild(); save(); renderBoard(); update();
   say(`ลบ ${c.code} ${c.name} แล้ว`);
@@ -130,17 +132,26 @@ function hoverEnd() {
 
 function togglePassed(id) {
   if (passed.has(id)) {
-    const hit = [...affected(g.unlocks, id)].filter(x => passed.has(x));
-    passed.delete(id);
-    hit.forEach(x => passed.delete(x));
+    const hit = unpass(id);
     say(hit.length ? `ยกเลิก ${label(id)} แล้ว และยกเลิกวิชาที่ต่อจากนี้ด้วย: ${hit.map(label).join(", ")}` : "");
   } else {
     const miss = g.prereqs.get(id).filter(p => !passed.has(p));
     if (miss.length) { say(`ติ๊ก ${label(id)} ไม่ได้ ต้องผ่าน ${miss.map(label).join(", ")} ก่อน`, true); return; }
     passed.add(id);
+    if (grades[id] && !PASSING.has(grades[id])) delete grades[id];   // เคยได้ F/U/W แล้วติ๊กผ่าน = เรียนใหม่ผ่านแล้ว
     say("");
   }
   save(); update();
+}
+
+// ยกเลิกผ่านวิชานี้ และวิชาที่ต่อจากนี้ (BFS) พร้อมลบเกรดผ่านของวิชาเหล่านั้น · คืนรายชื่อวิชาที่โดนตาม
+function unpass(id) {
+  const hit = [...affected(g.unlocks, id)].filter(x => passed.has(x));
+  for (const x of [id, ...hit]) {
+    passed.delete(x);
+    if (PASSING.has(grades[x])) delete grades[x];
+  }
+  return hit;
 }
 
 function say(msg, bad) {

@@ -63,7 +63,12 @@ async function exportPng() {
     // วงกลม / เครื่องหมายถูก
     const t = rel(card.querySelector(".tick")), cx = t.x + t.w / 2, cy = t.y + t.h / 2;
     ctx.globalAlpha = passedCard ? 1 : .45; ctx.strokeStyle = ctx.fillStyle = cs.color;
-    if (passedCard) { ctx.font = `700 14px ${tok("--font-body")}`; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("✓", cx, cy); ctx.textAlign = "left"; ctx.textBaseline = "top"; }
+    const grade = card.querySelector(".tick").dataset.grade;
+    if (grade) {
+      ctx.globalAlpha = 1; ctx.fillStyle = PASSING.has(grade) ? cs.color : tok("--bad");
+      ctx.font = `700 12px ${tok("--font-mono")}`; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(grade, cx, cy); ctx.textAlign = "left"; ctx.textBaseline = "top";
+    }
+    else if (passedCard) { ctx.font = `700 14px ${tok("--font-body")}`; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("✓", cx, cy); ctx.textAlign = "left"; ctx.textBaseline = "top"; }
     else if (!locked) { ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(cx, cy, 6, 0, Math.PI * 2); ctx.stroke(); }
     ctx.globalAlpha = 1;
   }

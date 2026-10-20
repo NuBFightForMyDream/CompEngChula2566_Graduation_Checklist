@@ -28,6 +28,7 @@
       <button id="btn-png" type="button">บันทึกรูป PNG</button>
       <button id="btn-pdf" type="button">บันทึก PDF</button>
       <button id="btn-palette" type="button" aria-expanded="false" aria-controls="palette">ปรับสีวิชา</button>
+      <button id="btn-grades" type="button" aria-expanded="false" aria-controls="grade-import">กรอกเกรดหลายวิชา</button>
     </div>
   </header>
 
@@ -38,8 +39,14 @@
       <div class="meter"><i id="total-bar" style="width:0"></i></div>
       <span class="muted" id="total-note"></span>
       <span class="extra-note" id="extra-note" hidden></span>
+      <span class="gpax" id="gpax" hidden></span>
     </div>
     <div class="cats" id="cats"></div>
+    <form class="palette grade-import" id="grade-import" hidden>
+      <div class="palette-head"><b>กรอกเกรดหลายวิชา</b><span class="muted">วางรหัสวิชาตามด้วยเกรด บรรทัดละวิชา หรือวางรูปแบบ {"2110101","A"} จากโค้ด C++ ก็ได้</span></div>
+      <textarea id="grade-text" rows="5" aria-label="รหัสวิชาและเกรด" placeholder="2110101 A&#10;2301107 C+&#10;2304103 B&#10;2100301 S"></textarea>
+      <div class="actions"><button type="submit">ใส่เกรด</button><span id="grade-result" role="status"></span></div>
+    </form>
     <div class="palette" id="palette" hidden>
       <div class="palette-head"><b>ปรับสีวิชา</b><span class="muted">เลือกสีของแต่ละหมวด/กลุ่ม บันทึกไว้ในเบราว์เซอร์นี้</span>
         <button type="button" id="btn-palette-reset">คืนสีตามตารางหลักสูตร</button></div>
@@ -93,13 +100,15 @@
 </div>
 
 <!-- สคริปต์แบบธรรมดา (ไม่ใช่ module) ใช้ตัวแปรร่วมกันได้ ต้องเรียงตามลำดับนี้:
-     graph → state → board → panels → notices → export → main -->
+     graph → state → grades → board → panels → notices → export → animate → main -->
 <script src="js/graph.js"></script>
 <script src="js/state.js"></script>
+<script src="js/grades.js"></script>
 <script src="js/board.js"></script>
 <script src="js/panels.js"></script>
 <script src="js/notices.js"></script>
 <script src="js/export.js"></script>
+<script src="js/animate.js"></script>
 <script src="js/main.js"></script>
 </body>
 </html>

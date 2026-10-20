@@ -43,6 +43,7 @@ function renderInfo() {
     <p><span style="color:var(--warn)">ถ้าตก จะกระทบ:</span> ${names(post)}</p>
     ${mine.map(([p, v]) => `<p class="bad-text">✗ ${esc(label(v))} อยู่ ${place[v]} แต่วิชาบังคับก่อน ${esc(label(p))} อยู่ ${place[p]}</p>`).join("")}
     ${c.pool ? choiceUI(id, c) : ""}
+    ${gradeUI(id)}
     <div class="actions">
       <label for="move-sel">ย้ายไป</label>
       <select id="move-sel">${SEMS.map(s => `<option value="${s}" ${s === place[id] ? "selected" : ""} ${offeredIn(c, s) ? "" : "disabled"}>${semName(s)}${offeredIn(c, s) ? "" : " · ไม่เปิดสอน"}</option>`).join("")}</select>
@@ -59,6 +60,7 @@ function renderInfo() {
   $("extra-cat")?.addEventListener("change", e => { c.category = e.target.value; save(); renderBoard(); update(); });
   $("btn-shift-one")?.addEventListener("click", () => shift(new Set([id, ...post])));
   if (c.pool) bindChoice(id, c);
+  bindGradeUI(id);
 }
 
 // ---------- เลือกวิชาให้ช่อง ELECTIVE / APPROVED / FREE ----------
@@ -137,6 +139,8 @@ function update() {
     span.textContent = cr ? `${cr} หน่วยกิต${over ? ` · เกิน ${cur.maxCreditsPerSemester}` : ""}` : "ว่าง";
     span.classList.toggle("over", over);
   });
+
+  renderGpa();   // grades.js: GPAX, GPA รายเทอม, เกรดบนการ์ด
 
   // banner
   const banner = $("banner");

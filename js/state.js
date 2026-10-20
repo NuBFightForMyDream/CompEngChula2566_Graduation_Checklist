@@ -9,7 +9,7 @@ const store = {
   get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } },
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
 };
-const save = () => { store.set("passed:" + cur.id, [...passed]); store.set("place:" + cur.id, place); store.set("choice:" + cur.id, choices); store.set("extra:" + cur.id, extras); };
+const save = () => { store.set("passed:" + cur.id, [...passed]); store.set("place:" + cur.id, place); store.set("choice:" + cur.id, choices); store.set("extra:" + cur.id, extras); store.set("grade:" + cur.id, grades); };
 const $ = id => document.getElementById(id);
 // วิชาเรียนเพิ่ม: node ที่ไม่มีลูกศร prereq เลือกได้ว่านับเข้าหมวดไหน (category "extra" = ไม่นับในหลักสูตร)
 // นับเป็นภาระหน่วยกิตต่อเทอมเสมอ
