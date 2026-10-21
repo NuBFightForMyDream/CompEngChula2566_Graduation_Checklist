@@ -36,7 +36,7 @@
     },
     "elective": {
       "label": "CP Elective (2110xxx)",
-      "note": "Choose 6 Courses (18 Credits) from lists below (Referred from Reg Chula & CP Curriculum Board)",
+      "note": "Choose 6 Courses (18 Credits) from lists below",
       "options": [
         { "id": "2110413",     "code": "2110413", "name": "COMP SECURITY",  "credits": 3 , "prereq": ["2110313","2110471"] , "offered": ["1"] },
         { "id": "2110415",     "code": "2110415", "name": "SOFTWARE DEFINED SYS", "credits": 3 , "prereq": ["2110313","2110471"] , "offered": ["1"]},
