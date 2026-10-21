@@ -113,7 +113,7 @@
     { "id": "2110203", "name": "COMP ENG MATH II",    "credits": 3, "category": "engfund", "semester": "3/1", "prereq": [] },
     { "id": "2110426", "group": "sw",  "code": "2110426", "name": "SOFTWARE LAB", "credits": 1, "category": "core", "semester": "3/1", "offered": ["1"], "prereq": [] },
     { "id": "2110423", "group": "sw", "name": "SOFTWARE ENG",       "credits": 3, "category": "core",    "semester": "3/1", "offered": ["1"], "prereq": [] },
-    { "id": "2110318", "group": "sys", "name": "DISTRIBUTED SYS",            "credits": 1, "category": "core",    "semester": "3/1", "offered": ["1"], "prereq": [] },
+    { "id": "2110318", "group": "sys", "name": "DISTRIBUTED SYS",            "credits": 1, "category": "core",    "semester": "3/1", "offered": ["1"], "prereq": ["2110313"] },
     { "id": "2110471", "group": "sys", "name": "COMP NETWORK",       "credits": 3, "category": "core",    "semester": "3/1", "offered": ["1"], "prereq": ["2110221"] },
     { "id": "2110366", "group": "hw", "name": "EMBEDDED SYS LAB I", "credits": 1, "category": "core",    "semester": "3/1", "offered": ["1"], "prereq": ["2110263"] },
     { "id": "ELEC-1", "pool": "elective",  "code": "2110xxx", "name": "ELECTIVE",   "credits": 3, "category": "elective", "semester": "3/1", "prereq": [] , "offered": ["1","2"]},
