@@ -70,11 +70,11 @@
       "label": "Free Elective (xxx)",
       "note": "Choose 2 Courses (6 Credits) from Reg Chula by yourself (must choose)",
       "options": [
-        { "id": "2100223", "code": "2100223", "name": "ENTREPRENEUR", "credits": 3, "offered": ["1", "2"] },
-        { "id": "2100225", "code": "2100225", "name": "DESIGN THINKING", "credits": 3, "offered": ["1", "2"] },
-        { "id": "2110576", "code": "2110576", "name": "AGENTIC AI COMP ENG", "credits": 3, "offered": ["1"] },
-        { "id": "2110303", "code": "2110303", "name": "STUDY ABOARD I", "credits": 3, "offered": ["1", "2"] },
-        { "id": "2110304", "code": "2110304", "name": "STUDY ABOARD II", "credits": 3, "offered": ["1", "2"] }
+        { "id": "2109101", "code": "2109101", "name": "ENG MATERIALS", "credits": 3, "offered": ["1", "2"] },
+        { "id": "2103106", "code": "2103106", "name": "ENG DRAWING", "credits": 3, "offered": ["1", "2"] },
+        { "id": "2108323", "code": "2108323", "name": "REMOTE SENSING", "credits": 3, "offered": ["1","2"] },
+        { "id": "2223041", "code": "2223041", "name": "INT JAPANESE I", "credits": 3, "offered": ["1","2"] },
+        { "id": "2304595", "code": "2304595", "name": "QUANTUM INFO THEORY", "credits": 3, "offered": ["1","2"] }
       ]
     }
   },
