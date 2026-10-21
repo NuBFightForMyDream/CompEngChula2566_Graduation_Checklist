@@ -44,13 +44,24 @@
         { "id": "2110477",      "code": "2110477", "name": "FAULT TOLERANT COMPUTING", "credits": 3 , "prereq": [] , "offered": ["1"]},
         { "id": "2110479",      "code": "2110479", "name": "COMPUTER GRAPHICS", "credits": 3 , "prereq": [] , "offered": ["1"]},
         { "id": "2110482",      "code": "2110482", "name": "HIGH TECH ENTREPRENEUR", "credits": 3 , "prereq": [] , "offered": ["1"]},
-        { "id": "2110503",      "code": "2110503", "name": "SOFTWARE PRACTICE I (BACKEND)", "credits": 3 , "prereq": [] , "offered": ["1"]},
-        { "id": "2110507",      "code": "2110507", "name": "SOFTWARE PRACTICE II (FRONTEND)", "credits": 3 , "prereq": [] , "offered": ["1"]},
+        { "id": "2110503",      "code": "2110503", "name": "SOFTWARE PRAC I (BACKEND)", "credits": 3 , "prereq": [] , "offered": ["1"]},
+        { "id": "2110507",      "code": "2110507", "name": "SOFTWARE PRAC II (FRONTEND)", "credits": 3 , "prereq": [] , "offered": ["1"]},
         { "id": "2110564",      "code": "2110564", "name": "ROBOTICS SIMULATION", "credits": 3 , "prereq": [] , "offered": ["1"]},
         { "id": "2110581",      "code": "2110581", "name": "BIOINFORMATICS", "credits": 3 , "prereq": [] , "offered": ["1"]},
-        { "id": "2110595",      "code": "2110595", "name": "INTRO QUANTUM", "credits": 3 , "prereq": [] , "offered": ["1"]},
-        { "id": "2110597",      "code": "2110597", "name": "GRAPHIC SYSTEM ARCHITECTURE", "credits": 3 , "prereq": [] , "offered": ["1"]}
-        
+        { "id": "2110595",      "code": "2110595", "name": "INTRO QUANTUM", "credits": 3 , "prereq": [] , "offered": ["1","2"]},
+        { "id": "2110597",      "code": "2110597", "name": "GRAPHIC SYSTEM ARCH", "credits": 3 , "prereq": [] , "offered": ["1"]} ,
+
+        { "id": "2110430",      "code": "2110430", "name": "TIME SERIES MINING", "credits": 3 , "prereq": [] , "offered": ["2"]},
+        { "id": "2110475",      "code": "2110475", "name": "VLSI DESIGN", "credits": 3 , "prereq": [] , "offered": ["2"]},
+        { "id": "2110481",      "code": "2110481", "name": "WIRELESS COMP NETWORK", "credits": 3 , "prereq": [] , "offered": ["2"]},
+        { "id": "2110511",      "code": "2110511", "name": "GAME PROGRAMMING", "credits": 3 , "prereq": [] , "offered": ["2"]},
+        { "id": "2110512",      "code": "2110512", "name": "COMP ANIMATION", "credits": 3 , "prereq": [] , "offered": ["2"]},
+        { "id": "2110514",      "code": "2110514", "name": "REALTIME COMP GRAPHICS", "credits": 3 , "prereq": [] , "offered": ["2"]},
+        { "id": "2110524",      "code": "2110524", "name": "CLOUD COMPUTING TECH", "credits": 3 , "prereq": [] , "offered": ["2"]},
+        { "id": "2110555",      "code": "2110555", "name": "SOFTWARE MACHINE LEARNING", "credits": 3 , "prereq": [] , "offered": ["2"]},
+        { "id": "2110571",      "code": "2110571", "name": "NEURAL NETWORK", "credits": 3 , "prereq": [] , "offered": ["2"]},
+        { "id": "2110572",      "code": "2110572", "name": "NLP SYSTEM", "credits": 3 , "prereq": [] , "offered": ["2"]},
+        { "id": "2110573",      "code": "2110573", "name": "PATTERN RECOGNITION", "credits": 3 , "prereq": [] , "offered": ["2"]}
       ]
     },
     "approved": {

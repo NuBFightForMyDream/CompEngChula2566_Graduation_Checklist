@@ -130,11 +130,11 @@ button.primary { background: var(--bad); border-color: var(--bad); color: #fff; 
   cursor: grab;
 }
 .card button { border: 0; background: none; color: inherit; border-radius: 6px; }
-.card .sel { flex: 1; min-width: 0; text-align: left; display: grid; gap: 2px; padding: 6px 4px 6px 9px; cursor: inherit; }
+.card .sel { flex: 1; min-width: 0; text-align: left; display: grid; grid-template-columns: minmax(0, 1fr); gap: 2px; overflow: hidden; padding: 6px 4px 6px 9px; cursor: inherit; }
 .card .tick { flex: none; width: 30px; padding: 0; font-size: 14px; font-weight: 700; display: grid; place-items: center; }
 .card .tick::before { content: ""; width: 14px; height: 14px; border-radius: 50%; border: 2px solid currentColor; opacity: .45; }
-.card .nm { font-size: 12.5px; font-weight: 600; letter-spacing: .02em; line-height: 1.25; }
-.card .cd { font-family: var(--font-mono); font-size: 12px; display: flex; justify-content: space-between; gap: 6px; }
+.card .nm { min-width: 0; overflow-wrap: anywhere; word-break: break-word; font-size: 12.5px; font-weight: 600; letter-spacing: .02em; line-height: 1.25; }
+.card .cd { min-width: 0; font-family: var(--font-mono); font-size: 12px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0 6px; overflow-wrap: anywhere; }
 .card.passed { background: var(--c); color: #fff; }
 .card.passed .tick::before { content: "✓"; border: 0; width: auto; height: auto; opacity: 1; }
 .card.locked { border-style: dashed; }
@@ -208,7 +208,7 @@ marker path { fill: var(--muted); }
 .version { white-space: nowrap; }
 .card .tick[aria-disabled="true"] { cursor: not-allowed; }
 .card .tick[aria-disabled="true"]::before { content: "🔒"; border: 0; width: auto; height: auto; font-size: 11px; opacity: .6; }
-.card .slot-tag { font-size: 10.5px; letter-spacing: .04em; opacity: .75; }
+.card .slot-tag { min-width: 0; overflow-wrap: anywhere; font-size: 10.5px; letter-spacing: .04em; opacity: .75; }
 .choose { display: grid; gap: 8px; padding: 10px 12px; border: 1px dashed var(--line); border-radius: 10px; }
 .choose select { max-width: 100%; }
 .custom { display: grid; grid-template-columns: minmax(0, 7em) minmax(0, 1fr) 4.5em auto; gap: 6px; }
