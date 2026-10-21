@@ -68,13 +68,13 @@
     },
     "free": {
       "label": "Free Elective (xxx)",
-      "note": "Choose 2 Courses (6 Credits) from Reg Chula (Example courses given below)",
+      "note": "Choose 2 Courses (6 Credits) from Reg Chula by yourself (must choose)",
       "options": [
-        { "id": "2301207",    "code": "2301207", "name": "CALCULUS III",  "credits": 3 , "prereq": ["2301108"] , "offered": ["1","2"] },
-        { "id": "2301502",    "code": "2301502", "name": "SET AXIOM THEORY", "credits": 3 , "prereq": ["2301221"] , "offered": ["1"]},
-        { "id": "2107541",    "code": "2107541", "name": "MACHINE LEARNING ENVI", "credits": 3 , "prereq": [] , "offered": ["1"] },
-        { "id": "2103106",    "code": "2109101", "name": "ENG MATERIALS", "credits": 3 , "prereq": [] , "offered": ["1","2"]},
-        { "id": "2109101",    "code": "2103106", "name": "ENG DRAWING", "credits": 3 , "prereq": [] , "offered": ["1","2"]}
+        { "id": "2100223", "code": "2100223", "name": "ENTREPRENEUR", "credits": 3, "offered": ["1", "2"] },
+        { "id": "2100225", "code": "2100225", "name": "DESIGN THINKING", "credits": 3, "offered": ["1", "2"] },
+        { "id": "2110576", "code": "2110576", "name": "AGENTIC AI COMP ENG", "credits": 3, "offered": ["1"] },
+        { "id": "2110303", "code": "2110303", "name": "STUDY ABOARD I", "credits": 3, "offered": ["1", "2"] },
+        { "id": "2110304", "code": "2110304", "name": "STUDY ABOARD II", "credits": 3, "offered": ["1", "2"] }
       ]
     }
   },
