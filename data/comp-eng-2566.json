@@ -1,0 +1,118 @@
+{
+  "id": "comp-eng-2566",
+  "name": "Bachelor of Engineering: Computer Engineering (2022)",
+  "totalCredits": 138,
+  "maxCreditsPerSemester": 22,
+  "offeredNote": "offered = เทอมที่เปิดสอน (\"1\" = เทอมต้น, \"2\" = เทอมปลาย) ถ้าไม่ใส่ = เปิดทุกเทอม — ตอนนี้ตั้งวิชาแกนสาขาให้เปิดตามเทอมในแผน ถ้าวิชาไหนเปิดทั้งสองเทอมให้แก้เป็น [\"1\", \"2\"]",
+  "note": "ถอดจากแผนภาพหลักสูตร — prerequisite ใส่ไว้เฉพาะตามลูกศรในรูป ควรตรวจกับเอกสารหลักสูตรทางการอีกครั้ง",
+  "categories": {
+    "gened":    { "label": "General Education",                 "required": 30, "color": "#ee1d8f" },
+    "sci":      { "label": "Basic Math - Science",            "required": 21, "color": "#a3121c" },
+    "engfund":  { "label": "Basic Enginnering",              "required": 11, "color": "#c86ee6" },
+    "core":     { "label": "Fundamental Courses",            "required": 40, "color": "#9a2be2" },
+    "approved":       { "label": "CP Approved Elective (7 Choose 2)", "required": 6,  "color": "#4b7d16" },
+    "21st":      { "label": "21st Century",                    "required": 6,  "color": "#0d3c96" },
+    "elective": { "label": "CP Elective",                    "required": 18, "color": "#6cbf2d" },
+    "free":     { "label": "Free Elective",                 "required": 6,  "color": "#111111" }
+  },
+  "groups": {
+    "prog":       { "label": "Fundamental : Programming (17 Cr.)", "color": "#9a2be2" },
+    "hw":         { "label": "Fundamental : Hardware (9 Cr.)",    "color": "#2e93ec" },
+    "sys":        { "label": "Fundamental : System (7 Cr.)",      "color": "#ff9a1f" },
+    "sw":         { "label": "Fundamental : Software (7 Cr.)",    "color": "#14998d" },
+    "gened-free": { "label": "GenEd Self Choose (12 Credit)",  "color": "#f27ab8" }
+  },
+  "pools": {
+    "elective": {
+      "label": "วิชาเลือก (2110xxx)",
+      "note": "รายการตัวอย่าง — ให้แทนด้วยรายชื่อวิชาเลือกจริงจากประกาศภาควิชา",
+      "options": [
+        { "id": "ex-ml",       "code": "2110xxx", "name": "ตัวอย่าง: Machine Learning",            "credits": 3 },
+        { "id": "ex-security", "code": "2110xxx", "name": "ตัวอย่าง: Computer Security",           "credits": 3 },
+        { "id": "ex-cloud",    "code": "2110xxx", "name": "ตัวอย่าง: Cloud Computing",             "credits": 3 },
+        { "id": "ex-graphics", "code": "2110xxx", "name": "ตัวอย่าง: Computer Graphics",           "credits": 3 },
+        { "id": "ex-nlp",      "code": "2110xxx", "name": "ตัวอย่าง: Natural Language Processing", "credits": 3 },
+        { "id": "ex-compiler", "code": "2110xxx", "name": "ตัวอย่าง: Compiler Construction",       "credits": 3 }
+      ]
+    },
+    "approved": {
+      "label": "วิชาเลือกที่ภาคอนุมัติ (2110yyy)",
+      "note": "รายการตัวอย่าง — ให้แทนด้วยรายชื่อวิชาจริงจากประกาศภาควิชา",
+      "options": [
+        { "id": "ex-datasci", "code": "2110yyy", "name": "ตัวอย่าง: Data Science",                "credits": 3 },
+        { "id": "ex-web",     "code": "2110yyy", "name": "ตัวอย่าง: Web Application Development", "credits": 3 },
+        { "id": "ex-mobile",  "code": "2110yyy", "name": "ตัวอย่าง: Mobile Application",          "credits": 3 }
+      ]
+    },
+    "free": {
+      "label": "วิชาเลือกเสรี (วิชาใดก็ได้ในมหาวิทยาลัย)",
+      "note": "รายการตัวอย่าง — ส่วนใหญ่ใช้ช่องกรอกเองจะสะดวกกว่า",
+      "options": [
+        { "id": "ex-japanese", "code": "xxx", "name": "ตัวอย่าง: ภาษาญี่ปุ่น 1",       "credits": 3 },
+        { "id": "ex-finance",  "code": "xxx", "name": "ตัวอย่าง: การเงินส่วนบุคคล",   "credits": 3 },
+        { "id": "ex-music",    "code": "xxx", "name": "ตัวอย่าง: ดนตรีไทย",           "credits": 2 }
+      ]
+    }
+  },
+  "courses": [
+    { "id": "2110101", "name": "COMP PROG",          "credits": 3, "category": "engfund", "semester": "1/1", "prereq": [] },
+    { "id": "2100111", "name": "EXPL ENG WORLD",     "credits": 3, "category": "gened",   "semester": "1/1", "prereq": [] },
+    { "id": "2301107", "name": "CALCULUS I",         "credits": 3, "category": "sci",     "semester": "1/1", "prereq": [] },
+    { "id": "2304103", "name": "GEN PHYS I",         "credits": 3, "category": "sci",     "semester": "1/1", "prereq": [] },
+    { "id": "2304183", "name": "GEN PHYS LAB I",     "credits": 1, "category": "sci",     "semester": "1/1", "prereq": [] },
+    { "id": "5500111", "name": "EXP ENGlISH I",          "credits": 3, "category": "gened",   "semester": "1/1", "prereq": [] },
+
+    { "id": "2110215", "group": "prog", "name": "PROG METH",  "credits": 3, "category": "core", "semester": "1/2", "offered": ["1","2"], "prereq": ["2110101"] },
+    { "id": "2110221", "name": "COMP ENG ESS",        "credits": 3, "category": "gened",   "semester": "1/2", "offered": ["1","2"] , "prereq": [] },
+    { "id": "2301108", "name": "CALCULUS II",        "credits": 3, "category": "sci",     "semester": "1/2", "prereq": ["2301108"] },
+    { "id": "2304104", "name": "GEN PHYS II",        "credits": 3, "category": "sci",     "semester": "1/2", "prereq": [] },
+    { "id": "2304184", "name": "GEN PHYS LAB II",    "credits": 1, "category": "sci",     "semester": "1/2", "prereq": [] },
+    { "id": "2302127", "name": "GEN CHEM",           "credits": 3, "category": "sci",     "semester": "1/2", "prereq": [] },
+    { "id": "2302163", "name": "GEN CHEM LAB",       "credits": 1, "category": "sci",     "semester": "1/2", "prereq": [] },
+    { "id": "5500112", "name": "EXP ENGLISH II",         "credits": 3, "category": "gened",   "semester": "1/2", "prereq": ["5500111"] },
+
+    { "id": "2110200", "group": "prog", "name": "DISCRETE MATH",    "credits": 3, "category": "core",    "semester": "2/1", "offered": ["1"], "prereq": [] },
+    { "id": "2110211", "group": "prog", "name": "DATA STRUCTURE",  "credits": 3, "category": "core",    "semester": "2/1", "offered": ["1"], "prereq": ["2110101"] },
+    { "id": "2603284", "name": "STAT PHYS SCIENCE",  "credits": 3, "category": "sci",     "semester": "2/1", "prereq": [] },
+    { "id": "2110251", "group": "hw", "name": "DIGITAL LOGIC",      "credits": 3, "category": "core",    "semester": "2/1", "offered": ["1"], "prereq": [] },
+    { "id": "2110263", "group": "hw", "name": "DIGITAL LOGIC LAB",    "credits": 1, "category": "core",    "semester": "2/1", "offered": ["1"], "prereq": [] },
+    { "id": "GENED-1", "group": "gened-free", "code": "xxx", "name": "GENERAL ED", "credits": 3, "category": "gened", "semester": "2/1", "offered": ["1","2"] , "prereq": [] },
+
+    { "id": "2110201", "name": "COMP ENG MATH I",     "credits": 3, "category": "engfund", "semester": "2/2", "prereq": [] },
+    { "id": "2110327", "group": "prog", "name": "ALGORITHM DESIGN",        "credits": 3, "category": "core",    "semester": "2/2", "offered": ["2"], "prereq": ["2110200", "2110211"] },
+    { "id": "2110322", "group": "sw", "name": "DATABASE",             "credits": 3, "category": "core",    "semester": "2/2", "offered": ["2"], "prereq": [] },
+    { "id": "2110313", "group": "sys", "name": "OS SYS PROG",                 "credits": 3, "category": "core",    "semester": "2/2", "offered": ["2"], "prereq": ["2110211"] },
+    { "id": "2110352", "group": "hw", "name": "COMP SYS ARCH",       "credits": 3, "category": "core",    "semester": "2/2", "offered": ["2"], "prereq": [] },
+    { "id": "2110363", "group": "hw", "name": "HARDWARE SYN LAB",       "credits": 1, "category": "core",    "semester": "2/2", "offered": ["2"], "prereq": [] },
+    { "id": "5500208", "name": "COM PRES SKILL (ENGLISH III)",      "credits": 3, "category": "gened",   "semester": "2/2", "prereq": ["5500112"] },
+
+    { "id": "2110203", "name": "COMP ENG MATH II",    "credits": 3, "category": "engfund", "semester": "3/1", "prereq": [] },
+    { "id": "2110426", "group": "sw",  "code": "2110xxx", "name": "SOFTWARE LAB", "credits": 1, "category": "core", "semester": "3/1", "offered": ["1"], "prereq": [] },
+    { "id": "2110423", "group": "sw", "name": "SOFTWARE ENG",       "credits": 3, "category": "core",    "semester": "3/1", "offered": ["1"], "prereq": [] },
+    { "id": "2110318", "group": "sys", "name": "DISTRIBUTED SYS",            "credits": 1, "category": "core",    "semester": "3/1", "offered": ["1"], "prereq": [] },
+    { "id": "2110471", "group": "sys", "name": "COMP NETWORK",       "credits": 3, "category": "core",    "semester": "3/1", "offered": ["1"], "prereq": [] },
+    { "id": "2110366", "group": "hw", "name": "EMBEDDED SYS LAB I", "credits": 1, "category": "core",    "semester": "3/1", "offered": ["1"], "prereq": ["2110263"] },
+    { "id": "ELEC-1", "pool": "elective",  "code": "2110xxx", "name": "ELECTIVE",   "credits": 3, "category": "elective", "semester": "3/1", "prereq": [] , "offered": ["1","2"]},
+    { "id": "GENED-2", "group": "gened-free", "code": "xxx",     "name": "GENERAL ED", "credits": 3, "category": "gened",    "semester": "3/1", "prereq": [] },
+
+    { "id": "APPR-1", "pool": "approved",  "code": "2110yyy", "name": "APPROVED ELEC.", "credits": 3, "category": "approved", "offered": ["2"] , "semester": "3/2", "prereq": [] },
+    { "id": "C21-1",   "code": "2100xxx", "name": "21st CENTURY",   "credits": 3, "category": "21st", "semester": "3/2", "prereq": [] , "offered": ["1","2"] },
+    { "id": "FREE-1", "pool": "free",  "code": "xxx",     "name": "FREE ELECTIVE",  "credits": 3, "category": "free",   "semester": "3/2", "prereq": [] },
+    { "id": "ELEC-2", "pool": "elective",  "code": "2110xxx", "name": "ELECTIVE",       "credits": 3, "category": "elective", "semester": "3/2", "prereq": [], "offered": ["1","2"] },
+    { "id": "5500308", "name": "TECH WRIT ENG",      "credits": 3, "category": "gened",   "semester": "3/2", "prereq": ["5500208"] },
+    { "id": "2100301", "name": "ENG PRACTICE",       "credits": 2, "category": "engfund", "semester": "3/2", "prereq": [] },
+
+    { "id": "2110488", "group": "prog", "name": "CAP PROJ I",         "credits": 2, "category": "core",    "semester": "4/1", "offered": ["1"], "prereq": [] },
+    { "id": "APPR-2", "pool": "approved",  "code": "2110yyy", "name": "APPROVED ELEC.", "credits": 3, "category": "approved",     "semester": "4/1", "prereq": [] },
+    { "id": "ELEC-3", "pool": "elective",  "code": "2110xxx", "name": "ELECTIVE",       "credits": 3, "category": "elective", "semester": "4/1", "prereq": [] },
+    { "id": "ELEC-4", "pool": "elective",  "code": "2110xxx", "name": "ELECTIVE",       "credits": 3, "category": "elective", "semester": "4/1", "prereq": [] },
+    { "id": "GENED-3", "group": "gened-free", "code": "xxx",     "name": "GENERAL ED",     "credits": 3, "category": "gened",    "semester": "4/1", "prereq": [] },
+    { "id": "GENED-4", "group": "gened-free", "code": "xxx",     "name": "GENERAL ED",     "credits": 3, "category": "gened",    "semester": "4/1", "prereq": [] },
+
+    { "id": "2110489", "group": "prog", "name": "CAP PROJ II",        "credits": 3, "category": "core",    "semester": "4/2", "offered": ["2"], "prereq": ["2110488"] },
+    { "id": "C21-2",   "code": "2100xxx", "name": "21st CENTURY",   "credits": 3, "category": "21st",    "semester": "4/2", "prereq": [] , "offered": ["1","2"] },
+    { "id": "ELEC-5", "pool": "elective",  "code": "2110xxx", "name": "ELECTIVE",       "credits": 3, "category": "elective", "semester": "4/2", "prereq": [] , "offered": ["1","2"] },
+    { "id": "ELEC-6", "pool": "elective",  "code": "2110xxx", "name": "ELECTIVE",       "credits": 3, "category": "elective", "semester": "4/2", "prereq": [] , "offered": ["1","2"] },
+    { "id": "FREE-2", "pool": "free",  "code": "xxx",     "name": "FREE ELECTIVE",  "credits": 3, "category": "free",   "semester": "4/2", "prereq": [] , "offered": ["1","2"] }
+  ]
+}

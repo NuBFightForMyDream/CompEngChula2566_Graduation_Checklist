@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>CP Graduation Roadmap</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anuphan:wght@500;700&family=IBM+Plex+Sans+Thai:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="css/style.css?v=202610201310">
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="titlebar">
+      <h1>Graduation Roadmap</h1>
+      <div id="cur-name">กำลังโหลดหลักสูตร…</div>
+    </div>
+    <div class="controls">
+      <label class="muted" for="cur-select">หลักสูตร</label>
+      <select id="cur-select"></select>
+      <button id="btn-sample" type="button">ตัวอย่าง: จบปี 1</button>
+      <button id="btn-demo-move" type="button">ตัวอย่าง: ย้าย Data Struct ไป 3/1</button>
+      <button id="btn-reset-plan" type="button">คืนแผนเดิม</button>
+      <button id="btn-reset" type="button">ล้างทั้งหมด</button>
+      <label class="check"><input type="checkbox" id="auto-shift"> ย้ายแล้วเลื่อนวิชาที่ต่อเนื่องตามอัตโนมัติ</label>
+      <button id="btn-png" type="button">บันทึกรูป PNG</button>
+      <button id="btn-pdf" type="button">บันทึก PDF</button>
+      <button id="btn-palette" type="button" aria-expanded="false" aria-controls="palette">ปรับสีวิชา</button>
+      <button id="btn-grades" type="button" aria-expanded="false" aria-controls="grade-import">กรอกเกรดหลายวิชา</button>
+    </div>
+  </header>
+
+  <section class="summary" aria-label="สรุปหน่วยกิต">
+    <div class="total">
+      <span class="muted">หน่วยกิตที่ผ่านแล้ว</span>
+      <div class="big"><span id="total-got">0</span> <small>/ <span id="total-need">0</span></small></div>
+      <div class="meter"><i id="total-bar" style="width:0"></i></div>
+      <span class="muted" id="total-note"></span>
+      <span class="extra-note" id="extra-note" hidden></span>
+      <span class="gpax" id="gpax" hidden></span>
+    </div>
+    <div class="cats" id="cats"></div>
+    <form class="palette grade-import" id="grade-import" hidden>
+      <div class="palette-head"><b>กรอกเกรดหลายวิชา</b><span class="muted">วางรหัสวิชาตามด้วยเกรด บรรทัดละวิชา หรือวางรูปแบบ {"2110101","A"} จากโค้ด C++ ก็ได้</span></div>
+      <textarea id="grade-text" rows="5" aria-label="รหัสวิชาและเกรด" placeholder="2110101 A&#10;2301107 C+&#10;2304103 B&#10;2100301 S"></textarea>
+      <div class="actions"><button type="submit">ใส่เกรด</button><span id="grade-result" role="status"></span></div>
+    </form>
+    <div class="palette" id="palette" hidden>
+      <div class="palette-head"><b>ปรับสีวิชา</b><span class="muted">เลือกสีของแต่ละหมวด/กลุ่ม บันทึกไว้ในเบราว์เซอร์นี้</span>
+        <button type="button" id="btn-palette-reset">คืนสีตามตารางหลักสูตร</button></div>
+      <div class="palette-grid" id="palette-grid"></div>
+    </div>
+  </section>
+
+  <details class="notices" id="notices" open hidden>
+    <summary><h2>ประกาศและเงื่อนไขเพิ่มเติม</h2><span class="muted">เขียนเองในไฟล์ <code>data/notices/</code></span></summary>
+    <div class="notice-list" id="notice-list"></div>
+  </details>
+
+  <div class="banner" id="banner" hidden>
+    <p id="banner-text"></p>
+    <button class="primary" id="btn-shift-all" type="button">เลื่อนวิชาที่ต่อเนื่องตามไปอัตโนมัติ</button>
+  </div>
+
+  <div class="legend">
+    <span><i class="chip p"></i>ผ่านแล้ว</span>
+    <span><i class="chip"></i>ลงได้ตอนนี้</span>
+    <span><i class="chip l"></i>ยังล็อก</span>
+    <span><i class="chip x"></i>ลงก่อนวิชาบังคับก่อน</span>
+    <span>คลิกที่ว่างหรือกด Esc = ยกเลิกการเลือก · วงกลมขวา = ติ๊กผ่าน (วิชาที่ล็อกติ๊กไม่ได้) · คลิกชื่อ = เลือกดู/ย้ายเทอม · ลากการ์ดไปวางเทอมอื่นได้ · "+ เพิ่มวิชา" = เรียนเพิ่ม (เลือกได้ว่านับเข้าหมวดไหน) · วิชาแกนสาขาเลื่อนข้ามปีได้ แต่ข้ามเทอมไม่ได้</span>
+  </div>
+
+  <p class="toast" id="toast" role="status" aria-live="polite"></p>
+
+  <div class="board-scroll">
+    <div class="board" id="board"><svg id="edges" aria-hidden="true"></svg></div>
+  </div>
+
+  <div class="panels">
+    <section class="panel">
+      <h2>วิชาที่เลือก</h2>
+      <div class="info" id="info"><span class="muted">คลิกชื่อวิชาบนการ์ด เพื่อดูวิชาบังคับก่อน วิชาที่จะกระทบ และย้ายเทอม</span></div>
+      <p class="algo">DFS ย้อนกลับหาวิชาที่ต้องผ่านก่อน · BFS ไปข้างหน้าหาวิชาที่จะโดนล็อก · ย้ายเทอมแล้วเช็กว่า prereq ทุกตัวยังอยู่เทอมก่อนหน้า</p>
+    </section>
+    <section class="panel">
+      <h2>ลงได้ตอนนี้ <span class="muted" id="avail-count"></span></h2>
+      <ul class="list" id="avail"></ul>
+      <p class="algo">วิชาที่ยังไม่ผ่าน และ prereq ทุกตัวผ่านแล้ว (in-degree ที่เหลือ = 0)</p>
+    </section>
+    <section class="panel">
+      <h2>แผนแนะนำเทอมที่เหลือ</h2>
+      <div id="plan"></div>
+      <p class="algo">เริ่มจากเทอมถัดจากวิชาที่ผ่านล่าสุด แต่ละเทอมหยิบเฉพาะวิชาที่เปิดสอน · Topological sort + Greedy ด้วย priority queue: เทอมบนกระดานก่อน แล้วตามความยาวสาย prereq ที่ต่อจากวิชานั้น (DP บน DAG)</p>
+    </section>
+  </div>
+
+  <p class="note"><span id="cur-note"></span> <span class="version">· เวอร์ชันเว็บ 202610201310</span></p>
+</div>
+
+<!-- ?v=... = เวอร์ชันไฟล์ แก้ไฟล์ใน css/ หรือ js/ แล้วต้องเปลี่ยนเลขนี้ทุกบรรทัด (ใช้ tools/bump-version.sh)
+     เบราว์เซอร์จะได้โหลดไฟล์ชุดใหม่ทั้งชุด ไม่ใช้ไฟล์เก่าในแคชปนกับไฟล์ใหม่
+     สคริปต์แบบธรรมดา (ไม่ใช่ module) ใช้ตัวแปรร่วมกันได้ ต้องเรียงตามลำดับนี้:
+     graph → state → grades → board → panels → notices → export → animate → main -->
+<script src="js/graph.js?v=202610201310"></script>
+<script src="js/state.js?v=202610201310"></script>
+<script src="js/grades.js?v=202610201310"></script>
+<script src="js/board.js?v=202610201310"></script>
+<script src="js/panels.js?v=202610201310"></script>
+<script src="js/notices.js?v=202610201310"></script>
+<script src="js/export.js?v=202610201310"></script>
+<script src="js/animate.js?v=202610201310"></script>
+<script src="js/main.js?v=202610201310"></script>
+</body>
+</html>
