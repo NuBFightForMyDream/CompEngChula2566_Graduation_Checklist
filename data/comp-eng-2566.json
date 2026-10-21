@@ -117,7 +117,7 @@
     { "id": "GENED-2", "group": "gened-free", "code": "xxx",     "name": "GENERAL ED", "credits": 3, "category": "gened",    "semester": "3/1", "prereq": [] },
 
     { "id": "APPR-1", "pool": "approved",  "code": "2110yyy", "name": "APPROVED ELEC.", "credits": 3, "category": "approved", "offered": ["2"] , "semester": "3/2", "prereq": [] },
-    { "id": "C21-1",   "code": "2100xxx", "name": "21st CENTURY",   "credits": 3, "category": "21st", "semester": "3/2", "prereq": [] , "offered": ["1","2"] },
+    { "id": "C21-1", "pool": "21st",   "code": "2100xxx", "name": "21st CENTURY",   "credits": 3, "category": "21st", "semester": "3/2", "prereq": [] , "offered": ["1","2"] },
     { "id": "FREE-1", "pool": "free",  "code": "xxx",     "name": "FREE ELECTIVE",  "credits": 3, "category": "free",   "semester": "3/2", "prereq": [] },
     { "id": "ELEC-2", "pool": "elective",  "code": "2110xxx", "name": "ELECTIVE",       "credits": 3, "category": "elective", "semester": "3/2", "prereq": [], "offered": ["1","2"] },
     { "id": "5500308", "name": "TECH WRITE ENG",      "credits": 3, "category": "gened",   "semester": "3/2", "prereq": ["5500208"] },
@@ -131,7 +131,7 @@
     { "id": "GENED-4", "group": "gened-free", "code": "xxx",     "name": "GENERAL ED",     "credits": 3, "category": "gened",    "semester": "4/1", "prereq": [] },
 
     { "id": "2110489", "group": "prog", "name": "CAPSTONE PROJ II",        "credits": 3, "category": "core",    "semester": "4/2", "offered": ["2"], "prereq": ["2110488"] },
-    { "id": "C21-2",   "code": "2100xxx", "name": "21st CENTURY",   "credits": 3, "category": "21st",    "semester": "4/2", "prereq": [] , "offered": ["1","2"] },
+    { "id": "C21-2", "pool": "21st",   "code": "2100xxx", "name": "21st CENTURY",   "credits": 3, "category": "21st",    "semester": "4/2", "prereq": [] , "offered": ["1","2"] },
     { "id": "ELEC-5", "pool": "elective",  "code": "2110xxx", "name": "ELECTIVE",       "credits": 3, "category": "elective", "semester": "4/2", "prereq": [] , "offered": ["1","2"] },
     { "id": "ELEC-6", "pool": "elective",  "code": "2110xxx", "name": "ELECTIVE",       "credits": 3, "category": "elective", "semester": "4/2", "prereq": [] , "offered": ["1","2"] },
     { "id": "FREE-2", "pool": "free",  "code": "xxx",     "name": "FREE ELECTIVE",  "credits": 3, "category": "free",   "semester": "4/2", "prereq": [] , "offered": ["1","2"] }
