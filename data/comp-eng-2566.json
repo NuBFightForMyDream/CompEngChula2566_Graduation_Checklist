@@ -27,7 +27,7 @@
       "label": "21st Elective (2100xxx)",
       "note": "Choose 2 Courses (6 Credits) from lists below (Referred from Reg Chula & CP Curriculum Board)",
       "options": [
-        { "id": "2100223",     "code": "2100223", "name": "ENTREPRENEURSHIP",  "credits": 3 , "offered": ["1","2"] },
+        { "id": "2100223",     "code": "2100223", "name": "ENTREPRENEUR",  "credits": 3 , "offered": ["1","2"] },
         { "id": "2100225",     "code": "2100225", "name": "DESIGN THINKING", "credits": 3 , "offered": ["1","2"]},
         { "id": "2110576",    "code": "2110576", "name": "AGENTIC AI COMP ENG", "credits": 3 , "prereq": [] , "offered": ["1"] },
         { "id": "2110303",    "code": "2110303", "name": "STUDY ABOARD I", "credits": 3 , "prereq": [] , "offered": ["1","2"]},
@@ -38,8 +38,6 @@
       "label": "CP Elective (2110xxx)",
       "note": "Choose 6 Courses (18 Credits) from lists below",
       "options": [
-        { "id": "2110413",     "code": "2110413", "name": "COMP SECURITY",  "credits": 3 , "prereq": ["2110313","2110471"] , "offered": ["1"] },
-        { "id": "2110415",     "code": "2110415", "name": "SOFTWARE DEFINED SYS", "credits": 3 , "prereq": ["2110313","2110471"] , "offered": ["1"]},
         { "id": "2110431",    "code": "2110431", "name": "DIGITAL IMAGING", "credits": 3 , "prereq": [] , "offered": ["1"] },
         { "id": "2110433",    "code": "2110433", "name": "COMPUTER VISION", "credits": 3 , "prereq": [] , "offered": ["1","2"]},
         { "id": "2110473",      "code": "2110473", "name": "AI II", "credits": 3 , "prereq": [] , "offered": ["1"]},
@@ -48,7 +46,6 @@
         { "id": "2110482",      "code": "2110482", "name": "HIGH TECH ENTREPRENEUR", "credits": 3 , "prereq": [] , "offered": ["1"]},
         { "id": "2110503",      "code": "2110503", "name": "SOFTWARE PRACTICE I (BACKEND)", "credits": 3 , "prereq": [] , "offered": ["1"]},
         { "id": "2110507",      "code": "2110507", "name": "SOFTWARE PRACTICE II (FRONTEND)", "credits": 3 , "prereq": [] , "offered": ["1"]},
-        { "id": "2110521",      "code": "2110521", "name": "SOFTWARE ARCH", "credits": 3 , "prereq": [] , "offered": ["1"]},
         { "id": "2110564",      "code": "2110564", "name": "ROBOTICS SIMULATION", "credits": 3 , "prereq": [] , "offered": ["1"]},
         { "id": "2110581",      "code": "2110581", "name": "BIOINFORMATICS", "credits": 3 , "prereq": [] , "offered": ["1"]},
         { "id": "2110595",      "code": "2110595", "name": "INTRO QUANTUM", "credits": 3 , "prereq": [] , "offered": ["1"]},
@@ -57,21 +54,27 @@
       ]
     },
     "approved": {
-      "label": "วิชาเลือกที่ภาคอนุมัติ (2110yyy)",
-      "note": "รายการตัวอย่าง — ให้แทนด้วยรายชื่อวิชาจริงจากประกาศภาควิชา",
+      "label": "CP Approved Elective (2110yyy)",
+      "note": "Choose 2 Courses (6 Credits) from 7 Courses below only",
       "options": [
-        { "id": "ex-datasci", "code": "2110yyy", "name": "ตัวอย่าง: Data Science",                "credits": 3 },
-        { "id": "ex-web",     "code": "2110yyy", "name": "ตัวอย่าง: Web Application Development", "credits": 3 },
-        { "id": "ex-mobile",  "code": "2110yyy", "name": "ตัวอย่าง: Mobile Application",          "credits": 3 }
+        { "id": "2110413",     "code": "2110413", "name": "COMP SECURITY",  "credits": 3 , "prereq": ["2110313","2110471"] , "offered": ["1"] },
+        { "id": "2110415",     "code": "2110415", "name": "SOFTWARE DEFINED SYS", "credits": 3 , "prereq": ["2110313","2110471"] , "offered": ["1"]},
+        { "id": "2110521",      "code": "2110521", "name": "SOFTWARE ARCH", "credits": 3 , "prereq": [] , "offered": ["1"]},
+        { "id": "2110431",    "code": "2110431", "name": "DIGITAL IMAGING", "credits": 3 , "prereq": [] , "offered": ["1"] },
+        { "id": "2110452",    "code": "2110452", "name": "HIGH PERFORMANCE ARCH", "credits": 3 , "prereq": ["2110352"] , "offered": ["2"]},
+        { "id": "2110446",      "code": "2110446", "name": "DATA SCIENCE AND DATA ENG", "credits": 3 , "prereq": [] , "offered": ["2"]},
+        { "id": "2110404",      "code": "2110404", "name": "COMPUTATIONAL THEORY", "credits": 3 , "prereq": [] , "offered": ["2"]}
       ]
     },
     "free": {
-      "label": "วิชาเลือกเสรี (วิชาใดก็ได้ในมหาวิทยาลัย)",
-      "note": "รายการตัวอย่าง — ส่วนใหญ่ใช้ช่องกรอกเองจะสะดวกกว่า",
+      "label": "Free Elective (xxx)",
+      "note": "Choose 2 Courses (6 Credits) from Reg Chula (Example courses given below)",
       "options": [
-        { "id": "ex-japanese", "code": "xxx", "name": "ตัวอย่าง: ภาษาญี่ปุ่น 1",       "credits": 3 },
-        { "id": "ex-finance",  "code": "xxx", "name": "ตัวอย่าง: การเงินส่วนบุคคล",   "credits": 3 },
-        { "id": "ex-music",    "code": "xxx", "name": "ตัวอย่าง: ดนตรีไทย",           "credits": 2 }
+        { "id": "2301207",    "code": "2301207", "name": "CALCULUS III",  "credits": 3 , "prereq": ["2301108"] , "offered": ["1","2"] },
+        { "id": "2301502",    "code": "2301502", "name": "SET AXIOM THEORY", "credits": 3 , "prereq": ["2301221"] , "offered": ["1"]},
+        { "id": "2107541",    "code": "2107541", "name": "MACHINE LEARNING ENVI", "credits": 3 , "prereq": [] , "offered": ["1"] },
+        { "id": "2103106",    "code": "2109101", "name": "ENG MATERIALS", "credits": 3 , "prereq": [] , "offered": ["1","2"]},
+        { "id": "2109101",    "code": "2103106", "name": "ENG DRAWING", "credits": 3 , "prereq": [] , "offered": ["1","2"]}
       ]
     }
   },
