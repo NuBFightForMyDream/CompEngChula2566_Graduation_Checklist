@@ -64,7 +64,7 @@
 
     { "id": "2110215", "group": "prog", "name": "PROG METH",  "credits": 3, "category": "core", "semester": "1/2", "offered": ["1","2"], "prereq": ["2110101"] },
     { "id": "2110221", "name": "COMP ENG ESS",        "credits": 3, "category": "gened",   "semester": "1/2", "offered": ["1","2"] , "prereq": [] },
-    { "id": "2301108", "name": "CALCULUS II",        "credits": 3, "category": "sci",     "semester": "1/2", "prereq": ["2301108"] },
+    { "id": "2301108", "name": "CALCULUS II",        "credits": 3, "category": "sci",     "semester": "1/2", "prereq": ["2301107"] },
     { "id": "2304104", "name": "GEN PHYS II",        "credits": 3, "category": "sci",     "semester": "1/2", "prereq": [] },
     { "id": "2304184", "name": "GEN PHYS LAB II",    "credits": 1, "category": "sci",     "semester": "1/2", "prereq": [] },
     { "id": "2302127", "name": "GEN CHEM",           "credits": 3, "category": "sci",     "semester": "1/2", "prereq": [] },
@@ -84,7 +84,7 @@
     { "id": "2110313", "group": "sys", "name": "OS SYS PROG",                 "credits": 3, "category": "core",    "semester": "2/2", "offered": ["2"], "prereq": ["2110211"] },
     { "id": "2110352", "group": "hw", "name": "COMP SYS ARCH",       "credits": 3, "category": "core",    "semester": "2/2", "offered": ["2"], "prereq": [] },
     { "id": "2110363", "group": "hw", "name": "HARDWARE SYN LAB",       "credits": 1, "category": "core",    "semester": "2/2", "offered": ["2"], "prereq": [] },
-    { "id": "5500208", "name": "COM PRES SKILL (ENGLISH III)",      "credits": 3, "category": "gened",   "semester": "2/2", "prereq": ["5500112"] },
+    { "id": "5500208", "name": "COM PRES SKILL",      "credits": 3, "category": "gened",   "semester": "2/2", "prereq": ["5500112"] },
 
     { "id": "2110203", "name": "COMP ENG MATH II",    "credits": 3, "category": "engfund", "semester": "3/1", "prereq": [] },
     { "id": "2110426", "group": "sw",  "code": "2110xxx", "name": "SOFTWARE LAB", "credits": 1, "category": "core", "semester": "3/1", "offered": ["1"], "prereq": [] },
@@ -99,17 +99,17 @@
     { "id": "C21-1",   "code": "2100xxx", "name": "21st CENTURY",   "credits": 3, "category": "21st", "semester": "3/2", "prereq": [] , "offered": ["1","2"] },
     { "id": "FREE-1", "pool": "free",  "code": "xxx",     "name": "FREE ELECTIVE",  "credits": 3, "category": "free",   "semester": "3/2", "prereq": [] },
     { "id": "ELEC-2", "pool": "elective",  "code": "2110xxx", "name": "ELECTIVE",       "credits": 3, "category": "elective", "semester": "3/2", "prereq": [], "offered": ["1","2"] },
-    { "id": "5500308", "name": "TECH WRIT ENG",      "credits": 3, "category": "gened",   "semester": "3/2", "prereq": ["5500208"] },
+    { "id": "5500308", "name": "TECH WRITE ENG",      "credits": 3, "category": "gened",   "semester": "3/2", "prereq": ["5500208"] },
     { "id": "2100301", "name": "ENG PRACTICE",       "credits": 2, "category": "engfund", "semester": "3/2", "prereq": [] },
 
-    { "id": "2110488", "group": "prog", "name": "CAP PROJ I",         "credits": 2, "category": "core",    "semester": "4/1", "offered": ["1"], "prereq": [] },
+    { "id": "2110488", "group": "prog", "name": "CAPSTONE PROJ I",         "credits": 2, "category": "core",    "semester": "4/1", "offered": ["1"], "prereq": [] },
     { "id": "APPR-2", "pool": "approved",  "code": "2110yyy", "name": "APPROVED ELEC.", "credits": 3, "category": "approved",     "semester": "4/1", "prereq": [] },
     { "id": "ELEC-3", "pool": "elective",  "code": "2110xxx", "name": "ELECTIVE",       "credits": 3, "category": "elective", "semester": "4/1", "prereq": [] },
     { "id": "ELEC-4", "pool": "elective",  "code": "2110xxx", "name": "ELECTIVE",       "credits": 3, "category": "elective", "semester": "4/1", "prereq": [] },
     { "id": "GENED-3", "group": "gened-free", "code": "xxx",     "name": "GENERAL ED",     "credits": 3, "category": "gened",    "semester": "4/1", "prereq": [] },
     { "id": "GENED-4", "group": "gened-free", "code": "xxx",     "name": "GENERAL ED",     "credits": 3, "category": "gened",    "semester": "4/1", "prereq": [] },
 
-    { "id": "2110489", "group": "prog", "name": "CAP PROJ II",        "credits": 3, "category": "core",    "semester": "4/2", "offered": ["2"], "prereq": ["2110488"] },
+    { "id": "2110489", "group": "prog", "name": "CAPSTONE PROJ II",        "credits": 3, "category": "core",    "semester": "4/2", "offered": ["2"], "prereq": ["2110488"] },
     { "id": "C21-2",   "code": "2100xxx", "name": "21st CENTURY",   "credits": 3, "category": "21st",    "semester": "4/2", "prereq": [] , "offered": ["1","2"] },
     { "id": "ELEC-5", "pool": "elective",  "code": "2110xxx", "name": "ELECTIVE",       "credits": 3, "category": "elective", "semester": "4/2", "prereq": [] , "offered": ["1","2"] },
     { "id": "ELEC-6", "pool": "elective",  "code": "2110xxx", "name": "ELECTIVE",       "credits": 3, "category": "elective", "semester": "4/2", "prereq": [] , "offered": ["1","2"] },
