@@ -109,3 +109,28 @@ describe("seedCurricula", () => {
     expect(row?.name).not.toBe("SHOULD NOT STAY");
   });
 });
+
+describe("seeding when nothing changed", () => {
+  it("writes nothing, so waking a sleeping server is cheap", async () => {
+    await seedCurricula(handle.db);
+    const versions = () => handle.db.execute<{ xmin: string }>(sql`SELECT xmin::text FROM courses ORDER BY id`);
+    const before = [...(await versions())];
+    const result = await seedCurricula(handle.db);
+    expect(result.written).toBe(false);
+    expect([...(await versions())]).toEqual(before);
+  });
+
+  it("still writes when only a notice changed", async () => {
+    await seedCurricula(handle.db);
+    await handle.db.execute(sql`UPDATE notices SET body = 'แก้ด้วยมือ' WHERE slug = 'cp-department'`);
+    expect((await seedCurricula(handle.db)).written).toBe(true);
+  });
+
+  it("still writes when a course changed in the database", async () => {
+    await seedCurricula(handle.db);
+    await handle.db.update(courses).set({ name: "แก้ด้วยมือ" }).where(eq(courses.id, "2110101"));
+    expect((await seedCurricula(handle.db)).written).toBe(true);
+    const [row] = await handle.db.select({ name: courses.name }).from(courses).where(eq(courses.id, "2110101"));
+    expect(row?.name).toBe("COMP PROG");
+  });
+});

@@ -51,6 +51,19 @@ jobs:
         env:
           E2E_API: "1"
 
+  # สร้าง Docker image จริง แล้วรัน E2E กับ image นั้น เพื่อยืนยันว่าสิ่งที่จะ deploy ใช้งานได้
+  image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @cp/web exec playwright install --with-deps chromium
+      - run: pnpm test:e2e:image
+
   learning:
     runs-on: ubuntu-latest
     steps:

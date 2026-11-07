@@ -16,5 +16,18 @@ services:
       timeout: 3s
       retries: 20
 
+  # image ตัวเดียวกับที่จะ deploy ใช้ทดสอบในเครื่องด้วย pnpm image:up ไม่ได้เปิดตอน pnpm db:up
+  app:
+    profiles: [image]
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://cp:cp_dev_only@db:5432/cp_roadmap
+      PUBLIC_ORIGIN: http://localhost:8090
+    ports:
+      - "127.0.0.1:8090:8080"
+
 volumes:
   db-data:

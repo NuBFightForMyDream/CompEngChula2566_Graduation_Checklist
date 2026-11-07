@@ -1,6 +1,9 @@
 // โครงสร้างฐานข้อมูลของหลักสูตร
 // ใช้ composite key เพราะรหัสวิชาซ้ำกันได้ข้ามหลักสูตร และ position รักษาลำดับตามไฟล์ JSON
 // กฎสำคัญบังคับที่ฐานข้อมูลด้วย ข้อมูลจึงผิดไม่ได้แม้เขียนผ่านช่องทางอื่นที่ไม่ใช่ API
+//
+// ทุกตารางต้อง .enableRLS() เพราะ Supabase เปิดตารางใน schema public ผ่าน Data API ด้วยคีย์สาธารณะ
+// เปิด RLS โดยไม่มี policy = ปฏิเสธทุกคำขอจากช่องทางนั้น ส่วน API ของเราต่อในฐานะเจ้าของตารางจึงไม่ถูกกระทบ
 
 import type { PlanSettings } from "@cp/contracts";
 import { sql } from "drizzle-orm";
@@ -35,7 +38,7 @@ export const curricula = pgTable(
     check("curricula_total_credits_positive", sql`${t.totalCredits} > 0`),
     check("curricula_max_credits_positive", sql`${t.maxCreditsPerSemester} > 0`),
   ],
-);
+).enableRLS();
 
 const curriculumRef = () =>
   text("curriculum_id")
@@ -56,7 +59,7 @@ export const categories = pgTable(
     primaryKey({ columns: [t.curriculumId, t.key] }),
     check("categories_required_not_negative", sql`${t.required} >= 0`),
   ],
-);
+).enableRLS();
 
 export const groups = pgTable(
   "groups",
@@ -68,7 +71,7 @@ export const groups = pgTable(
     position: integer().notNull(),
   },
   (t) => [primaryKey({ columns: [t.curriculumId, t.key] })],
-);
+).enableRLS();
 
 export const pools = pgTable(
   "pools",
@@ -80,7 +83,7 @@ export const pools = pgTable(
     position: integer().notNull(),
   },
   (t) => [primaryKey({ columns: [t.curriculumId, t.key] })],
-);
+).enableRLS();
 
 const OFFERED_VALID = (offered: unknown) =>
   sql`${offered} IS NULL OR (cardinality(${offered}) > 0 AND ${offered} <@ ARRAY['1','2']::text[])`;
@@ -106,7 +109,7 @@ export const poolOptions = pgTable(
     check("pool_options_credits_positive", sql`${t.credits} > 0`),
     check("pool_options_offered_valid", OFFERED_VALID(t.offered)),
   ],
-);
+).enableRLS();
 
 export const courses = pgTable(
   "courses",
@@ -132,7 +135,7 @@ export const courses = pgTable(
     check("courses_semester_format", sql`${t.semester} ~ '^[1-5]/[12]$'`),
     check("courses_offered_valid", OFFERED_VALID(t.offered)),
   ],
-);
+).enableRLS();
 
 /** edge ของกราฟ: course_id ต้องผ่าน prereq_id ก่อน */
 export const prerequisites = pgTable(
@@ -155,7 +158,7 @@ export const prerequisites = pgTable(
     // ใช้ตอนเดินกราฟย้อนทิศ หาวิชาที่ต่อจากวิชานี้
     index("prerequisites_reverse_idx").on(t.curriculumId, t.prereqId),
   ],
-);
+).enableRLS();
 
 export const poolOptionPrerequisites = pgTable(
   "pool_option_prerequisites",
@@ -176,12 +179,12 @@ export const poolOptionPrerequisites = pgTable(
       "cascade",
     ),
   ],
-);
+).enableRLS();
 
 export const notices = pgTable("notices", {
   slug: text().primaryKey(),
   body: text().notNull(),
-});
+}).enableRLS();
 
 /** ประกาศหนึ่งใช้ได้หลายหลักสูตร เช่น ประกาศของภาควิชา */
 export const curriculumNotices = pgTable(
@@ -194,7 +197,7 @@ export const curriculumNotices = pgTable(
     position: integer().notNull(),
   },
   (t) => [primaryKey({ columns: [t.curriculumId, t.noticeSlug] })],
-);
+).enableRLS();
 
 // ---------- บัญชีผู้ใช้และแผน ----------
 
@@ -205,7 +208,7 @@ export const users = pgTable("users", {
   email: text().notNull(),
   name: text().notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-});
+}).enableRLS();
 
 /** เก็บเฉพาะ hash ของ token ถ้าฐานข้อมูลรั่ว ค่าที่เห็นจะใช้ login แทนผู้ใช้ไม่ได้ */
 export const sessions = pgTable(
@@ -219,7 +222,7 @@ export const sessions = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [index("sessions_user_idx").on(t.userId), index("sessions_expires_idx").on(t.expiresAt)],
-);
+).enableRLS();
 
 export const plans = pgTable(
   "plans",
@@ -245,7 +248,7 @@ export const plans = pgTable(
     check("plans_version_positive", sql`${t.version} >= 1`),
     check("plans_name_length", sql`char_length(${t.name}) BETWEEN 1 AND 60`),
   ],
-);
+).enableRLS();
 
 /**
  * หนึ่งแถวต่อหนึ่งวิชาในแผน ทั้งวิชาในหลักสูตรและวิชาเรียนเพิ่ม เพราะมีเทอม สถานะผ่าน และเกรดเหมือนกัน
@@ -301,4 +304,4 @@ export const planItems = pgTable(
     // วิชาเดียวกันเลือกซ้ำในหลายช่องของแผนเดียวไม่ได้ แถวที่ไม่ได้เลือกวิชาจะไม่ถูกนับ
     uniqueIndex("plan_items_one_choice_per_plan").on(t.planId, t.choiceId).where(sql`${t.choiceId} IS NOT NULL`),
   ],
-);
+).enableRLS();

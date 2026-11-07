@@ -15,3 +15,6 @@ playwright-report/
 # C++ binaries from the exercises
 learning/cpp/step[0-9]
 learning/cpp/step[0-9].exe
+
+# สำเนาฐานข้อมูล มีข้อมูลส่วนตัวของผู้ใช้ ห้ามขึ้น git
+backups/

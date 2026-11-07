@@ -31,10 +31,11 @@ interface AuthDeps {
   oauth: OAuthProvider | null;
   cookies: CookieOptions;
   limits: RateLimits;
+  trustedProxyHops: number;
 }
 
 /** redirect กลับหน้าแรกเสมอ ไม่รับปลายทางจากภายนอก จึงไม่มีช่องโหว่ open redirect */
-export function authRoutes({ db, logger, oauth, cookies, limits }: AuthDeps) {
+export function authRoutes({ db, logger, oauth, cookies, limits, trustedProxyHops }: AuthDeps) {
   const app = new Hono();
   const flowCookie = {
     httpOnly: true,
@@ -45,8 +46,9 @@ export function authRoutes({ db, logger, oauth, cookies, limits }: AuthDeps) {
     maxAge: FLOW_MAX_AGE_SECONDS,
   };
 
-  app.use("/google", rateLimit(limits.auth, clientAddress));
-  app.use("/google/callback", rateLimit(limits.auth, clientAddress));
+  const limitByAddress = rateLimit(limits.auth, clientAddress(trustedProxyHops));
+  app.use("/google", limitByAddress);
+  app.use("/google/callback", limitByAddress);
 
   app.get("/google", (c) => {
     if (!oauth) return c.redirect("/?login=unavailable");

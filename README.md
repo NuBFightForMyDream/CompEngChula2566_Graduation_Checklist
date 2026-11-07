@@ -3,7 +3,7 @@
 เว็บวางแผนการเรียนและเช็กเงื่อนไขจบการศึกษา วิศวกรรมคอมพิวเตอร์ จุฬาฯ
 มองหลักสูตรเป็นกราฟ: วิชา = node, วิชาบังคับก่อน = edge โดยใช้แนวคิดจาก 2110211 Data Structure และ 2110327 Algorithm Design
 
-> กำลังย้ายจาก static site ไปเป็น full-stack ตอนนี้เสร็จถึงเฟส 4 (บัญชีผู้ใช้และบันทึกแผนข้ามเครื่อง) ยังรันได้เฉพาะในเครื่อง
+> กำลังย้ายจาก static site ไปเป็น full-stack โค้ดพร้อม deploy แล้ว แต่ยังไม่ได้ขึ้นออนไลน์ ดู[คู่มือ deploy](docs/deploy.md)
 
 ## เริ่มใช้งาน
 
@@ -42,6 +42,9 @@ GOOGLE_CLIENT_SECRET=ค่าที่ได้จาก Google
 | `pnpm test` | unit test ของ `core`, `contracts` และ integration test ของ API กับ Postgres จริง (ต้องเปิด Docker) |
 | `pnpm test:e2e` | ทดสอบหน้าเว็บจริงด้วย Playwright (ครั้งแรกรัน `pnpm --filter @cp/web exec playwright install chromium`) |
 | `pnpm test:e2e:api` | รัน E2E ผ่าน API และ Postgres รวมชุดทดสอบบัญชีและการบันทึกแผน |
+| `pnpm test:e2e:image` | สร้าง Docker image ที่จะ deploy จริง แล้วรัน E2E กับ image นั้น |
+| `pnpm image:up` / `pnpm image:down` | เปิด / ปิด image ที่ http://localhost:8090 |
+| `pnpm db:backup` | สำรองฐานข้อมูลเป็นไฟล์ใน `backups/` (ต้องตั้ง `DATABASE_URL`) |
 | `pnpm db:up` / `pnpm db:down` | เปิด / ปิด Postgres ใน Docker (ข้อมูลยังอยู่) |
 | `pnpm db:setup` | migrate แล้ว seed หลักสูตรเข้าฐานข้อมูล รันซ้ำได้ |
 | `pnpm --filter @cp/api db:generate` | สร้างไฟล์ migration หลังแก้ `apps/api/src/db/schema.ts` |
@@ -68,6 +71,10 @@ packages/
   core/         กราฟ กฎ เกรด สรุปหน่วยกิต ฟังก์ชันล้วน ไม่แตะหน้าเว็บหรือฐานข้อมูล
   contracts/    Zod schema ของไฟล์หลักสูตร แผน และไฟล์สำรอง
   curricula/    JSON หลักสูตรและ Markdown ประกาศ
+docs/deploy.md  คู่มือ deploy
+scripts/        สำรองฐานข้อมูล
+Dockerfile      image เดียวรวมหน้าเว็บกับ API
+index.html      หน้าที่จะแทนเว็บเดิมบน GitHub Pages ช่วยผู้ใช้เดิมนำข้อมูลออก
 learning/
   python/       เวอร์ชัน Python อ่านง่าย มีคำอธิบายทุกอัลกอริทึม
   cpp/          แบบฝึก C++ ทีละขั้น พร้อมตัวตรวจ PASS / FAIL
@@ -136,5 +143,5 @@ learning/
 | 0–2 | Monorepo, `core` + test, React + UI ใหม่ | เสร็จแล้ว |
 | 3 | PostgreSQL ใน Docker + Hono API อ่านหลักสูตร | เสร็จแล้ว |
 | 4 | Google OAuth + บันทึกแผนข้ามเครื่อง | เสร็จแล้ว (รอทดสอบกับ Google จริง) |
-| 5 | Deploy (ฐานข้อมูลบน Supabase) และย้ายข้อมูลจากเว็บเดิม | ยังไม่เริ่ม |
+| 5 | Docker image, RLS, backup, หน้าย้ายข้อมูลจากเว็บเดิม | โค้ดเสร็จแล้ว รอ deploy จริง |
 | 6 | หลายแผน, ประวัติ, ลิงก์แชร์, admin, สถิติ | ยังไม่เริ่ม |

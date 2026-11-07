@@ -2,7 +2,8 @@
 import { randomUUID } from "node:crypto";
 import { type BrowserContext, expect, type Page, test } from "@playwright/test";
 
-test.skip(!process.env.E2E_API, "ใช้เฉพาะโหมดที่มี API");
+// image ที่จะ deploy ไม่มี Google ปลอม จึงทดสอบชุดนี้ไม่ได้
+test.skip(!process.env.E2E_API || !!process.env.E2E_BASE_URL, "ใช้เฉพาะโหมดที่มี API และ Google ปลอม");
 
 const card = (page: Page, id: string) => page.getByTestId(`card-${id}`);
 const tick = (page: Page, id: string) => card(page, id).locator(".tick");

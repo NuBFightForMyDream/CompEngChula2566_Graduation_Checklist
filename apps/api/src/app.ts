@@ -11,6 +11,7 @@ import type { OAuthProvider } from "./modules/auth/oauth.ts";
 import { authRoutes, meRoutes } from "./modules/auth/routes.ts";
 import { curriculaRoutes } from "./modules/curricula/routes.ts";
 import { planRoutes } from "./modules/plans/routes.ts";
+import { webRoutes } from "./web.ts";
 
 export interface AppOptions {
   db: Db;
@@ -18,6 +19,9 @@ export interface AppOptions {
   oauth?: OAuthProvider | null;
   publicOrigin?: string;
   rateLimits?: Partial<RateLimits>;
+  trustedProxyHops?: number;
+  /** โฟลเดอร์หน้าเว็บที่ build แล้ว ตอนพัฒนาไม่ต้องใช้เพราะ Vite เสิร์ฟให้ */
+  webRoot?: string | undefined;
 }
 
 export function createApp({
@@ -26,6 +30,8 @@ export function createApp({
   oauth = null,
   publicOrigin = "http://localhost:5173",
   rateLimits,
+  trustedProxyHops = 0,
+  webRoot,
 }: AppOptions) {
   const app = new OpenAPIHono();
   const limits = { ...DEFAULT_RATE_LIMITS, ...rateLimits };
@@ -73,7 +79,7 @@ export function createApp({
   });
 
   app.route("/api/curricula", curriculaRoutes(db));
-  app.route("/api/auth", authRoutes({ db, logger, oauth, cookies, limits }));
+  app.route("/api/auth", authRoutes({ db, logger, oauth, cookies, limits, trustedProxyHops }));
   app.route("/api/me", meRoutes({ db, cookies, loginAvailable: !!oauth }));
   app.route("/api/plans", planRoutes({ db, cookies, limits }));
 
@@ -82,6 +88,8 @@ export function createApp({
     info: { title: "CP Graduation Roadmap API", version: "0.1.0" },
   });
   app.get("/api/docs", swaggerUI({ url: "/api/openapi.json" }));
+
+  if (webRoot) app.route("/", webRoutes(webRoot));
 
   return app;
 }

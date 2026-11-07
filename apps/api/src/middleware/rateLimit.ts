@@ -16,14 +16,29 @@ export const DEFAULT_RATE_LIMITS: RateLimits = { auth: 30, writes: 120 };
 
 const WINDOW_MS = 60_000;
 
-export const clientAddress = (c: Context) => {
-  try {
-    return getConnInfo(c).remote.address ?? "unknown";
-  } catch {
-    // app.request() ใน test ไม่มี socket จริง
-    return "unknown";
-  }
-};
+/**
+ * หา IP ของผู้ใช้สำหรับ rate limit
+ * X-Forwarded-For เขียนต่อจากซ้ายไปขวา ผู้ใช้ปลอมค่าด้านซ้ายได้ แต่ปลอมค่าที่ proxy ของเราเติมด้านขวาไม่ได้
+ * จึงนับจากขวาตามจำนวน proxy ที่ไว้ใจ ถ้าไม่มี proxy จะใช้ IP ของการเชื่อมต่อและไม่เชื่อ header นี้เลย
+ */
+export const clientAddress =
+  (trustedProxyHops: number) =>
+  (c: Context): string => {
+    if (trustedProxyHops > 0) {
+      const chain = (c.req.header("x-forwarded-for") ?? "")
+        .split(",")
+        .map((ip) => ip.trim())
+        .filter(Boolean);
+      const ip = chain[chain.length - trustedProxyHops] ?? chain[0];
+      if (ip) return ip;
+    }
+    try {
+      return getConnInfo(c).remote.address ?? "unknown";
+    } catch {
+      // app.request() ใน test ไม่มี socket จริง
+      return "unknown";
+    }
+  };
 
 export function rateLimit(limit: number, keyOf: (c: Context) => string): MiddlewareHandler {
   const hits = new Map<string, { count: number; resetAt: number }>();

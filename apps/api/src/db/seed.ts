@@ -8,6 +8,7 @@ import { fileURLToPath } from "node:url";
 import { type Curriculum, curriculumIndexSchema, curriculumSchema } from "@cp/contracts";
 import { eq, sql } from "drizzle-orm";
 import type { PgInsertValue, PgTable } from "drizzle-orm/pg-core";
+import { getCurriculum, getNotices, listCurricula } from "../modules/curricula/repo.ts";
 import type { Db } from "./client.ts";
 import {
   categories,
@@ -127,6 +128,44 @@ async function writeCurriculum(tx: Tx, cur: Curriculum, listName: string, positi
   );
 }
 
+async function hasChanges(
+  db: Db,
+  loaded: { entry: { id: string; name: string; notices?: string[] | undefined }; curriculum: Curriculum }[],
+  noticeRows: { slug: string; body: string }[],
+) {
+  const stored = await db.select({ slug: notices.slug, body: notices.body }).from(notices);
+  const bodies = new Map(stored.map((n) => [n.slug, n.body]));
+  if (noticeRows.some((n) => bodies.get(n.slug) !== n.body)) return true;
+
+  const list = await listCurricula(db);
+  for (const [i, { entry, curriculum }] of loaded.entries()) {
+    if (list[i]?.id !== entry.id || list[i]?.name !== entry.name) return true;
+    const current = await getCurriculum(db, entry.id);
+    if (JSON.stringify(current) !== JSON.stringify(withOptionPrereqs(curriculum))) return true;
+    const attached = (await getNotices(db, entry.id)).map((n) => n.slug);
+    if (JSON.stringify(attached) !== JSON.stringify((entry.notices ?? []).map(noticeSlug))) return true;
+  }
+  return false;
+}
+
+/** ในไฟล์ ตัวเลือกวิชาอาจไม่มี prereq แต่ฐานข้อมูลคืนเป็น [] เสมอ ต้องปรับให้เหมือนกันก่อนเทียบ */
+function withOptionPrereqs(cur: Curriculum): Curriculum {
+  // parse อีกรอบเพื่อให้ลำดับ key ตรงกับ schema การเทียบด้วย JSON จึงเชื่อถือได้
+  return curriculumSchema.parse({
+    ...cur,
+    pools: Object.fromEntries(
+      Object.entries(cur.pools ?? {}).map(([key, pool]) => [
+        key,
+        {
+          label: pool.label,
+          ...(pool.note === undefined ? {} : { note: pool.note }),
+          options: pool.options.map((o) => ({ ...o, prereq: o.prereq ?? [] })),
+        },
+      ]),
+    ),
+  });
+}
+
 /** อ่านและตรวจไฟล์ทั้งหมดให้ผ่านก่อน จึงเริ่มแตะฐานข้อมูล */
 export async function seedCurricula(db: Db, dataDir: string = DEFAULT_DATA_DIR) {
   const read = (file: string) => readFile(join(dataDir, file), "utf8");
@@ -140,6 +179,10 @@ export async function seedCurricula(db: Db, dataDir: string = DEFAULT_DATA_DIR) 
   const noticeFiles = [...new Set(entries.flatMap((e) => e.notices ?? []))];
   const noticeRows = await Promise.all(noticeFiles.map(async (f) => ({ slug: noticeSlug(f), body: await read(f) })));
 
+  // เซิร์ฟเวอร์รัน seed ทุกครั้งที่เริ่ม บนบริการที่หลับเมื่อไม่มีคนใช้จะเกิดบ่อย จึงเขียนเมื่อเนื้อหาเปลี่ยนเท่านั้น
+  const changed = await hasChanges(db, loaded, noticeRows);
+  if (!changed) return { curricula: loaded.length, notices: noticeRows.length, written: false };
+
   await db.transaction(async (tx) => {
     if (noticeRows.length) {
       await tx
@@ -151,5 +194,5 @@ export async function seedCurricula(db: Db, dataDir: string = DEFAULT_DATA_DIR) 
       await writeCurriculum(tx, curriculum, entry.name, i, entry.notices ?? []);
     }
   });
-  return { curricula: loaded.length, notices: noticeRows.length };
+  return { curricula: loaded.length, notices: noticeRows.length, written: true };
 }

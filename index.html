@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Graduation Roadmap ย้ายไปเว็บใหม่แล้ว</title>
+<!--
+  หน้านี้แทนเว็บเดิมบน GitHub Pages เมื่อ merge เข้า main
+  ข้อมูลของผู้ใช้เดิมอยู่ใน localStorage ของโดเมนนี้ เว็บใหม่อยู่คนละโดเมนจึงอ่านเองไม่ได้
+  หน้านี้จึงช่วยดาวน์โหลดข้อมูลออกมาเป็นไฟล์ เพื่อนำเข้าที่เว็บใหม่
+
+  ก่อน merge ให้ใส่ที่อยู่เว็บใหม่ใน NEW_SITE_URL ด้านล่าง
+-->
+<style>
+  :root { --bg: #f6f5f3; --surface: #fff; --fg: #1d1b1a; --muted: #68625e; --line: #e2dfdb; --brand: #a3001e; color-scheme: light; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #141312; --surface: #1e1c1b; --fg: #eeeae6; --muted: #a9a29c; --line: #36322f; --brand: #8c0019; color-scheme: dark; }
+  }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.6 system-ui, sans-serif; padding: 32px 16px; }
+  main { max-width: 560px; margin: 0 auto; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 24px; }
+  h1 { font-size: 1.4rem; margin: 0 0 8px; }
+  p { margin: 8px 0; }
+  ol { padding-left: 22px; }
+  .muted { color: var(--muted); font-size: 14px; }
+  .actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0 8px; }
+  button, .link { font: inherit; display: inline-block; padding: 9px 16px; border-radius: 9px; border: 1px solid var(--line); background: var(--surface); color: var(--fg); text-decoration: none; cursor: pointer; }
+  .primary { background: var(--brand); border-color: var(--brand); color: #fff; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<main>
+  <h1>เว็บนี้ย้ายไปที่ใหม่แล้ว</h1>
+  <p>เว็บใหม่เข้าสู่ระบบด้วย Google และบันทึกแผนการเรียนข้ามเครื่องได้</p>
+
+  <section id="has-data" hidden>
+    <p>พบแผนที่คุณเคยบันทึกไว้ในเบราว์เซอร์นี้: <b id="summary"></b> ข้อมูลนี้จะไม่ย้ายไปเอง ให้ทำตามนี้</p>
+    <ol>
+      <li>กด "ดาวน์โหลดแผนของฉัน"</li>
+      <li>เปิดเว็บใหม่ แล้วไปที่ ตั้งค่า → นำเข้าไฟล์สำรอง</li>
+    </ol>
+    <div class="actions">
+      <button type="button" class="primary" id="download">ดาวน์โหลดแผนของฉัน</button>
+      <a class="link" href="./" data-new-site hidden>ไปเว็บใหม่</a>
+    </div>
+  </section>
+
+  <section id="no-data" hidden>
+    <p>ไม่พบแผนที่บันทึกไว้ในเบราว์เซอร์นี้ ถ้าเคยใช้จากเครื่องอื่น ให้เปิดหน้านี้จากเครื่องนั้น</p>
+    <div class="actions"><a class="link primary" href="./" data-new-site hidden>ไปเว็บใหม่</a></div>
+  </section>
+
+  <p class="muted" id="not-ready" hidden>เว็บใหม่กำลังจะเปิดให้ใช้งาน</p>
+</main>
+<script>
+  "use strict";
+  const NEW_SITE_URL = "";
+  const CURRICULUM_ID = "comp-eng-2566";
+
+  const read = (key) => {
+    try { return JSON.parse(localStorage.getItem(key)); } catch { return null; }
+  };
+
+  // รับเฉพาะค่าที่ถูกต้อง ข้อมูลเก่าเพียงจุดเดียวต้องไม่ทำให้นำเข้าที่เว็บใหม่ไม่สำเร็จทั้งไฟล์
+  const isSem = (s) => typeof s === "string" && /^[1-5]\/[12]$/.test(s);
+  const GRADES = new Set(["A", "B+", "B", "C+", "C", "D+", "D", "F", "S", "U", "W"]);
+  const isCredits = (n) => Number.isInteger(n) && n >= 1 && n <= 6;
+  const text = (s, max) => typeof s === "string" && s.length > 0 && s.length <= max;
+  const pick = (record, keep) =>
+    Object.fromEntries(Object.entries(record && typeof record === "object" ? record : {}).filter(keep));
+
+  function buildBackup() {
+    const passed = read(`passed:${CURRICULUM_ID}`);
+    const place = read(`place:${CURRICULUM_ID}`);
+    const grades = read(`grade:${CURRICULUM_ID}`);
+    const choices = read(`choice:${CURRICULUM_ID}`);
+    const extras = read(`extra:${CURRICULUM_ID}`);
+    if ([passed, place, grades, choices, extras].every((v) => v === null)) return null;
+    const autoShift = read("autoShift");
+    return {
+      app: "cp-graduation-roadmap",
+      version: 1,
+      curriculumId: CURRICULUM_ID,
+      exportedAt: new Date().toISOString(),
+      plan: {
+        passed: (Array.isArray(passed) ? passed : []).filter((id) => text(id, 64)),
+        place: pick(place, ([, sem]) => isSem(sem)),
+        grades: pick(grades, ([, grade]) => GRADES.has(grade)),
+        choices: Object.fromEntries(
+          Object.entries(pick(choices, ([, c]) => c && text(c.code, 20) && text(c.name, 120) && isCredits(c.credits)))
+            .map(([slot, c]) => [slot, { id: typeof c.id === "string" ? c.id : null, code: c.code, name: c.name, credits: c.credits }]),
+        ),
+        extras: (Array.isArray(extras) ? extras : [])
+          .filter((e) => e && text(e.id, 64) && text(e.code, 20) && text(e.name, 120) && isCredits(e.credits) && typeof e.category === "string" && isSem(e.semester))
+          .slice(0, 50)
+          .map(({ id, code, name, credits, category, semester }) => ({ id, code, name, credits, category, semester })),
+      },
+      settings: {
+        autoShift: typeof autoShift === "boolean" ? autoShift : true,
+        showEdges: true,
+        colors: pick(read(`colors:${CURRICULUM_ID}`), ([, hex]) => typeof hex === "string" && /^#[0-9a-f]{6}$/i.test(hex)),
+      },
+    };
+  }
+
+  const backup = buildBackup();
+  document.getElementById(backup ? "has-data" : "no-data").hidden = false;
+  document.getElementById("not-ready").hidden = !!NEW_SITE_URL;
+  for (const link of document.querySelectorAll("[data-new-site]")) {
+    link.hidden = !NEW_SITE_URL;
+    if (NEW_SITE_URL) link.href = NEW_SITE_URL;
+  }
+  if (backup) {
+    const count = backup.plan.passed.length;
+    const graded = Object.keys(backup.plan.grades).length;
+    document.getElementById("summary").textContent = `ผ่านแล้ว ${count} วิชา มีเกรด ${graded} วิชา`;
+    document.getElementById("download").addEventListener("click", () => {
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" }));
+      a.download = `graduation-plan-${CURRICULUM_ID}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+    });
+  }
+</script>
+</body>
+</html>

@@ -218,3 +218,22 @@ test.describe("when the curriculum cannot load", () => {
     await expect(page.getByTestId("total-credits")).toBeVisible();
   });
 });
+
+test("the content security policy does not block normal use", async ({ page }) => {
+  const blocked: string[] = [];
+  page.on("console", (m) => {
+    if (/content security policy/i.test(m.text())) blocked.push(m.text());
+  });
+  await page.goto("/");
+  await tick(page, "2110101").click();
+  await openCard(page, "ELEC-1");
+  await page.keyboard.press("Escape");
+  await drag(page, "2110211", "3/1");
+  await page.locator(".menu summary").first().click();
+  const download = page.waitForEvent("download");
+  await page.getByRole("button", { name: "รูปภาพ (PNG)" }).click();
+  await download;
+  await page.getByRole("tab", { name: /ประกาศ/ }).click();
+  await expect(page.locator('[data-panel="notices"]')).toContainText("เงื่อนไขเพิ่มเติม");
+  expect(blocked).toEqual([]);
+});

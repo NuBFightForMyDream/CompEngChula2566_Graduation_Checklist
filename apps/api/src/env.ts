@@ -8,6 +8,12 @@ export const env = z
     LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"]).default("info"),
     /** ที่อยู่ที่ผู้ใช้เปิดเว็บ ใช้ตรวจ Origin และสร้าง redirect URI ของ Google */
     PUBLIC_ORIGIN: z.url().default("http://localhost:5173"),
+    /** ตั้งให้ต่ำกว่าเพดานของ pooler ฝั่งฐานข้อมูล */
+    DATABASE_MAX_CONNECTIONS: z.coerce.number().int().positive().default(10),
+    /** จำนวน proxy ของผู้ให้บริการที่อยู่หน้าเซิร์ฟเวอร์ ใช้หา IP จริงสำหรับ rate limit */
+    TRUSTED_PROXY_HOPS: z.coerce.number().int().min(0).default(0),
+    /** โฟลเดอร์หน้าเว็บที่ build แล้ว ถ้าตั้งไว้ API จะเสิร์ฟหน้าเว็บด้วย */
+    WEB_ROOT: z.string().min(1).optional(),
     GOOGLE_CLIENT_ID: z.string().min(1).optional(),
     GOOGLE_CLIENT_SECRET: z.string().min(1).optional(),
   })
