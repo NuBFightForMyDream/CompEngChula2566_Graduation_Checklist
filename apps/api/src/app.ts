@@ -1,6 +1,7 @@
 import { swaggerUI } from "@hono/swagger-ui";
 import { OpenAPIHono } from "@hono/zod-openapi";
 import { sql } from "drizzle-orm";
+import type { MiddlewareHandler } from "hono";
 import { HTTPException } from "hono/http-exception";
 import { secureHeaders } from "hono/secure-headers";
 import type { Logger } from "pino";
@@ -12,6 +13,13 @@ import { authRoutes, meRoutes } from "./modules/auth/routes.ts";
 import { curriculaRoutes } from "./modules/curricula/routes.ts";
 import { planRoutes } from "./modules/plans/routes.ts";
 import { webRoutes } from "./web.ts";
+
+const cachePublicResponse: MiddlewareHandler = async (c, next) => {
+  await next();
+  if (c.req.method === "GET" && c.res.ok) {
+    c.header("Cache-Control", "public, max-age=0, s-maxage=300, stale-while-revalidate=3600");
+  }
+};
 
 export interface AppOptions {
   db: Db;
@@ -78,6 +86,9 @@ export function createApp({
     }
   });
 
+  // ข้อมูลหลักสูตรเป็นข้อมูลสาธารณะและเปลี่ยนไม่บ่อย ให้ CDN ตอบแทนฐานข้อมูลได้ ลดเวลาโหลดหน้าแรกมาก
+  app.use("/api/curricula/*", cachePublicResponse);
+  app.use("/api/curricula", cachePublicResponse);
   app.route("/api/curricula", curriculaRoutes(db));
   app.route("/api/auth", authRoutes({ db, logger, oauth, cookies, limits, trustedProxyHops }));
   app.route("/api/me", meRoutes({ db, cookies, loginAvailable: !!oauth }));

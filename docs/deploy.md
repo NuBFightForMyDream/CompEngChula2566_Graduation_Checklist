@@ -1,42 +1,44 @@
 # คู่มือ deploy
 
-ทั้งระบบเป็น Docker image เดียวที่รวมหน้าเว็บกับ API ใช้กับผู้ให้บริการไหนก็ได้ที่รัน Docker และต่อ Postgres ได้
-คู่มือนี้ใช้ Supabase เป็นฐานข้อมูล และ Render เป็นตัวอย่างที่รัน image
+ใช้ Vercel รันหน้าเว็บกับ API และ Supabase เป็นฐานข้อมูล
+หน้าเว็บเสิร์ฟจาก CDN ส่วน API รันเป็น function เดียวใน origin เดียวกัน `scripts/vercel-build.ts` เป็นตัวสร้างทั้งสองส่วน
 
-ก่อนเริ่ม ลองรัน image ในเครื่องด้วย `pnpm test:e2e:image` ให้ผ่านก่อน
+ต้องใช้บัญชี Supabase, Vercel และ Google Cloud ใส่ค่าลับในหน้าตั้งค่าของแต่ละบริการเท่านั้น ห้าม commit ลง repo เพราะ repo นี้เป็น public
 
 ## 1. สร้างฐานข้อมูลบน Supabase
 
-1. สร้างโปรเจกต์ใหม่ เลือก region ใกล้ผู้ใช้และใกล้เซิร์ฟเวอร์ แล้วเก็บรหัสผ่านฐานข้อมูลไว้
-2. เปิดหน้า Connect แล้วคัดลอก connection string แบบ **Session pooler**
-   - ไม่ใช้ Direct connection เพราะเป็น IPv6 โดยปกติ ผู้ให้บริการส่วนมากต่อไม่ได้
-   - ไม่ใช้ Transaction pooler เพราะไม่รองรับ prepared statements และแอปนี้เป็นเซิร์ฟเวอร์ที่รันตลอด ไม่ใช่ serverless
-3. เติม `?sslmode=require` ท้าย connection string
-4. แนะนำให้ปิด Data API ใน Project Settings เพราะแอปนี้ไม่ได้ใช้ ทุกตารางเปิด Row Level Security แบบไม่มี policy ไว้แล้ว การปิดเป็นการป้องกันอีกชั้น
+1. สร้างโปรเจกต์ใหม่ เลือก region Southeast Asia (Singapore) ให้ตรงกับ function ซึ่งตั้งไว้ที่ `sin1` แล้วเก็บรหัสผ่านฐานข้อมูลไว้
+2. เปิดหน้า Connect แล้วคัดลอก connection string 2 แบบ และเติม `?sslmode=require` ท้ายทั้งคู่
 
-ตารางจะถูกสร้างเองตอน container เริ่มทำงาน ไม่ต้องรัน SQL เอง
+| แบบ | พอร์ต | ใช้เป็น | เหตุผล |
+|---|---|---|---|
+| Transaction pooler | 6543 | `DATABASE_URL` | เหมาะกับ serverless ที่เปิด connection สั้น ๆ จำนวนมาก |
+| Session pooler | 5432 | `MIGRATION_DATABASE_URL` | ใช้ตอน migrate และ seed ระหว่าง build |
 
-> Free plan จะ pause โปรเจกต์เมื่อไม่มีการใช้งานราว 1 สัปดาห์ ข้อมูลยังอยู่ แต่เว็บจะใช้ไม่ได้จนกว่าจะกด restore ในหน้า Supabase
+3. แนะนำให้ปิด Data API ใน Project Settings เพราะแอปนี้ไม่ได้ใช้ ทุกตารางเปิด Row Level Security แบบไม่มี policy ไว้แล้ว การปิดเป็นการป้องกันอีกชั้น
 
-## 2. รัน image บน Render
+ตารางจะถูกสร้างเองตอน deploy production ไม่ต้องรัน SQL เอง
 
-1. สร้าง Web Service แล้วเชื่อมกับ repo เลือก branch ที่ต้องการ และ runtime เป็น Docker
-2. เลือก region เดียวกับฐานข้อมูลถ้าทำได้
-3. ตั้ง Health Check Path เป็น `/api/health`
-4. ใส่ environment variables ตามตารางด้านล่าง
+> Free plan จะ pause โปรเจกต์เมื่อไม่มีการใช้งานราว 1 สัปดาห์ ข้อมูลยังอยู่ แต่เว็บจะโหลดไม่ได้ และ deploy ใหม่จะล้มจนกว่าจะกด restore ในหน้า Supabase
 
-> Free plan จะหลับเมื่อไม่มีการใช้งาน 15 นาที และใช้เวลาตื่นราว 1 นาที คำขอแรกหลังจากนั้นจึงช้า
+## 2. สร้างโปรเจกต์บน Vercel
+
+1. Add New → Project แล้ว import repo นี้ ไม่ต้องเปลี่ยน Root Directory ค่า install และ build อ่านจาก `vercel.json`
+2. ใส่ environment variables ตามตารางด้านล่าง โดยเลือก scope เป็น **Production เท่านั้น**
+3. ไปที่ Settings → Environments → Production แล้วเปลี่ยน branch เป็น `restructure`
+   ค่าเริ่มต้นคือ `main` ซึ่งยังเป็นเว็บเดิม deployment แรกจึงจะยังไม่ใช่เว็บใหม่
+4. กด Redeploy หรือ push ขึ้น `restructure` อีกครั้ง
 
 | ตัวแปร | ค่า | จำเป็น |
 |---|---|---|
-| `DATABASE_URL` | connection string จากขั้นที่ 1 | ต้องมี |
-| `PUBLIC_ORIGIN` | ที่อยู่เว็บ เช่น `https://your-app.onrender.com` ไม่มี `/` ท้าย | ต้องมี |
-| `DATABASE_MAX_CONNECTIONS` | `5` | แนะนำ เพื่อไม่ให้ชนเพดานของ pooler |
-| `TRUSTED_PROXY_HOPS` | `1` แล้วตรวจตามขั้นที่ 4 | แนะนำ |
+| `DATABASE_URL` | Transaction pooler จากขั้นที่ 1 | ต้องมี |
+| `MIGRATION_DATABASE_URL` | Session pooler จากขั้นที่ 1 | แนะนำ |
 | `GOOGLE_CLIENT_ID` | จากขั้นที่ 3 | ถ้าต้องการ login |
 | `GOOGLE_CLIENT_SECRET` | จากขั้นที่ 3 | ถ้าต้องการ login |
+| `PUBLIC_ORIGIN` | เช่น `https://your-app.vercel.app` ไม่มี `/` ท้าย | ต้องตั้งเมื่อใช้โดเมนอื่น ถ้าไม่ตั้งจะใช้โดเมนหลักของโปรเจกต์ |
+| `VERCEL_FUNCTION_REGION` | region ของ function ค่าเริ่มต้น `sin1` | ตั้งเมื่อฐานข้อมูลอยู่ที่อื่น |
 
-ใส่ค่าเหล่านี้ในหน้าตั้งค่าของผู้ให้บริการเท่านั้น ห้าม commit ลง repo เพราะ repo นี้เป็น public
+Preview deployment จะไม่มีฐานข้อมูลเพราะตัวแปรตั้งไว้เฉพาะ Production หน้าเว็บจึงขึ้นว่าโหลดหลักสูตรไม่สำเร็จ และ build จะไม่ migrate ฐานข้อมูลจริง เป็นพฤติกรรมที่ตั้งใจไว้
 
 ## 3. ตั้งค่า Google สำหรับเว็บจริง
 
@@ -44,17 +46,17 @@
 2. เปลี่ยนสถานะหน้า OAuth consent จาก Testing เป็น In production
    ถ้ายังเป็น Testing จะ login ได้เฉพาะอีเมลที่เพิ่มเป็น test user
 
-แนะนำให้สร้าง OAuth client แยกจากที่ใช้ในเครื่อง
+แนะนำให้สร้าง OAuth client แยกจากที่ใช้ในเครื่อง หลังใส่ค่าใน Vercel แล้วต้อง Redeploy
 
 ## 4. ตรวจหลัง deploy
 
+- [ ] Build log มี `migrate: เรียบร้อย`
 - [ ] `https://ที่อยู่เว็บ/api/health` ตอบ `{"status":"ok"}`
 - [ ] หน้าเว็บเปิดได้ ฟอนต์และสีถูกต้อง และ Console ไม่มี error เรื่อง Content Security Policy
+- [ ] header `x-vercel-id` ของ `/api/health` ลงท้ายด้วย function ใน `sin1` ถ้าเป็น `iad1` แปลว่า region ไม่ถูกใช้ และเว็บจะช้า
 - [ ] login ด้วย Google ได้ ติ๊กวิชา แล้วเปิดจากอีกเครื่องเห็นข้อมูลเดียวกัน
 - [ ] cookie ชื่อ `__Host-session` มี Secure และ HttpOnly
-- [ ] ตรวจ `TRUSTED_PROXY_HOPS`: เปิด `/api/auth/google` จากเครือข่ายสองแห่ง ต้องถูกนับเพดานแยกกัน
-      ถ้าถูกนับรวมกันแปลว่าค่าน้อยหรือมากเกินจำนวน proxy จริง ให้ปรับแล้วลองใหม่
-- [ ] Data API เข้าถึงข้อมูลไม่ได้ ถ้าไม่ได้ปิด ให้เรียก `GET https://โปรเจกต์.supabase.co/rest/v1/users` ด้วย anon key ต้องไม่เห็นข้อมูลผู้ใช้
+- [ ] ถ้าไม่ได้ปิด Data API ให้เรียก `GET https://โปรเจกต์.supabase.co/rest/v1/users` ด้วย anon key ต้องไม่เห็นข้อมูลผู้ใช้
 - [ ] ลองสำรองฐานข้อมูลตามหัวข้อด้านล่าง
 
 ## 5. เปลี่ยนจากเว็บเดิมบน GitHub Pages
@@ -67,12 +69,15 @@
 1. ใส่ที่อยู่เว็บใหม่ใน `NEW_SITE_URL` ใน `index.html`
 2. merge `restructure` เข้า `main`
 3. เปิดเว็บเดิม แล้วตรวจว่าปุ่มดาวน์โหลดและลิงก์ไปเว็บใหม่ทำงาน
+4. เปลี่ยน Production branch บน Vercel กลับเป็น `main`
 
 ## สำรองและกู้คืนฐานข้อมูล
 
+ใช้ Session pooler เพราะ `pg_dump` ต้องถือ connection ไว้ตลอดการทำงาน
+
 ```bash
 # สำรองเป็นไฟล์ใน backups/ ซึ่ง git ไม่เก็บ
-DATABASE_URL='connection string' pnpm db:backup
+DATABASE_URL='session pooler connection string' pnpm db:backup
 
 # กู้คืนไปยังฐานข้อมูลปลายทาง (เขียนทับข้อมูลเดิม) ต้องติดตั้ง pg_restore หรือรันผ่าน image postgres:17
 pg_restore --clean --if-exists --no-owner --no-privileges -d "$TARGET_DATABASE_URL" backups/ชื่อไฟล์.dump
@@ -82,7 +87,13 @@ pg_restore --clean --if-exists --no-owner --no-privileges -d "$TARGET_DATABASE_U
 
 ## อัปเดตเวอร์ชันใหม่
 
-push ขึ้น branch ที่ผู้ให้บริการติดตามอยู่ ตอนเริ่มทำงาน container จะรัน migration และนำเข้าหลักสูตรให้เอง
-ถ้า migration ล้ม container จะหยุด แทนการเปิดด้วยฐานข้อมูลที่ไม่ตรงกับโค้ด
+push ขึ้น Production branch ได้เลย build จะ migrate และนำเข้าหลักสูตรให้ก่อนเปิดเวอร์ชันใหม่
+ถ้า migration ล้ม build จะล้ม และเวอร์ชันเดิมยังทำงานต่อ
 
-Migration ควรเป็นแบบเพิ่มอย่างเดียวเมื่อทำได้ ถ้าต้องลบคอลัมน์หรือตาราง ให้สำรองข้อมูลก่อนเสมอ
+- โค้ดเวอร์ชันเดิมยังทำงานอยู่ระหว่าง build จึงควร migrate แบบเพิ่มอย่างเดียวเมื่อทำได้ ถ้าต้องลบคอลัมน์หรือตาราง ให้สำรองข้อมูลก่อนเสมอ
+- ข้อมูลหลักสูตรถูกเก็บที่ CDN 5 นาที หลังแก้ JSON หน้าเว็บอาจเห็นของเดิมอีกสักครู่
+
+## ทางเลือกอื่น: Docker
+
+`Dockerfile` สร้าง image เดียวที่รวมหน้าเว็บกับ API ใช้กับผู้ให้บริการอื่นได้ และ CI ใช้ทดสอบระบบแบบรวมทุกส่วน
+ต้องตั้ง `DATABASE_URL` เป็น Session pooler, `PUBLIC_ORIGIN` และ `TRUSTED_PROXY_HOPS` ตามจำนวน proxy ของผู้ให้บริการนั้น

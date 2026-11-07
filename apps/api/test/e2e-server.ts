@@ -11,7 +11,7 @@ import { createDb } from "../src/db/client.ts";
 import { env } from "../src/env.ts";
 import { fakeOAuth } from "./fakeOAuth.ts";
 
-const { db } = createDb(env.DATABASE_URL);
+const { db } = createDb(env.DATABASE_URL, { max: env.DATABASE_MAX_CONNECTIONS, prepare: env.DATABASE_PREPARE });
 const app = createApp({
   db,
   logger: pino({ level: env.LOG_LEVEL }),

@@ -46,7 +46,7 @@ export function planRoutes({ db, cookies, limits }: { db: Db; cookies: CookieOpt
       onError: (c) => c.json(error("TOO_LARGE", "ข้อมูลใหญ่เกินไป"), 413),
     }),
   );
-  const writeLimit = rateLimit(limits.writes, (c) => (c.get("user") as { id: string }).id);
+  const writeLimit = rateLimit(db, "writes", limits.writes, (c) => (c.get("user") as { id: string }).id);
   app.on(["POST", "PUT", "DELETE"], "*", writeLimit);
 
   app.openapi(

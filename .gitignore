@@ -1,5 +1,6 @@
 node_modules/
 dist/
+.vercel/
 coverage/
 .DS_Store
 *.log
@@ -18,3 +19,4 @@ learning/cpp/step[0-9].exe
 
 # สำเนาฐานข้อมูล มีข้อมูลส่วนตัวของผู้ใช้ ห้ามขึ้น git
 backups/
+.vercel

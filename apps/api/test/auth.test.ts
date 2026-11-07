@@ -1,9 +1,9 @@
 import { meSchema } from "@cp/contracts";
 import { eq, sql } from "drizzle-orm";
 import { pino } from "pino";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { createApp } from "../src/app.ts";
-import { plans, sessions, users } from "../src/db/schema.ts";
+import { plans, rateLimitCounters, sessions, users } from "../src/db/schema.ts";
 import { seedCurricula } from "../src/db/seed.ts";
 import { googleProvider } from "../src/modules/auth/oauth.ts";
 import { Browser, jsonOf } from "./client.ts";
@@ -217,6 +217,7 @@ describe("cross-site requests", () => {
 
 describe("rate limit", () => {
   it("slows down repeated login attempts", async () => {
+    await handle.db.delete(rateLimitCounters);
     const limited = createApp({ db: handle.db, logger, oauth: fakeOAuth(), rateLimits: { auth: 2 } });
     const b = new Browser(limited);
     await b.request("/api/auth/google");
@@ -224,6 +225,41 @@ describe("rate limit", () => {
     const res = await b.request("/api/auth/google");
     expect(res.status).toBe(429);
     expect(Number(res.headers.get("retry-after"))).toBeGreaterThan(0);
+  });
+});
+
+describe("rate limit counters", () => {
+  const start = (app: ReturnType<typeof createApp>) => app.request("/api/auth/google");
+
+  beforeEach(() => handle.db.delete(rateLimitCounters));
+
+  it("count exactly when requests arrive together, as on many instances", async () => {
+    // คนละ app เหมือนคนละ instance ของ serverless ที่ไม่แชร์หน่วยความจำกัน
+    const instances = Array.from({ length: 4 }, () =>
+      createApp({ db: handle.db, logger, oauth: fakeOAuth(), rateLimits: { auth: 5 } }),
+    );
+    const results = await Promise.all(
+      Array.from({ length: 20 }, (_, i) => start(instances[i % 4] as (typeof instances)[0])),
+    );
+    const statuses = results.map((r) => r.status);
+    expect(statuses.filter((s) => s === 302)).toHaveLength(5);
+    expect(statuses.filter((s) => s === 429)).toHaveLength(15);
+  });
+
+  it("start over after the window ends", async () => {
+    const app = createApp({ db: handle.db, logger, oauth: fakeOAuth(), rateLimits: { auth: 1 } });
+    expect((await start(app)).status).toBe(302);
+    expect((await start(app)).status).toBe(429);
+    await handle.db.update(rateLimitCounters).set({ resetAt: new Date(Date.now() - 1000) });
+    expect((await start(app)).status).toBe(302);
+  });
+
+  it("do not store the address itself", async () => {
+    const app = createApp({ db: handle.db, logger, oauth: fakeOAuth(), trustedProxyHops: 1 });
+    await app.request("/api/auth/google", { headers: { "x-forwarded-for": "203.0.113.7" } });
+    const rows = await handle.db.select().from(rateLimitCounters);
+    expect(rows).toHaveLength(1);
+    expect(JSON.stringify(rows)).not.toContain("203.0.113.7");
   });
 });
 

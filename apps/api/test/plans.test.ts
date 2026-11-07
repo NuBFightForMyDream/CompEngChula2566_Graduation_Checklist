@@ -372,7 +372,7 @@ describe("rate limit", () => {
       db: handle.db,
       logger: pino({ level: "silent" }),
       oauth: fakeOAuth(),
-      rateLimits: { auth: 100, writes: 2 },
+      rateLimits: { auth: 100_000, writes: 2 },
     });
     const b = new Browser(limited);
     await b.login(`limited${counter}`);

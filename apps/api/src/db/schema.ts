@@ -305,3 +305,17 @@ export const planItems = pgTable(
     uniqueIndex("plan_items_one_choice_per_plan").on(t.planId, t.choiceId).where(sql`${t.choiceId} IS NOT NULL`),
   ],
 ).enableRLS();
+
+/**
+ * ตัวนับ rate limit เก็บในฐานข้อมูล เพราะ serverless มีหลาย instance ที่ไม่แชร์หน่วยความจำกัน
+ * key เป็น hash จึงไม่ได้เก็บ IP ของผู้ใช้ไว้ตรง ๆ
+ */
+export const rateLimitCounters = pgTable(
+  "rate_limit_counters",
+  {
+    key: text().primaryKey(),
+    count: integer().notNull(),
+    resetAt: timestamp("reset_at", { withTimezone: true }).notNull(),
+  },
+  (t) => [index("rate_limit_counters_reset_idx").on(t.resetAt)],
+).enableRLS();

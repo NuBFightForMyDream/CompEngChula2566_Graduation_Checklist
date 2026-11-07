@@ -169,6 +169,9 @@ importers:
       '@biomejs/biome':
         specifier: ^2.6.5
         version: 2.6.5
+      esbuild:
+        specifier: ^0.28.2
+        version: 0.28.2
       typescript:
         specifier: ^7.0.2
         version: 7.0.2

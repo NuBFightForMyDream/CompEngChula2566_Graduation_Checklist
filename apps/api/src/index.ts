@@ -6,7 +6,7 @@ import { env } from "./env.ts";
 import { googleProvider } from "./modules/auth/oauth.ts";
 
 const logger = pino({ level: env.LOG_LEVEL });
-const { db, close } = createDb(env.DATABASE_URL, { max: env.DATABASE_MAX_CONNECTIONS });
+const { db, close } = createDb(env.DATABASE_URL, { max: env.DATABASE_MAX_CONNECTIONS, prepare: env.DATABASE_PREPARE });
 const oauth =
   env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET
     ? googleProvider({

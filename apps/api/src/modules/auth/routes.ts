@@ -46,7 +46,7 @@ export function authRoutes({ db, logger, oauth, cookies, limits, trustedProxyHop
     maxAge: FLOW_MAX_AGE_SECONDS,
   };
 
-  const limitByAddress = rateLimit(limits.auth, clientAddress(trustedProxyHops));
+  const limitByAddress = rateLimit(db, "auth", limits.auth, clientAddress(trustedProxyHops));
   app.use("/google", limitByAddress);
   app.use("/google/callback", limitByAddress);
 

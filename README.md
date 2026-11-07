@@ -3,7 +3,7 @@
 เว็บวางแผนการเรียนและเช็กเงื่อนไขจบการศึกษา วิศวกรรมคอมพิวเตอร์ จุฬาฯ
 มองหลักสูตรเป็นกราฟ: วิชา = node, วิชาบังคับก่อน = edge โดยใช้แนวคิดจาก 2110211 Data Structure และ 2110327 Algorithm Design
 
-> กำลังย้ายจาก static site ไปเป็น full-stack โค้ดพร้อม deploy แล้ว แต่ยังไม่ได้ขึ้นออนไลน์ ดู[คู่มือ deploy](docs/deploy.md)
+> กำลังย้ายจาก static site ไปเป็น full-stack โค้ดพร้อม deploy บน Vercel แล้ว แต่ยังไม่ได้ขึ้นออนไลน์ ดู[คู่มือ deploy](docs/deploy.md)
 
 ## เริ่มใช้งาน
 
@@ -42,6 +42,7 @@ GOOGLE_CLIENT_SECRET=ค่าที่ได้จาก Google
 | `pnpm test` | unit test ของ `core`, `contracts` และ integration test ของ API กับ Postgres จริง (ต้องเปิด Docker) |
 | `pnpm test:e2e` | ทดสอบหน้าเว็บจริงด้วย Playwright (ครั้งแรกรัน `pnpm --filter @cp/web exec playwright install chromium`) |
 | `pnpm test:e2e:api` | รัน E2E ผ่าน API และ Postgres รวมชุดทดสอบบัญชีและการบันทึกแผน |
+| `pnpm build:vercel` | สร้างผลลัพธ์สำหรับ Vercel ลงใน `.vercel/output` |
 | `pnpm test:e2e:image` | สร้าง Docker image ที่จะ deploy จริง แล้วรัน E2E กับ image นั้น |
 | `pnpm image:up` / `pnpm image:down` | เปิด / ปิด image ที่ http://localhost:8090 |
 | `pnpm db:backup` | สำรองฐานข้อมูลเป็นไฟล์ใน `backups/` (ต้องตั้ง `DATABASE_URL`) |
@@ -72,8 +73,8 @@ packages/
   contracts/    Zod schema ของไฟล์หลักสูตร แผน และไฟล์สำรอง
   curricula/    JSON หลักสูตรและ Markdown ประกาศ
 docs/deploy.md  คู่มือ deploy
-scripts/        สำรองฐานข้อมูล
-Dockerfile      image เดียวรวมหน้าเว็บกับ API
+scripts/        สร้างผลลัพธ์สำหรับ Vercel และสำรองฐานข้อมูล
+Dockerfile      image ทางเลือก รวมหน้าเว็บกับ API
 index.html      หน้าที่จะแทนเว็บเดิมบน GitHub Pages ช่วยผู้ใช้เดิมนำข้อมูลออก
 learning/
   python/       เวอร์ชัน Python อ่านง่าย มีคำอธิบายทุกอัลกอริทึม
@@ -143,5 +144,5 @@ learning/
 | 0–2 | Monorepo, `core` + test, React + UI ใหม่ | เสร็จแล้ว |
 | 3 | PostgreSQL ใน Docker + Hono API อ่านหลักสูตร | เสร็จแล้ว |
 | 4 | Google OAuth + บันทึกแผนข้ามเครื่อง | เสร็จแล้ว (รอทดสอบกับ Google จริง) |
-| 5 | Docker image, RLS, backup, หน้าย้ายข้อมูลจากเว็บเดิม | โค้ดเสร็จแล้ว รอ deploy จริง |
+| 5 | Vercel + Supabase, RLS, backup, หน้าย้ายข้อมูลจากเว็บเดิม | โค้ดเสร็จแล้ว รอ deploy จริง |
 | 6 | หลายแผน, ประวัติ, ลิงก์แชร์, admin, สถิติ | ยังไม่เริ่ม |

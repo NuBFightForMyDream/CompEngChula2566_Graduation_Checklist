@@ -112,6 +112,20 @@ describe("GET /api/curricula/:id/courses/:courseId/chain", () => {
   });
 });
 
+describe("CDN caching", () => {
+  it("lets the CDN cache public curriculum data", async () => {
+    for (const path of ["/api/curricula", `/api/curricula/${ID}`, `/api/curricula/${ID}/notices`]) {
+      expect((await get(path)).headers.get("cache-control"), path).toContain("s-maxage");
+    }
+  });
+
+  it("never caches errors or private data", async () => {
+    expect((await get("/api/curricula/nope")).headers.get("cache-control")).toBeNull();
+    expect((await get("/api/health")).headers.get("cache-control")).toBeNull();
+    expect((await get("/api/me")).headers.get("cache-control")).toBe("no-store");
+  });
+});
+
 describe("the rest of the app", () => {
   it("publishes an OpenAPI document with every route", async () => {
     const doc = await bodyOf("/api/openapi.json");

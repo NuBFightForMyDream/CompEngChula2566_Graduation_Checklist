@@ -17,6 +17,7 @@
     "image:down": "docker compose --profile image down",
     "build": "pnpm --filter @cp/web build",
     "preview": "pnpm --filter @cp/web preview",
+    "build:vercel": "node scripts/vercel-build.ts",
     "test": "pnpm -r --if-present test",
     "test:e2e": "pnpm --filter @cp/web test:e2e",
     "test:e2e:image": "pnpm image:up && E2E_API=1 E2E_BASE_URL=http://localhost:8090 pnpm --filter @cp/web test:e2e",
@@ -28,6 +29,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.6.5",
+    "esbuild": "^0.28.2",
     "typescript": "^7.0.2",
     "vitest": "^5.1.0"
   }

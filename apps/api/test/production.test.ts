@@ -4,8 +4,9 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { sql } from "drizzle-orm";
 import { pino } from "pino";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { createApp } from "../src/app.ts";
+import { rateLimitCounters } from "../src/db/schema.ts";
 import { seedCurricula } from "../src/db/seed.ts";
 import { Browser } from "./client.ts";
 import { fakeOAuth } from "./fakeOAuth.ts";
@@ -36,7 +37,7 @@ describe("the Supabase Data API", () => {
     const tables = await handle.db.execute<{ tablename: string; rowsecurity: boolean }>(
       sql`SELECT tablename, rowsecurity FROM pg_tables WHERE schemaname = 'public' ORDER BY tablename`,
     );
-    expect(tables.length).toBeGreaterThanOrEqual(14);
+    expect(tables.length).toBeGreaterThanOrEqual(15);
     expect(tables.filter((t) => !t.rowsecurity).map((t) => t.tablename)).toEqual([]);
   });
 
@@ -129,6 +130,8 @@ describe("serving the web app", () => {
 });
 
 describe("rate limit behind a proxy", () => {
+  beforeEach(() => handle.db.delete(rateLimitCounters));
+
   const limited = (trustedProxyHops: number) =>
     createApp({ db: handle.db, logger, oauth: fakeOAuth(), rateLimits: { auth: 1 }, trustedProxyHops });
   const start = (app: ReturnType<typeof limited>, forwarded: string) =>
