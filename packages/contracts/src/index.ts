@@ -1,6 +1,6 @@
 // Zod schema ของข้อมูลที่ข้ามขอบเขตระบบ: ไฟล์หลักสูตร, แผนที่โหลดจากเบราว์เซอร์หรือไฟล์ และ API ในอนาคต
 
-import { GRADES, type Grade, SEMS } from "@cp/core";
+import { buildGraph, GRADES, type Grade, SEMS, topoSort } from "@cp/core";
 import { z } from "zod";
 
 const offered = z.array(z.enum(["1", "2"])).min(1);
@@ -65,7 +65,41 @@ export const curriculumSchema = z
         for (const p of o.prereq ?? []) if (!ids.has(p)) fail(`pool ${key} / ${o.id}: ไม่มี prereq ${p}`);
       }
     }
+    const refsOk = cur.courses.every((c) => c.prereq.every((p) => ids.has(p)));
+    if (refsOk && ids.size === cur.courses.length && topoSort(buildGraph(cur.courses)).length !== cur.courses.length) {
+      fail("มีวิชาบังคับก่อนที่วนกัน");
+    }
   });
+
+export type Curriculum = z.infer<typeof curriculumSchema>;
+
+/** data/index.json */
+export const curriculumIndexSchema = z.array(
+  z.object({
+    id: z.string().min(1),
+    name: z.string().min(1),
+    file: z.string().min(1),
+    notices: z.array(z.string()).optional(),
+  }),
+);
+
+// ---------- API ----------
+export const curriculumSummarySchema = z.object({ id: z.string(), name: z.string() });
+export const curriculumListSchema = z.array(curriculumSummarySchema);
+export type CurriculumSummary = z.infer<typeof curriculumSummarySchema>;
+
+export const noticeSchema = z.object({ slug: z.string(), body: z.string() });
+export const noticeListSchema = z.array(noticeSchema);
+
+export const courseChainSchema = z.object({
+  courseId: z.string(),
+  /** ทุกวิชาที่ต้องผ่านก่อน รวมทุกชั้น */
+  prereqs: z.array(z.string()),
+  /** ทุกวิชาที่ได้รับผลกระทบถ้าไม่ผ่านวิชานี้ รวมทุกชั้น */
+  dependents: z.array(z.string()),
+});
+
+export const apiErrorSchema = z.object({ error: z.object({ code: z.string(), message: z.string() }) });
 
 const choiceSchema = z.object({
   id: z.string().nullable(),

@@ -1,38 +1,20 @@
-// แหล่งข้อมูลหลักสูตร ตอนนี้อ่านจาก packages/curricula เฟส 3 จะเปลี่ยนไปอ่านจาก API
+// แหล่งข้อมูลหลักสูตร สลับได้ด้วย VITE_CURRICULUM_SOURCE
+//   bundled (ค่าเริ่มต้น) = อ่านจากไฟล์ที่ติดมากับเว็บ ไม่ต้องเปิด API หรือฐานข้อมูล
+//   api = อ่านจาก API ใช้กับ pnpm dev:full และจะเป็นค่าหลักเมื่อ deploy ในเฟส 5
 
-import { curriculumSchema } from "@cp/contracts";
+import type { CurriculumSummary } from "@cp/contracts";
 import type { Curriculum } from "@cp/core";
-import index from "@cp/curricula/data/index.json";
 
-export interface CurriculumEntry {
-  id: string;
-  name: string;
-  file: string;
-  notices?: string[];
+export interface CurriculumSource {
+  list(): Promise<CurriculumSummary[]>;
+  curriculum(id: string): Promise<Curriculum>;
+  notices(id: string): Promise<string[]>;
 }
 
-const files = import.meta.glob(
-  ["../../../../packages/curricula/data/*.json", "!../../../../packages/curricula/data/index.json"],
-  {
-    import: "default",
-  },
-);
-const notices = import.meta.glob("../../../../packages/curricula/data/notices/*.md", {
-  query: "?raw",
-  import: "default",
-});
-
-const findByName = <T>(all: Record<string, () => Promise<T>>, tail: string) => {
-  const key = Object.keys(all).find((k) => k.endsWith(`/data/${tail}`));
-  if (!key) throw new Error(`ไม่พบไฟล์ ${tail}`);
-  return (all[key] as () => Promise<T>)();
-};
-
-export const curriculumEntries = index as CurriculumEntry[];
-
-export async function loadCurriculum(entry: CurriculumEntry): Promise<Curriculum> {
-  return curriculumSchema.parse(await findByName(files, entry.file)) as Curriculum;
+export async function curriculumSource(): Promise<CurriculumSource> {
+  // import แบบไดนามิก เพื่อไม่ให้ข้อมูลหลักสูตรติดไปใน bundle ตอนใช้โหมด api
+  if (import.meta.env.VITE_CURRICULUM_SOURCE === "api") {
+    return (await import("./apiCurriculumSource.ts")).apiCurriculumSource;
+  }
+  return (await import("./bundledCurriculumSource.ts")).bundledCurriculumSource;
 }
-
-export const loadNotices = (entry: CurriculumEntry) =>
-  Promise.all((entry.notices ?? []).map((f) => findByName(notices, f) as Promise<string>));

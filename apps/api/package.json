@@ -1,0 +1,38 @@
+{
+  "name": "@cp/api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --env-file-if-exists=.env.example --env-file-if-exists=.env --watch src/index.ts",
+    "dev:full": "pnpm run dev",
+    "start": "node --env-file-if-exists=.env.example --env-file-if-exists=.env src/index.ts",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "node --env-file-if-exists=.env.example --env-file-if-exists=.env src/db/migrate-cli.ts",
+    "db:seed": "node --env-file-if-exists=.env.example --env-file-if-exists=.env src/db/seed-cli.ts",
+    "db:setup": "pnpm run db:migrate && pnpm run db:seed",
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@cp/contracts": "workspace:*",
+    "@cp/core": "workspace:*",
+    "@hono/node-server": "^2.1.6",
+    "@hono/swagger-ui": "^0.6.2",
+    "@hono/zod-openapi": "^1.6.3",
+    "drizzle-orm": "^0.45.4",
+    "hono": "^4.13.16",
+    "pino": "^10.4.0",
+    "postgres": "^4.1.0",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@cp/curricula": "workspace:*",
+    "@testcontainers/postgresql": "^12.2.1",
+    "@types/node": "^26.6.6",
+    "drizzle-kit": "^0.31.11",
+    "testcontainers": "^12.2.1",
+    "typescript": "^7.0.2",
+    "vitest": "^5.1.0"
+  }
+}

@@ -30,6 +30,14 @@ describe("comp-eng-2566.json", () => {
 });
 
 describe("curriculumSchema", () => {
+  it("rejects a prerequisite cycle", () => {
+    const broken = JSON.parse(JSON.stringify(data)) as { courses: { id: string; prereq: string[] }[] };
+    const [a, b] = broken.courses as [{ id: string; prereq: string[] }, { id: string; prereq: string[] }];
+    a.prereq = [b.id];
+    b.prereq = [a.id];
+    expect(curriculumSchema.safeParse(broken).success).toBe(false);
+  });
+
   it("rejects a reference to a missing course", () => {
     const broken = JSON.parse(JSON.stringify(data)) as { courses: { prereq: string[] }[] };
     (broken.courses[0] as { prereq: string[] }).prereq = ["ghost"];

@@ -1,6 +1,12 @@
 // แผนของผู้ใช้: ทุกการเปลี่ยนแปลงผ่าน commit() ที่เดียว จึงมี undo และบันทึกอัตโนมัติครบทุกจุด
 
-import { defaultSettings, type PlanFile, type PlanSettings, planFileSchema } from "@cp/contracts";
+import {
+  type CurriculumSummary,
+  defaultSettings,
+  type PlanFile,
+  type PlanSettings,
+  planFileSchema,
+} from "@cp/contracts";
 import {
   type ActionResult,
   type Curriculum,
@@ -11,7 +17,7 @@ import {
   type PlanState,
 } from "@cp/core";
 import { create } from "zustand";
-import { type CurriculumEntry, loadCurriculum, loadNotices } from "../lib/curriculumSource.ts";
+import { curriculumSource } from "../lib/curriculumSource.ts";
 import { describeOutcome } from "../lib/messages.ts";
 import { localPlanRepository } from "../lib/planRepository.ts";
 import { useUi } from "./uiStore.ts";
@@ -20,13 +26,15 @@ const HISTORY_LIMIT = 50;
 const repository = localPlanRepository;
 
 interface PlanStore {
+  entries: CurriculumSummary[];
   curriculum: Curriculum | null;
   state: PlanState | null;
   settings: PlanSettings;
   notices: string[];
   past: PlanState[];
   future: PlanState[];
-  loadEntry(entry: CurriculumEntry): Promise<void>;
+  init(): Promise<void>;
+  loadCurriculum(id: string): Promise<void>;
   commit(next: PlanState, message?: string): void;
   dispatch(action: (m: PlanModel) => ActionResult): void;
   undo(): void;
@@ -53,6 +61,7 @@ export const usePlan = create<PlanStore>((set, get) => {
   };
 
   return {
+    entries: [],
     curriculum: null,
     state: null,
     settings: defaultSettings,
@@ -60,8 +69,18 @@ export const usePlan = create<PlanStore>((set, get) => {
     past: [],
     future: [],
 
-    async loadEntry(entry) {
-      const [curriculum, notices] = await Promise.all([loadCurriculum(entry), loadNotices(entry)]);
+    async init() {
+      const source = await curriculumSource();
+      const entries = await source.list();
+      const first = entries[0];
+      if (!first) throw new Error("ไม่พบรายชื่อหลักสูตร");
+      set({ entries });
+      await get().loadCurriculum(first.id);
+    },
+
+    async loadCurriculum(id) {
+      const source = await curriculumSource();
+      const [curriculum, notices] = await Promise.all([source.curriculum(id), source.notices(id)]);
       const stored = await repository.load(curriculum.id);
       const state = stored.plan ? normalizePlan(curriculum, stored.plan) : emptyPlan(curriculum);
       set({ curriculum, state, settings: stored.settings, notices, past: [], future: [] });

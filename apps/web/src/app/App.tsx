@@ -1,5 +1,5 @@
 import { availableCourses, remainingPlan } from "@cp/core";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { AddCourseDialog } from "../features/board/AddCourseDialog.tsx";
 import { Board } from "../features/board/Board.tsx";
 import { BoardToolbar } from "../features/board/BoardToolbar.tsx";
@@ -15,7 +15,6 @@ import { HelpDialog } from "../features/settings/HelpDialog.tsx";
 import { SettingsDialog } from "../features/settings/SettingsDialog.tsx";
 import { ProgressOverview } from "../features/summary/ProgressOverview.tsx";
 import { WelcomeCard } from "../features/summary/WelcomeCard.tsx";
-import { curriculumEntries } from "../lib/curriculumSource.ts";
 import { useModel, usePlan } from "../stores/planStore.ts";
 import { type Tab, useUi } from "../stores/uiStore.ts";
 
@@ -25,22 +24,16 @@ function TopBar() {
   const redo = usePlan((s) => s.redo);
   const canUndo = usePlan((s) => s.past.length > 0);
   const canRedo = usePlan((s) => s.future.length > 0);
-  const loadEntry = usePlan((s) => s.loadEntry);
+  const entries = usePlan((s) => s.entries);
+  const loadCurriculum = usePlan((s) => s.loadCurriculum);
   const openDialog = useUi((s) => s.openDialog);
   return (
     <header className="topbar">
       <div className="brand">
         <h1>Graduation Roadmap</h1>
-        {curriculumEntries.length > 1 ? (
-          <select
-            aria-label="หลักสูตร"
-            value={m.curriculum.id}
-            onChange={(e) => {
-              const entry = curriculumEntries.find((c) => c.id === e.target.value);
-              if (entry) void loadEntry(entry);
-            }}
-          >
-            {curriculumEntries.map((c) => (
+        {entries.length > 1 ? (
+          <select aria-label="หลักสูตร" value={m.curriculum.id} onChange={(e) => void loadCurriculum(e.target.value)}>
+            {entries.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name}
               </option>
@@ -141,14 +134,15 @@ function Workspace() {
 
 export function App() {
   const ready = usePlan((s) => !!s.curriculum);
-  const loadEntry = usePlan((s) => s.loadEntry);
+  const init = usePlan((s) => s.init);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const first = curriculumEntries[0];
-    if (first) loadEntry(first).catch((err: Error) => setError(err.message));
-    else setError("ไม่พบรายชื่อหลักสูตร");
-  }, [loadEntry]);
+  const start = useCallback(() => {
+    setError(null);
+    init().catch((err: Error) => setError(err.message));
+  }, [init]);
+
+  useEffect(start, [start]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -173,7 +167,16 @@ export function App() {
     };
   }, []);
 
-  if (error) return <p className="load-error">โหลดข้อมูลหลักสูตรไม่สำเร็จ: {error}</p>;
+  if (error) {
+    return (
+      <div className="load-error" role="alert">
+        <p>โหลดข้อมูลหลักสูตรไม่สำเร็จ: {error}</p>
+        <button type="button" onClick={start}>
+          ลองใหม่
+        </button>
+      </div>
+    );
+  }
   if (!ready) return <p className="load-state">กำลังโหลดหลักสูตร…</p>;
   return <Workspace />;
 }

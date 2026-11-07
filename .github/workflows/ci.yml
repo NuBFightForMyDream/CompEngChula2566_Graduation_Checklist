@@ -21,6 +21,36 @@ jobs:
       - run: pnpm --filter @cp/web exec playwright install --with-deps chromium
       - run: pnpm test:e2e
 
+  # เว็บโหลดหลักสูตรผ่าน API และ Postgres จริง โดยรัน E2E ชุดเดียวกัน
+  full-stack:
+    runs-on: ubuntu-latest
+    services:
+      db:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: cp
+          POSTGRES_PASSWORD: cp_dev_only
+          POSTGRES_DB: cp_roadmap
+        ports:
+          - 5434:5432
+        options: >-
+          --health-cmd "pg_isready -U cp -d cp_roadmap"
+          --health-interval 2s
+          --health-timeout 3s
+          --health-retries 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm db:setup
+      - run: pnpm --filter @cp/web exec playwright install --with-deps chromium
+      - run: pnpm test:e2e
+        env:
+          E2E_API: "1"
+
   learning:
     runs-on: ubuntu-latest
     steps:

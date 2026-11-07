@@ -18,7 +18,8 @@ async function drag(page: Page, id: string, sem: string) {
   await page.mouse.up();
 }
 
-test.beforeEach(async ({ page }) => {
+test.beforeEach(async ({ page }, testInfo) => {
+  if (testInfo.titlePath.includes("when the curriculum cannot load")) return;
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));
   page.on("console", (m) => {
@@ -202,5 +203,18 @@ test.describe("on a phone", () => {
     await card(page, "2110101").locator(".sel").tap();
     await expect(page.getByTestId("drawer")).toBeVisible();
     await expect(page.getByLabel("ย้ายไปเทอม")).toBeVisible();
+  });
+});
+
+test.describe("when the curriculum cannot load", () => {
+  test.skip(!process.env.E2E_API, "ใช้เฉพาะโหมดที่โหลดผ่าน API");
+
+  test("shows the reason and recovers with a retry", async ({ page }) => {
+    await page.route("**/api/curricula", (route) => route.fulfill({ status: 503, body: "{}" }));
+    await page.goto("/");
+    await expect(page.getByRole("alert")).toContainText("503");
+    await page.unroute("**/api/curricula");
+    await page.getByRole("button", { name: "ลองใหม่" }).click();
+    await expect(page.getByTestId("total-credits")).toBeVisible();
   });
 });

@@ -6,6 +6,7 @@ coverage/
 .env
 .env.*
 !.env.example
+!apps/web/.env.api
 
 # Playwright
 test-results/
