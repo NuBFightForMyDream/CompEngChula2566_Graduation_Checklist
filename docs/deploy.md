@@ -93,7 +93,21 @@ push ขึ้น Production branch ได้เลย build จะ migrate แ�
 - โค้ดเวอร์ชันเดิมยังทำงานอยู่ระหว่าง build จึงควร migrate แบบเพิ่มอย่างเดียวเมื่อทำได้ ถ้าต้องลบคอลัมน์หรือตาราง ให้สำรองข้อมูลก่อนเสมอ
 - ข้อมูลหลักสูตรถูกเก็บที่ CDN 5 นาที หลังแก้ JSON หน้าเว็บอาจเห็นของเดิมอีกสักครู่
 
-## ทางเลือกอื่น: Docker
+## ทางเลือกอื่น: Render
 
-`Dockerfile` สร้าง image เดียวที่รวมหน้าเว็บกับ API ใช้กับผู้ให้บริการอื่นได้ และ CI ใช้ทดสอบระบบแบบรวมทุกส่วน
-ต้องตั้ง `DATABASE_URL` เป็น Session pooler, `PUBLIC_ORIGIN` และ `TRUSTED_PROXY_HOPS` ตามจำนวน proxy ของผู้ให้บริการนั้น
+Render รัน `Dockerfile` ของ repo นี้โดยตรง ไม่ต้องสร้าง build แยก เซิร์ฟเวอร์ทำงานต่อเนื่อง จึงเก็บ connection ไว้ได้
+
+| | Vercel | Render (free) |
+|---|---|---|
+| รูปแบบ | serverless + CDN | เซิร์ฟเวอร์เดียวใน Docker |
+| ต่อฐานข้อมูลด้วย | Transaction pooler | Session pooler |
+| Migration | ตอน build | ตอนเซิร์ฟเวอร์เริ่ม |
+| เมื่อไม่มีคนใช้ | หน้าเว็บยังเปิดเร็วจาก CDN | หลับหลัง 15 นาที คำขอแรกรอราว 1 นาที |
+
+1. ทำขั้นที่ 1 ของคู่มือนี้ แต่ใช้ connection string แบบ **Session pooler** เป็น `DATABASE_URL`
+2. บน Render เลือก New → Blueprint แล้วเลือก repo นี้ ระบบจะอ่าน `render.yaml` และถาม `DATABASE_URL`, `GOOGLE_CLIENT_ID` และ `GOOGLE_CLIENT_SECRET`
+   ถ้ายังไม่ใช้ Google ให้เว้นสองค่านี้ว่างไว้ ส่วน `PUBLIC_ORIGIN` ไม่ต้องตั้ง ระบบใช้ที่อยู่ที่ Render กำหนดให้
+3. ตั้งค่า Google ตามขั้นที่ 3 โดยใช้ที่อยู่ `https://ชื่อบริการ.onrender.com`
+4. ตรวจตามขั้นที่ 4 ยกเว้นข้อ `x-vercel-id` และตรวจเพิ่มว่า `TRUSTED_PROXY_HOPS` ถูกต้อง โดยเปิด `/api/auth/google` จากเครือข่ายสองแห่ง ต้องถูกนับเพดานแยกกัน
+
+ถ้าใช้ผู้ให้บริการอื่นที่รัน Docker ได้ ให้ตั้ง `DATABASE_URL`, `PUBLIC_ORIGIN` และ `TRUSTED_PROXY_HOPS` เอง

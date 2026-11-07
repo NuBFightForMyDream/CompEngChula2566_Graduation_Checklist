@@ -20,6 +20,14 @@ jobs:
       - run: pnpm build
       - run: pnpm --filter @cp/web exec playwright install --with-deps chromium
       - run: pnpm test:e2e
+      # เก็บ trace ไว้ดูสาเหตุ เมื่อ E2E ตกแบบไม่สม่ำเสมอ ข้อมูลใน test เป็นข้อมูลสมมติทั้งหมด
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-web
+          path: apps/web/test-results
+          retention-days: 7
+          if-no-files-found: ignore
 
   # เว็บโหลดหลักสูตรผ่าน API และ Postgres จริง โดยรัน E2E ชุดเดียวกัน
   full-stack:
@@ -50,6 +58,14 @@ jobs:
       - run: pnpm test:e2e
         env:
           E2E_API: "1"
+      # เก็บ trace ไว้ดูสาเหตุ เมื่อ E2E ตกแบบไม่สม่ำเสมอ ข้อมูลใน test เป็นข้อมูลสมมติทั้งหมด
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-full-stack
+          path: apps/web/test-results
+          retention-days: 7
+          if-no-files-found: ignore
 
   # สร้าง Docker image จริง แล้วรัน E2E กับ image นั้น เพื่อยืนยันว่าสิ่งที่จะ deploy ใช้งานได้
   image:
@@ -63,6 +79,14 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @cp/web exec playwright install --with-deps chromium
       - run: pnpm test:e2e:image
+      # เก็บ trace ไว้ดูสาเหตุ เมื่อ E2E ตกแบบไม่สม่ำเสมอ ข้อมูลใน test เป็นข้อมูลสมมติทั้งหมด
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-image
+          path: apps/web/test-results
+          retention-days: 7
+          if-no-files-found: ignore
 
   learning:
     runs-on: ubuntu-latest

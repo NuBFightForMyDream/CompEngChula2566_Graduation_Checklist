@@ -74,7 +74,8 @@ packages/
   curricula/    JSON หลักสูตรและ Markdown ประกาศ
 docs/deploy.md  คู่มือ deploy
 scripts/        สร้างผลลัพธ์สำหรับ Vercel และสำรองฐานข้อมูล
-Dockerfile      image ทางเลือก รวมหน้าเว็บกับ API
+Dockerfile      image รวมหน้าเว็บกับ API สำหรับ Render หรือผู้ให้บริการอื่น
+render.yaml     ตั้งค่า Render
 index.html      หน้าที่จะแทนเว็บเดิมบน GitHub Pages ช่วยผู้ใช้เดิมนำข้อมูลออก
 learning/
   python/       เวอร์ชัน Python อ่านง่าย มีคำอธิบายทุกอัลกอริทึม

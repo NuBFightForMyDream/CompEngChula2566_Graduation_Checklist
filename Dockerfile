@@ -24,7 +24,6 @@ RUN pnpm install --frozen-lockfile --prod --filter "@cp/api..." \
 # Node รัน TypeScript ได้โดยตรง จึงคัดลอก source ไม่ต้อง compile
 COPY apps/api/src apps/api/src
 COPY apps/api/drizzle apps/api/drizzle
-COPY apps/api/docker-start.sh apps/api/docker-start.sh
 COPY packages/core/src packages/core/src
 COPY packages/contracts/src packages/contracts/src
 COPY packages/curricula/data packages/curricula/data
@@ -35,4 +34,4 @@ EXPOSE 8080
 USER node
 HEALTHCHECK --interval=10s --timeout=3s --start-period=20s --retries=6 \
   CMD node -e "fetch('http://localhost:'+process.env.PORT+'/api/health').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))"
-CMD ["sh", "docker-start.sh"]
+CMD ["node", "src/start.ts"]

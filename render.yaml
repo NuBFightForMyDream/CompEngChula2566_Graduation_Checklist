@@ -1,0 +1,21 @@
+# ตั้งค่า Render จาก repo นี้ ใช้ผ่านเมนู New → Blueprint
+# ค่าที่เป็น sync: false ต้องกรอกเองในหน้า Render และจะไม่ถูกเก็บใน repo
+services:
+  - type: web
+    name: cp-graduation-roadmap
+    runtime: docker
+    plan: free
+    region: singapore
+    branch: restructure
+    healthCheckPath: /api/health
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: DATABASE_MAX_CONNECTIONS
+        value: "5"
+      - key: TRUSTED_PROXY_HOPS
+        value: "1"

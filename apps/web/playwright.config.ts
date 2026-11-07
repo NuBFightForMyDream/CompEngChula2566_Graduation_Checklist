@@ -8,6 +8,8 @@ export default defineConfig({
   testDir: "./e2e",
   fullyParallel: true,
   retries: process.env.CI ? 1 : 0,
+  // เว็บจริงผ่านเครือข่ายภายนอกช้ากว่าเซิร์ฟเวอร์ในเครื่อง
+  expect: { timeout: externalUrl ? 15_000 : 5_000 },
   use: { baseURL: externalUrl ?? "http://localhost:5174", trace: "retain-on-failure" },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"], viewport: { width: 1440, height: 900 } } }],
   // E2E_API=1 รันชุดเดิมทั้งหมดผ่าน API และ Postgres จริง พร้อมชุดทดสอบบัญชี
