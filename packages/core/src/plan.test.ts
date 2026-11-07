@@ -12,7 +12,7 @@ import {
   togglePassed,
 } from "./actions.ts";
 import { prereqChain } from "./graph.ts";
-import { createModel, emptyPlan, extraCategories, normalizePlan } from "./model.ts";
+import { createModel, emptyPlan, extraCategories, hasProgress, normalizePlan, samePlan } from "./model.ts";
 import { availableCourses, creditSummary, gpax, remainingPlan } from "./summary.ts";
 import type { Choice, Curriculum, PlanState } from "./types.ts";
 
@@ -303,5 +303,26 @@ describe("helpers", () => {
     const m = model(resetPlacement(model(moved)));
     expect(m.isMoved("2110211")).toBe(false);
     expect(m.conflicts).toEqual([]);
+  });
+});
+
+describe("hasProgress and samePlan", () => {
+  it("a new plan has no progress", () => {
+    expect(hasProgress(cur, emptyPlan(cur))).toBe(false);
+  });
+
+  it("any real change counts as progress", () => {
+    const m = fresh();
+    expect(hasProgress(cur, togglePassed(m, "2110101").state)).toBe(true);
+    expect(hasProgress(cur, setGrade(m, "2110211", "F").state)).toBe(true);
+    expect(hasProgress(cur, moveCourse(m, "2110211", "3/1", auto).state)).toBe(true);
+    expect(hasProgress(cur, setChoice(m, "ELEC-1", optionChoice("elective", "2110431"), auto).state)).toBe(true);
+  });
+
+  it("samePlan ignores key order but notices real differences", () => {
+    const a = togglePassed(fresh(), "2110101").state;
+    const reordered = { ...a, place: Object.fromEntries(Object.entries(a.place).reverse()) };
+    expect(samePlan(a, reordered)).toBe(true);
+    expect(samePlan(a, emptyPlan(cur))).toBe(false);
   });
 });

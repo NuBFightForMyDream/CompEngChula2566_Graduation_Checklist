@@ -3,7 +3,7 @@
 เว็บวางแผนการเรียนและเช็กเงื่อนไขจบการศึกษา วิศวกรรมคอมพิวเตอร์ จุฬาฯ
 มองหลักสูตรเป็นกราฟ: วิชา = node, วิชาบังคับก่อน = edge โดยใช้แนวคิดจาก 2110211 Data Structure และ 2110327 Algorithm Design
 
-> กำลังย้ายจาก static site ไปเป็น full-stack ตอนนี้เสร็จถึงเฟส 3 (API และฐานข้อมูลของหลักสูตร) ส่วนแผนของผู้ใช้ยังบันทึกในเบราว์เซอร์
+> กำลังย้ายจาก static site ไปเป็น full-stack ตอนนี้เสร็จถึงเฟส 4 (บัญชีผู้ใช้และบันทึกแผนข้ามเครื่อง) ยังรันได้เฉพาะในเครื่อง
 
 ## เริ่มใช้งาน
 
@@ -23,11 +23,25 @@ pnpm dev:full          # เปิด Postgres, migrate + seed, API (:8080) แ�
 
 เอกสาร API อยู่ที่ http://localhost:8080/api/docs ค่าเริ่มต้นอยู่ใน `apps/api/.env.example` ถ้าต้องการค่าอื่นให้สร้าง `apps/api/.env`
 
+### เปิดใช้ปุ่มเข้าสู่ระบบด้วย Google
+
+ถ้ายังไม่ตั้งค่า ระบบทำงานได้ตามปกติ แต่จะซ่อนปุ่มเข้าสู่ระบบ
+
+1. ไปที่ [Google Cloud Console](https://console.cloud.google.com/) แล้วสร้างโปรเจกต์
+2. ตั้งค่าหน้า OAuth consent โดยขอ scope แค่ `openid`, `email`, `profile` และเพิ่มอีเมลตัวเองเป็น test user
+3. สร้าง OAuth client ID แบบ Web application แล้วเพิ่ม Authorized redirect URI เป็น `http://localhost:5173/api/auth/google/callback`
+4. สร้างไฟล์ `apps/api/.env` ซึ่ง git จะไม่เก็บ แล้วรัน `pnpm dev:full` ใหม่
+
+```bash
+GOOGLE_CLIENT_ID=ค่าที่ได้จาก Google
+GOOGLE_CLIENT_SECRET=ค่าที่ได้จาก Google
+```
+
 | คำสั่ง | ใช้ทำอะไร |
 |---|---|
 | `pnpm test` | unit test ของ `core`, `contracts` และ integration test ของ API กับ Postgres จริง (ต้องเปิด Docker) |
 | `pnpm test:e2e` | ทดสอบหน้าเว็บจริงด้วย Playwright (ครั้งแรกรัน `pnpm --filter @cp/web exec playwright install chromium`) |
-| `pnpm test:e2e:api` | รัน E2E ชุดเดียวกัน โดยให้หน้าเว็บโหลดหลักสูตรผ่าน API และ Postgres |
+| `pnpm test:e2e:api` | รัน E2E ผ่าน API และ Postgres รวมชุดทดสอบบัญชีและการบันทึกแผน |
 | `pnpm db:up` / `pnpm db:down` | เปิด / ปิด Postgres ใน Docker (ข้อมูลยังอยู่) |
 | `pnpm db:setup` | migrate แล้ว seed หลักสูตรเข้าฐานข้อมูล รันซ้ำได้ |
 | `pnpm --filter @cp/api db:generate` | สร้างไฟล์ migration หลังแก้ `apps/api/src/db/schema.ts` |
@@ -46,10 +60,10 @@ apps/web/src/
   lib/          planRepository, curriculumSource, messages, colors
   styles/       tokens, layout, board, panels, print
 apps/api/
-  src/modules/  API แยกตามเรื่อง ตอนนี้มี curricula (routes + repo)
+  src/modules/  API แยกตามเรื่อง: curricula, auth, plans
   src/db/       schema, migrate, seed
   drizzle/      ไฟล์ migration
-  test/         integration test กับ Postgres จริงผ่าน Testcontainers
+  test/         integration test กับ Postgres จริง และ Google ปลอมที่ใช้เฉพาะตอนทดสอบ
 packages/
   core/         กราฟ กฎ เกรด สรุปหน่วยกิต ฟังก์ชันล้วน ไม่แตะหน้าเว็บหรือฐานข้อมูล
   contracts/    Zod schema ของไฟล์หลักสูตร แผน และไฟล์สำรอง
@@ -71,7 +85,25 @@ learning/
 | `GET /api/curricula/{id}/notices` | ประกาศของหลักสูตร |
 | `GET /api/curricula/{id}/courses/{courseId}/chain` | วิชาที่ต้องผ่านก่อนและวิชาที่จะกระทบ ด้วย recursive CTE |
 
-หน้าเว็บเลือกแหล่งข้อมูลด้วย `VITE_CURRICULUM_SOURCE`: `pnpm dev` อ่านจากไฟล์ที่ติดมากับเว็บ ส่วน `pnpm dev:full` อ่านผ่าน API
+| `GET /api/auth/google` | เริ่มเข้าสู่ระบบด้วย Google (Authorization Code + PKCE) |
+| `POST /api/auth/logout` | ออกจากระบบ และยกเลิก session ฝั่ง server |
+| `GET /api/me` | ผู้ใช้ปัจจุบัน หรือ `null` ถ้ายังไม่ได้เข้าสู่ระบบ |
+| `GET /api/me/export` | ดาวน์โหลดข้อมูลทั้งหมดของฉัน |
+| `DELETE /api/me` | ลบบัญชีและข้อมูลทั้งหมดถาวร |
+| `GET`, `POST /api/plans` | แผนทั้งหมดของฉัน / สร้างแผนใหม่ (ไม่เกิน 10 แผน) |
+| `GET`, `DELETE /api/plans/{id}` | อ่าน / ลบแผน |
+| `PUT /api/plans/{id}/state` | บันทึกแผน พร้อม `version` กันการเขียนทับ ถ้าไม่ตรงจะตอบ 409 |
+
+แผนของผู้ใช้คนอื่นตอบ 404 เสมอ เพื่อไม่บอกว่าแผนนั้นมีอยู่จริง และ server ตรวจแผนด้วย `validatePlan` ใน `packages/core` ทุกครั้งก่อนบันทึก
+
+## การบันทึกแผน
+
+- **ไม่เข้าสู่ระบบ:** บันทึกในเบราว์เซอร์นี้
+- **เข้าสู่ระบบครั้งแรก:** ย้ายแผนในเบราว์เซอร์เข้าบัญชีให้ ถ้าบัญชีมีแผนที่ต่างกันอยู่แล้วจะให้เลือกฉบับที่จะเก็บ
+- **ระหว่างแก้:** เก็บฉบับร่างในเบราว์เซอร์ก่อน แล้วส่งขึ้นบัญชีเมื่อหยุดแก้ 0.8 วินาที เน็ตหลุดหรือปิดแท็บก็ยังส่งต่อได้
+- **แก้สองเครื่องพร้อมกัน:** เครื่องที่บันทึกทีหลังจะเห็นว่าสองฉบับต่างกันตรงไหน แล้วเลือกเอง ไม่มีการเขียนทับเงียบ ๆ
+
+หน้าเว็บเลือกแหล่งข้อมูลด้วย `VITE_CURRICULUM_SOURCE`: `pnpm dev` อ่านจากไฟล์ที่ติดมากับเว็บและไม่มีระบบบัญชี ส่วน `pnpm dev:full` อ่านผ่าน API
 
 ## เงื่อนไขที่ระบบตรวจ
 
@@ -103,6 +135,6 @@ learning/
 |---|---|---|
 | 0–2 | Monorepo, `core` + test, React + UI ใหม่ | เสร็จแล้ว |
 | 3 | PostgreSQL ใน Docker + Hono API อ่านหลักสูตร | เสร็จแล้ว |
-| 4 | Google OAuth + บันทึกแผนข้ามเครื่อง | ยังไม่เริ่ม |
+| 4 | Google OAuth + บันทึกแผนข้ามเครื่อง | เสร็จแล้ว (รอทดสอบกับ Google จริง) |
 | 5 | Deploy (ฐานข้อมูลบน Supabase) และย้ายข้อมูลจากเว็บเดิม | ยังไม่เริ่ม |
 | 6 | หลายแผน, ประวัติ, ลิงก์แชร์, admin, สถิติ | ยังไม่เริ่ม |

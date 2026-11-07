@@ -9,6 +9,7 @@ import { exportBackup } from "../export/ExportMenu.tsx";
 export function SettingsDialog() {
   const m = useModel();
   const settings = usePlan((s) => s.settings);
+  const remote = usePlan((s) => !!s.remote);
   const updateSettings = usePlan((s) => s.updateSettings);
   const commit = usePlan((s) => s.commit);
   const importFile = usePlan((s) => s.importFile);
@@ -84,7 +85,11 @@ export function SettingsDialog() {
 
         <section>
           <h3>ข้อมูลของฉัน</h3>
-          <p className="muted small">ตอนนี้ข้อมูลบันทึกไว้ในเบราว์เซอร์นี้เท่านั้น ควรบันทึกไฟล์สำรองไว้ก่อนล้างข้อมูลเบราว์เซอร์</p>
+          <p className="muted small">
+            {remote
+              ? "แผนนี้บันทึกอยู่ในบัญชีของคุณ ใช้ได้ทุกเครื่องที่เข้าสู่ระบบ"
+              : "ตอนนี้ข้อมูลบันทึกไว้ในเบราว์เซอร์นี้เท่านั้น ควรบันทึกไฟล์สำรองไว้ก่อนล้างข้อมูลเบราว์เซอร์"}
+          </p>
           <div className="actions">
             <button type="button" onClick={exportBackup}>
               บันทึกไฟล์สำรอง

@@ -120,6 +120,11 @@ describe("the rest of the app", () => {
       "/api/curricula/{id}",
       "/api/curricula/{id}/courses/{courseId}/chain",
       "/api/curricula/{id}/notices",
+      "/api/me",
+      "/api/me/export",
+      "/api/plans",
+      "/api/plans/{id}",
+      "/api/plans/{id}/state",
     ]);
   });
 

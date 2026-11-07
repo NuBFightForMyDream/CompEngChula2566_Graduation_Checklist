@@ -16,6 +16,7 @@
     "@cp/core": "workspace:*",
     "@cp/curricula": "workspace:*",
     "@dnd-kit/core": "^6.3.1",
+    "@tanstack/react-query": "^5.106.1",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "react-markdown": "^10.1.0",

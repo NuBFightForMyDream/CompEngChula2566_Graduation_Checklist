@@ -1,5 +1,8 @@
 import { availableCourses, remainingPlan } from "@cp/core";
 import { useCallback, useEffect, useState } from "react";
+import { AccountMenu } from "../features/account/AccountMenu.tsx";
+import { PlanConflictDialog } from "../features/account/PlanConflictDialog.tsx";
+import { SaveStatus } from "../features/account/SaveStatus.tsx";
 import { AddCourseDialog } from "../features/board/AddCourseDialog.tsx";
 import { Board } from "../features/board/Board.tsx";
 import { BoardToolbar } from "../features/board/BoardToolbar.tsx";
@@ -44,6 +47,7 @@ function TopBar() {
         )}
       </div>
       <div className="top-actions">
+        <SaveStatus />
         <div className="btn-group">
           <button
             type="button"
@@ -66,6 +70,7 @@ function TopBar() {
         <button type="button" onClick={() => openDialog("settings")}>
           ตั้งค่า
         </button>
+        <AccountMenu />
       </div>
     </header>
   );
@@ -119,10 +124,10 @@ function Workspace() {
         </section>
         <footer className="foot">
           <p>{m.curriculum.note}</p>
-          <p>บันทึกอัตโนมัติในเบราว์เซอร์นี้</p>
         </footer>
       </main>
       <CourseDrawer />
+      <PlanConflictDialog />
       <AddCourseDialog />
       {dialog === "grades" && <GradeImportDialog />}
       {dialog === "settings" && <SettingsDialog />}
@@ -143,6 +148,19 @@ export function App() {
   }, [init]);
 
   useEffect(start, [start]);
+
+  // ขากลับจากหน้า login: แจ้งผล แล้วล้าง query ออกจาก URL
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    const login = url.searchParams.get("login");
+    if (!login) return;
+    url.searchParams.delete("login");
+    window.history.replaceState(null, "", url);
+    useUi.getState().showToast({
+      text: login === "unavailable" ? "ระบบเข้าสู่ระบบยังไม่เปิดใช้งาน" : "เข้าสู่ระบบไม่สำเร็จ กรุณาลองใหม่",
+      bad: true,
+    });
+  }, []);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {

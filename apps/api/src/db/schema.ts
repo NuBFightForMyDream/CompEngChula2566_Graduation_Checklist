@@ -2,8 +2,22 @@
 // ใช้ composite key เพราะรหัสวิชาซ้ำกันได้ข้ามหลักสูตร และ position รักษาลำดับตามไฟล์ JSON
 // กฎสำคัญบังคับที่ฐานข้อมูลด้วย ข้อมูลจึงผิดไม่ได้แม้เขียนผ่านช่องทางอื่นที่ไม่ใช่ API
 
+import type { PlanSettings } from "@cp/contracts";
 import { sql } from "drizzle-orm";
-import { check, foreignKey, index, integer, pgTable, primaryKey, text } from "drizzle-orm/pg-core";
+import {
+  boolean,
+  check,
+  foreignKey,
+  index,
+  integer,
+  jsonb,
+  pgTable,
+  primaryKey,
+  text,
+  timestamp,
+  uniqueIndex,
+  uuid,
+} from "drizzle-orm/pg-core";
 
 export const curricula = pgTable(
   "curricula",
@@ -180,4 +194,111 @@ export const curriculumNotices = pgTable(
     position: integer().notNull(),
   },
   (t) => [primaryKey({ columns: [t.curriculumId, t.noticeSlug] })],
+);
+
+// ---------- บัญชีผู้ใช้และแผน ----------
+
+export const users = pgTable("users", {
+  id: uuid().primaryKey().defaultRandom(),
+  /** รหัสถาวรจาก Google อีเมลเปลี่ยนได้ จึงใช้ระบุตัวตนไม่ได้ */
+  googleSub: text("google_sub").notNull().unique(),
+  email: text().notNull(),
+  name: text().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+/** เก็บเฉพาะ hash ของ token ถ้าฐานข้อมูลรั่ว ค่าที่เห็นจะใช้ login แทนผู้ใช้ไม่ได้ */
+export const sessions = pgTable(
+  "sessions",
+  {
+    tokenHash: text("token_hash").primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("sessions_user_idx").on(t.userId), index("sessions_expires_idx").on(t.expiresAt)],
+);
+
+export const plans = pgTable(
+  "plans",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    // ห้ามลบหลักสูตรที่ยังมีแผนอ้างอยู่ แผนของผู้ใช้สำคัญกว่า
+    curriculumId: text("curriculum_id")
+      .notNull()
+      .references(() => curricula.id, { onDelete: "restrict" }),
+    name: text().notNull(),
+    /** เพิ่มทุกครั้งที่บันทึก ใช้กันการเขียนทับกันระหว่างหลายเครื่อง */
+    version: integer().notNull().default(1),
+    settings: jsonb().$type<PlanSettings>().notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+    deletedAt: timestamp("deleted_at", { withTimezone: true }),
+  },
+  (t) => [
+    index("plans_user_idx").on(t.userId),
+    check("plans_version_positive", sql`${t.version} >= 1`),
+    check("plans_name_length", sql`char_length(${t.name}) BETWEEN 1 AND 60`),
+  ],
+);
+
+/**
+ * หนึ่งแถวต่อหนึ่งวิชาในแผน ทั้งวิชาในหลักสูตรและวิชาเรียนเพิ่ม เพราะมีเทอม สถานะผ่าน และเกรดเหมือนกัน
+ * course_id ไม่มี foreign key ไปที่ courses เพราะ seed ลบแล้วใส่ใหม่ได้ และหลักสูตรอาจเปลี่ยนรายวิชา
+ * ตอนอ่านแผน ระบบจะปรับให้ตรงกับหลักสูตรปัจจุบันด้วย normalizePlan
+ */
+export const planItems = pgTable(
+  "plan_items",
+  {
+    planId: uuid("plan_id")
+      .notNull()
+      .references(() => plans.id, { onDelete: "cascade" }),
+    courseId: text("course_id").notNull(),
+    kind: text({ enum: ["curriculum", "extra"] }).notNull(),
+    semester: text().notNull(),
+    passed: boolean().notNull().default(false),
+    grade: text(),
+    // วิชาที่เลือกลงช่อง: choice_id เป็น null เมื่อผู้ใช้กรอกวิชาเอง
+    choiceId: text("choice_id"),
+    choiceCode: text("choice_code"),
+    choiceName: text("choice_name"),
+    choiceCredits: integer("choice_credits"),
+    // เฉพาะวิชาเรียนเพิ่ม
+    extraCode: text("extra_code"),
+    extraName: text("extra_name"),
+    extraCredits: integer("extra_credits"),
+    extraCategory: text("extra_category"),
+    extraPosition: integer("extra_position"),
+  },
+  (t) => [
+    primaryKey({ columns: [t.planId, t.courseId] }),
+    check("plan_items_semester_format", sql`${t.semester} ~ '^[1-5]/[12]$'`),
+    check(
+      "plan_items_grade_valid",
+      sql`${t.grade} IS NULL OR ${t.grade} IN ('A','B+','B','C+','C','D+','D','F','S','U','W')`,
+    ),
+    // เกรดผ่านต้องติ๊กผ่าน และเกรดไม่ผ่านต้องไม่ติ๊กผ่าน
+    check(
+      "plan_items_grade_matches_passed",
+      sql`${t.grade} IS NULL OR (${t.grade} IN ('A','B+','B','C+','C','D+','D','S')) = ${t.passed}`,
+    ),
+    // ข้อมูลวิชาที่เลือกต้องมาครบหรือไม่มีเลย และวิชาเรียนเพิ่มเลือกวิชาลงช่องไม่ได้
+    check(
+      "plan_items_choice_complete",
+      sql`(${t.choiceCode} IS NULL AND ${t.choiceName} IS NULL AND ${t.choiceCredits} IS NULL AND ${t.choiceId} IS NULL)
+        OR (${t.kind} = 'curriculum' AND ${t.choiceCode} IS NOT NULL AND ${t.choiceName} IS NOT NULL AND ${t.choiceCredits} BETWEEN 1 AND 6)`,
+    ),
+    check(
+      "plan_items_extra_complete",
+      sql`(${t.kind} = 'curriculum' AND ${t.extraCode} IS NULL AND ${t.extraName} IS NULL AND ${t.extraCredits} IS NULL AND ${t.extraCategory} IS NULL AND ${t.extraPosition} IS NULL)
+        OR (${t.kind} = 'extra' AND ${t.extraCode} IS NOT NULL AND ${t.extraName} IS NOT NULL AND ${t.extraCredits} BETWEEN 1 AND 6 AND ${t.extraCategory} IS NOT NULL AND ${t.extraPosition} IS NOT NULL)`,
+    ),
+    // วิชาเดียวกันเลือกซ้ำในหลายช่องของแผนเดียวไม่ได้ แถวที่ไม่ได้เลือกวิชาจะไม่ถูกนับ
+    uniqueIndex("plan_items_one_choice_per_plan").on(t.planId, t.choiceId).where(sql`${t.choiceId} IS NOT NULL`),
+  ],
 );

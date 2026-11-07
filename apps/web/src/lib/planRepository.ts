@@ -11,6 +11,7 @@ export interface StoredPlan {
 export interface PlanRepository {
   load(curriculumId: string): Promise<StoredPlan>;
   save(curriculumId: string, plan: PlanState, settings: PlanSettings): Promise<void>;
+  clear(curriculumId: string): Promise<void>;
 }
 
 const read = (key: string): unknown => {
@@ -63,6 +64,17 @@ export const localPlanRepository: PlanRepository = {
       localStorage.setItem(`cp:plan:v1:${id}`, JSON.stringify({ plan, settings }));
     } catch {
       // พื้นที่เต็มหรือถูกบล็อก ยังใช้งานต่อได้ แต่ข้อมูลจะไม่ถูกบันทึก
+    }
+  },
+  /** เรียกหลังย้ายแผนเข้าบัญชีแล้ว คอมพิวเตอร์ที่ใช้ร่วมกันจะได้ไม่มีข้อมูลค้าง */
+  async clear(id) {
+    try {
+      localStorage.removeItem(`cp:plan:v1:${id}`);
+      for (const prefix of ["passed", "place", "choice", "extra", "grade", "colors"]) {
+        localStorage.removeItem(`${prefix}:${id}`);
+      }
+    } catch {
+      // อ่านไม่ได้ก็ไม่มีอะไรให้ลบ
     }
   },
 };

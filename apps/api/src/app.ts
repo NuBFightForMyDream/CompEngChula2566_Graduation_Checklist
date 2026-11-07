@@ -1,15 +1,45 @@
 import { swaggerUI } from "@hono/swagger-ui";
 import { OpenAPIHono } from "@hono/zod-openapi";
 import { sql } from "drizzle-orm";
+import { HTTPException } from "hono/http-exception";
 import { secureHeaders } from "hono/secure-headers";
 import type { Logger } from "pino";
 import type { Db } from "./db/client.ts";
+import { DEFAULT_RATE_LIMITS, type RateLimits } from "./middleware/rateLimit.ts";
+import { requireSameOrigin } from "./middleware/sameOrigin.ts";
+import type { OAuthProvider } from "./modules/auth/oauth.ts";
+import { authRoutes, meRoutes } from "./modules/auth/routes.ts";
 import { curriculaRoutes } from "./modules/curricula/routes.ts";
+import { planRoutes } from "./modules/plans/routes.ts";
 
-export function createApp({ db, logger }: { db: Db; logger: Logger }) {
+export interface AppOptions {
+  db: Db;
+  logger: Logger;
+  oauth?: OAuthProvider | null;
+  publicOrigin?: string;
+  rateLimits?: Partial<RateLimits>;
+}
+
+export function createApp({
+  db,
+  logger,
+  oauth = null,
+  publicOrigin = "http://localhost:5173",
+  rateLimits,
+}: AppOptions) {
   const app = new OpenAPIHono();
+  const limits = { ...DEFAULT_RATE_LIMITS, ...rateLimits };
+  const cookies = { secure: publicOrigin.startsWith("https://") };
 
   app.use(secureHeaders());
+  app.use(requireSameOrigin(publicOrigin));
+  // ข้อมูลส่วนตัว ห้าม proxy หรือเบราว์เซอร์เก็บไว้ใช้ซ้ำ
+  for (const path of ["/api/me", "/api/me/*", "/api/plans", "/api/plans/*"]) {
+    app.use(path, async (c, next) => {
+      await next();
+      c.header("Cache-Control", "no-store");
+    });
+  }
   app.use(async (c, next) => {
     const start = performance.now();
     await next();
@@ -22,6 +52,10 @@ export function createApp({ db, logger }: { db: Db; logger: Logger }) {
   });
 
   app.onError((err, c) => {
+    // ข้อผิดพลาดที่ตั้งใจ เช่น JSON เสีย เป็นความผิดของ request ไม่ใช่ของระบบ
+    if (err instanceof HTTPException && err.status < 500) {
+      return c.json({ error: { code: "BAD_REQUEST", message: "รูปแบบ request ไม่ถูกต้อง" } }, err.status);
+    }
     // รายละเอียดอยู่ใน log เท่านั้น ไม่ส่งให้ผู้ใช้ เพราะอาจมี SQL หรือโครงสร้างภายใน
     logger.error({ err, path: c.req.path }, "unhandled error");
     return c.json({ error: { code: "INTERNAL", message: "ระบบขัดข้อง" } }, 500);
@@ -39,6 +73,9 @@ export function createApp({ db, logger }: { db: Db; logger: Logger }) {
   });
 
   app.route("/api/curricula", curriculaRoutes(db));
+  app.route("/api/auth", authRoutes({ db, logger, oauth, cookies, limits }));
+  app.route("/api/me", meRoutes({ db, cookies, loginAvailable: !!oauth }));
+  app.route("/api/plans", planRoutes({ db, cookies, limits }));
 
   app.doc31("/api/openapi.json", {
     openapi: "3.1.0",

@@ -97,13 +97,16 @@ export function normalizePlan(cur: Curriculum, raw: Partial<PlanState> | null | 
     if (isSem(sem) && offeredIn(c, sem)) place[c.id] = sem;
   }
 
+  // เทอมของวิชาเรียนเพิ่มเก็บสองที่ ให้ place เป็นตัวจริงเสมอ
+  const syncedExtras = extras.map((e) => ({ ...e, semester: place[e.id] as Sem }));
+
   const grades: Record<string, Grade> = {};
   for (const [id, grade] of Object.entries(raw?.grades ?? {})) {
     if (g.courses.has(id) && isGrade(grade) && PASSING.has(grade) === passed.has(id)) grades[id] = grade;
   }
 
   // ลำดับใน passed ไม่สำคัญ แต่ทำให้คงที่เพื่อเทียบ state กันได้
-  return { passed: order.filter((id) => passed.has(id)), place, choices, extras, grades };
+  return { passed: order.filter((id) => passed.has(id)), place, choices, extras: syncedExtras, grades };
 }
 
 export interface PlanModel {
@@ -156,4 +159,28 @@ export function createModel(curriculum: Curriculum, state: PlanState): PlanModel
     missingPrereqs,
     isMoved: (id) => state.place[id] !== defaultSemOf(course(id)),
   };
+}
+
+/** ผู้ใช้เริ่มทำอะไรกับแผนนี้แล้วหรือยัง ใช้ตัดสินว่ามีข้อมูลในเบราว์เซอร์ที่ควรย้ายเข้าบัญชีไหม */
+export function hasProgress(cur: Curriculum, state: PlanState) {
+  if (state.passed.length || state.extras.length) return true;
+  if (Object.keys(state.grades).length || Object.keys(state.choices).length) return true;
+  const defaults = defaultPlace(cur.courses);
+  return Object.entries(state.place).some(([id, sem]) => defaults[id] !== sem);
+}
+
+const sortedEntries = <T>(record: Record<string, T>) =>
+  Object.entries(record).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
+
+/** เทียบเนื้อหาสองแผน โดยไม่สนลำดับของ key ซึ่งไม่มีความหมาย */
+export function samePlan(a: PlanState, b: PlanState) {
+  const canonical = (s: PlanState) =>
+    JSON.stringify([
+      [...s.passed].sort(),
+      sortedEntries(s.place),
+      sortedEntries(s.grades),
+      sortedEntries(s.choices).map(([k, c]) => [k, c.id, c.code, c.name, c.credits]),
+      s.extras.map((e) => [e.id, e.code, e.name, e.credits, e.category, e.semester]),
+    ]);
+  return canonical(a) === canonical(b);
 }
