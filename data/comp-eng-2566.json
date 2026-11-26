@@ -29,7 +29,8 @@
       "options": [
         { "id": "2100223",     "code": "2100223", "name": "ENTREPRENEUR",  "credits": 3 , "offered": ["1","2"] },
         { "id": "2100225",     "code": "2100225", "name": "DESIGN THINKING", "credits": 3 , "offered": ["1","2"]},
-        { "id": "2110576",    "code": "2110576", "name": "AGENTIC AI COMP ENG", "credits": 3 , "prereq": [] , "offered": ["1"] },
+        { "id": "2100226",     "code": "2100226", "name": "PROBLEM SOLVING", "credits": 3 , "offered": ["1","2"]},
+        { "id": "2110576",    "code": "2110576", "name": "AGENTIC AI COMP ENG", "credits": 3 , "prereq": [] , "offered": ["1","2"] },
         { "id": "2110303",    "code": "2110303", "name": "STUDY ABOARD I", "credits": 3 , "prereq": [] , "offered": ["1","2"]},
         { "id": "2110304",      "code": "2110304", "name": "STUDY ABOARD II", "credits": 3 , "prereq": [] , "offered": ["1","2"]}
       ]
@@ -61,7 +62,10 @@
         { "id": "2110555",      "code": "2110555", "name": "SOFTWARE MACHINE LEARNING", "credits": 3 , "prereq": [] , "offered": ["2"]},
         { "id": "2110571",      "code": "2110571", "name": "NEURAL NETWORK", "credits": 3 , "prereq": [] , "offered": ["2"]},
         { "id": "2110572",      "code": "2110572", "name": "NLP SYSTEM", "credits": 3 , "prereq": [] , "offered": ["2"]},
-        { "id": "2110573",      "code": "2110573", "name": "PATTERN RECOGNITION", "credits": 3 , "prereq": [] , "offered": ["2"]}
+        { "id": "2110573",      "code": "2110573", "name": "PATTERN RECOGNITION", "credits": 3 , "prereq": [] , "offered": ["2"]},
+                
+        { "id": "2110593_05",      "code": "2110593_05", "name": "MAPPING & NAVIGATION", "credits": 3 , "prereq": [] , "offered": ["2"]},
+        { "id": "2110595_02",      "code": "2110595_02", "name": "MANIPULATION IN ROBOTICS", "credits": 3 , "prereq": [] , "offered": ["2"]}
       ]
     },
     "approved": {
