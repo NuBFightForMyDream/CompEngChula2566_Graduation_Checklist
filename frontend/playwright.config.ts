@@ -19,8 +19,9 @@ export default defineConfig({
         ...(useFirebase
           ? [
               {
-                command: "pnpm exec firebase emulators:start --only auth,firestore --project demo-cp",
-                cwd: "../..",
+                command:
+                  "pnpm exec firebase emulators:start --config firebase/firebase.json --only auth,firestore --project demo-cp",
+                cwd: "..",
                 url: "http://127.0.0.1:8085",
                 reuseExistingServer: !process.env.CI,
                 timeout: 120_000,

@@ -2,7 +2,7 @@
 //
 //   g++ -std=c++17 step5_planner.cpp -o step5 && ./step5
 //
-// ตัวจริงอยู่ที่ packages/core/src/ (grades.ts, summary.ts, model.ts, planner.ts)
+// ตัวจริงอยู่ที่ shared/core/src/ (grades.ts, summary.ts, model.ts, planner.ts)
 
 #include <algorithm>
 #include <cmath>

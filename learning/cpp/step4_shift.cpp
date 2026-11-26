@@ -2,7 +2,7 @@
 //
 //   g++ -std=c++17 step4_shift.cpp -o step4 && ./step4
 //
-// ตัวจริงอยู่ที่ packages/core/src/graph.ts (findConflicts, shiftDependents, chainDepth)
+// ตัวจริงอยู่ที่ shared/core/src/graph.ts (findConflicts, shiftDependents, chainDepth)
 //
 //   2110101 ─┬─> 2110215
 //            └─> 2110211 ─┬─> 2110327 <── 2110200

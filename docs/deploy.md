@@ -15,13 +15,13 @@
 3. **Firestore Database** → Create database
    - Location: `asia-southeast1 (Singapore)` เปลี่ยนทีหลังไม่ได้
    - เลือก Start in **production mode**
-4. ในหน้า Firestore เปิดแท็บ **Rules** แล้ววางเนื้อหาทั้งหมดของ [`firestore.rules`](../firestore.rules) ทับของเดิม แล้วกด Publish
+4. ในหน้า Firestore เปิดแท็บ **Rules** แล้ววางเนื้อหาทั้งหมดของ [`firebase/firestore.rules`](../firebase/firestore.rules) ทับของเดิม แล้วกด Publish
    ถ้าไม่ทำข้อนี้ จะบันทึกแผนไม่ได้ เพราะ production mode ปฏิเสธทุกคำขอ
 
 ## 2. ใส่ค่าของโปรเจกต์ลงในโค้ด
 
 1. กดรูปเฟือง → Project settings → Your apps → ไอคอน `</>` (Web) → ตั้งชื่อแอป → Register app ไม่ต้องติ๊ก Firebase Hosting
-2. คัดลอก 4 ค่าจาก `firebaseConfig` ที่ขึ้นมา ไปใส่ใน [`apps/web/src/lib/firebaseConfig.ts`](../apps/web/src/lib/firebaseConfig.ts)
+2. คัดลอก 4 ค่าจาก `firebaseConfig` ที่ขึ้นมา ไปใส่ใน [`frontend/src/lib/firebaseConfig.ts`](../frontend/src/lib/firebaseConfig.ts)
 
 ```ts
 const project = {
@@ -62,7 +62,7 @@ const project = {
 หรือใช้คำสั่ง (ครั้งแรกต้อง login ก่อนด้วย `pnpm exec firebase login`)
 
 ```bash
-pnpm exec firebase deploy --only firestore:rules --project ชื่อโปรเจกต์
+pnpm exec firebase deploy --config firebase/firebase.json --only firestore:rules --project ชื่อโปรเจกต์
 ```
 
 ก่อนแก้ ควรรัน `pnpm test:e2e:firebase` เพราะมี test ที่ตรวจว่าบัญชีอื่นอ่านแผนของเราไม่ได้

@@ -25,7 +25,7 @@ jobs:
         if: failure()
         with:
           name: playwright-web
-          path: apps/web/test-results
+          path: frontend/test-results
           retention-days: 7
           if-no-files-found: ignore
 
@@ -50,7 +50,7 @@ jobs:
         if: failure()
         with:
           name: playwright-firebase
-          path: apps/web/test-results
+          path: frontend/test-results
           retention-days: 7
           if-no-files-found: ignore
 

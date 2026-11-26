@@ -8,8 +8,8 @@
 | `step1_basics.cpp` | ตัวแปร, `for`, ฟังก์ชัน, `vector`, `string` | — |
 | `step2_struct_map.cpp` | `struct`, `unordered_map`, `set` | section 1, 8 |
 | `step3_graph.cpp` | adjacency list, DFS (`stack`), BFS (`queue`), topological sort | section 3–6 |
-| `step4_shift.cpp` | ตรวจลำดับเทอม, เลื่อนวิชาตาม, DP บน DAG | `packages/core/src/graph.ts` |
-| `step5_planner.cpp` | GPA, หน่วยกิตรายหมวด, วิชาเลือก, จัดแผนแบบ greedy | `packages/core/src/` |
+| `step4_shift.cpp` | ตรวจลำดับเทอม, เลื่อนวิชาตาม, DP บน DAG | `shared/core/src/graph.ts` |
+| `step5_planner.cpp` | GPA, หน่วยกิตรายหมวด, วิชาเลือก, จัดแผนแบบ greedy | `shared/core/src/` |
 
 ## เตรียมเครื่อง
 

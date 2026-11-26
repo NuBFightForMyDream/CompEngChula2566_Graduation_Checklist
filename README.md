@@ -16,7 +16,7 @@ pnpm install
 pnpm dev               # เปิดหน้าเว็บที่ http://localhost:5173
 ```
 
-ถ้ายังไม่ได้ใส่ค่า Firebase ใน `apps/web/src/lib/firebaseConfig.ts` เว็บจะบันทึกในเบราว์เซอร์อย่างเดียวและไม่มีปุ่มเข้าสู่ระบบ
+ถ้ายังไม่ได้ใส่ค่า Firebase ใน `frontend/src/lib/firebaseConfig.ts` เว็บจะบันทึกในเบราว์เซอร์อย่างเดียวและไม่มีปุ่มเข้าสู่ระบบ
 
 ลองระบบบัญชีโดยไม่ต้องมีโปรเจกต์ Firebase จริง (ต้องมี Java 21 ขึ้นไป):
 
@@ -30,10 +30,10 @@ pnpm dev:emulator      # เปิด Firebase Emulator (Google ปลอม + F
 |---|---|
 | `pnpm test` | unit test ของ `core` และ `contracts` รวมถึงตรวจไฟล์หลักสูตร |
 | `pnpm test:e2e` | ทดสอบหน้าเว็บจริงด้วย Playwright (ครั้งแรกรัน `pnpm --filter @cp/web exec playwright install chromium`) |
-| `pnpm test:e2e:firebase` | รัน E2E กับ Firebase Emulator รวมชุดทดสอบบัญชี การบันทึก และ `firestore.rules` |
+| `pnpm test:e2e:firebase` | รัน E2E กับ Firebase Emulator รวมชุดทดสอบบัญชี การบันทึก และ `firebase/firestore.rules` |
 | `pnpm typecheck` | ตรวจ TypeScript |
 | `pnpm lint` / `pnpm format` | ตรวจ / จัดรูปแบบโค้ดด้วย Biome |
-| `pnpm build` | build หน้าเว็บไปที่ `apps/web/dist` |
+| `pnpm build` | build หน้าเว็บไปที่ `frontend/dist` |
 | `pnpm checklist --why 2110327` | รันเวอร์ชัน Python |
 
 ## โครงสร้าง
@@ -43,26 +43,27 @@ data/               ข้อมูลหลักสูตรและประ
   index.json          รายชื่อหลักสูตร
   comp-eng-2566.json  รายวิชา หมวด และวิชาบังคับก่อน
   notices/            ประกาศ เขียนเป็น Markdown
-apps/web/src/
-  app/          จุดเริ่มต้นและโครงหน้า
-  features/     หน้าจอแยกตามเรื่อง: board, course-info, summary, grades, planner, notices, export, settings, account
-  stores/       planStore (แผน + undo + บันทึก), uiStore (สถานะหน้าจอ)
-  lib/          cloud (Firebase), firebaseConfig, planRepository, curriculumSource, messages, colors
-  styles/       tokens, layout, board, panels, print
-apps/web/e2e/   ทดสอบหน้าเว็บด้วย Playwright
-packages/
-  core/         กราฟ กฎ เกรด สรุปหน่วยกิต ฟังก์ชันล้วน ไม่แตะหน้าเว็บหรือฐานข้อมูล
-  contracts/    Zod schema ของไฟล์หลักสูตร แผน และไฟล์สำรอง
-firestore.rules ใครอ่านหรือเขียนข้อมูลไหนได้บ้าง
-firebase.json   ตั้งค่า Firebase Emulator
-docs/deploy.md  คู่มือตั้งค่า Firebase และ deploy
-index.html      หน้าที่จะแทนเว็บเดิมบน GitHub Pages ช่วยผู้ใช้เดิมนำข้อมูลออก
+frontend/           หน้าเว็บ React + Vite
+  src/app/            จุดเริ่มต้นและโครงหน้า
+  src/features/       หน้าจอแยกตามเรื่อง: board, course-info, summary, grades, planner, notices, export, settings, account
+  src/stores/         planStore (แผน + undo + บันทึก), uiStore (สถานะหน้าจอ)
+  src/lib/            cloud (Firebase), firebaseConfig, planRepository, curriculumSource, messages, colors
+  src/styles/         tokens, layout, board, panels, print
+  e2e/                ทดสอบหน้าเว็บด้วย Playwright
+firebase/           ฝั่งเซิร์ฟเวอร์ ซึ่งเป็นของ Firebase ทั้งหมด เราดูแลแค่ไฟล์ตั้งค่า
+  firestore.rules     ใครอ่านหรือเขียนข้อมูลไหนได้บ้าง
+  firebase.json       ตั้งค่า Firebase Emulator
+shared/             โค้ดที่ไม่ผูกกับหน้าเว็บ
+  core/               กราฟ กฎ เกรด สรุปหน่วยกิต ฟังก์ชันล้วน
+  contracts/          Zod schema ของไฟล์หลักสูตร แผน และไฟล์สำรอง
+docs/deploy.md      คู่มือตั้งค่า Firebase และ deploy
 learning/
-  python/       เวอร์ชัน Python อ่านง่าย มีคำอธิบายทุกอัลกอริทึม
-  cpp/          แบบฝึก C++ ทีละขั้น พร้อมตัวตรวจ PASS / FAIL
+  python/             เวอร์ชัน Python อ่านง่าย มีคำอธิบายทุกอัลกอริทึม
+  cpp/                แบบฝึก C++ ทีละขั้น พร้อมตัวตรวจ PASS / FAIL
+index.html          หน้าที่จะแทนเว็บเดิมบน GitHub Pages ช่วยผู้ใช้เดิมนำข้อมูลออก (ต้องอยู่ที่ root)
 ```
 
-กฎของระบบอยู่ใน `packages/core` ที่เดียว หน้าเว็บเรียกใช้โดยตรง
+กฎของระบบอยู่ใน `shared/core` ที่เดียว หน้าเว็บเรียกใช้โดยตรง
 
 ## การบันทึกแผน
 
@@ -70,7 +71,7 @@ learning/
 - **เข้าสู่ระบบครั้งแรก:** ย้ายแผนในเบราว์เซอร์เข้าบัญชีให้ ถ้าบัญชีมีแผนที่ต่างกันอยู่แล้วจะให้เลือกฉบับที่จะเก็บ
 - **ระหว่างแก้:** รอหยุดแก้ 0.8 วินาทีแล้วบันทึกลง Firestore ซึ่งเก็บไว้ในเบราว์เซอร์ก่อน ถ้าเน็ตหลุดหรือปิดแท็บ จะส่งให้เมื่อกลับมาออนไลน์
 - **เปิดหลายเครื่อง:** แก้จากเครื่องหนึ่ง เครื่องอื่นเปลี่ยนตามทันทีโดยไม่ต้อง reload ถ้าแก้สองเครื่องในเวลาเดียวกันจริง ๆ ฉบับที่บันทึกทีหลังจะชนะ
-- **ความปลอดภัย:** `firestore.rules` ให้แต่ละคนอ่านและเขียนได้เฉพาะแผนของตัวเอง
+- **ความปลอดภัย:** `firebase/firestore.rules` ให้แต่ละคนอ่านและเขียนได้เฉพาะแผนของตัวเอง
 
 ## เงื่อนไขที่ระบบตรวจ
 

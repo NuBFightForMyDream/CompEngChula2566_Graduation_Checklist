@@ -2,12 +2,12 @@
 
 import { type CurriculumSummary, curriculumIndexSchema, curriculumSchema } from "@cp/contracts";
 import type { Curriculum } from "@cp/core";
-import index from "../../../../data/index.json";
+import index from "../../../data/index.json";
 
 const entries = curriculumIndexSchema.parse(index);
 
-const files = import.meta.glob(["../../../../data/*.json", "!../../../../data/index.json"], { import: "default" });
-const noticeFiles = import.meta.glob("../../../../data/notices/*.md", {
+const files = import.meta.glob(["../../../data/*.json", "!../../../data/index.json"], { import: "default" });
+const noticeFiles = import.meta.glob("../../../data/notices/*.md", {
   query: "?raw",
   import: "default",
 });

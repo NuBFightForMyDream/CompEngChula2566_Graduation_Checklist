@@ -179,14 +179,14 @@ importers:
         specifier: ^5.1.0
         version: 5.1.0(@opentelemetry/api@1.9.1)(@types/node@26.6.6)(vite@8.3.6(@types/node@26.6.6)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.9.1))
 
-  apps/web:
+  frontend:
     dependencies:
       '@cp/contracts':
         specifier: workspace:*
-        version: link:../../packages/contracts
+        version: link:../shared/contracts
       '@cp/core':
         specifier: workspace:*
-        version: link:../../packages/core
+        version: link:../shared/core
       '@dnd-kit/core':
         specifier: ^6.3.1
         version: 6.3.1(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
@@ -225,7 +225,7 @@ importers:
         specifier: ^8.3.6
         version: 8.3.6(@types/node@26.6.6)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.9.1)
 
-  packages/contracts:
+  shared/contracts:
     dependencies:
       '@cp/core':
         specifier: workspace:*
@@ -234,7 +234,7 @@ importers:
         specifier: ^4.6.7
         version: 4.6.7
 
-  packages/core: {}
+  shared/core: {}
 
 packages:
 

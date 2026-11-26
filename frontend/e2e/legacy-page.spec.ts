@@ -2,7 +2,7 @@
 import { readFileSync } from "node:fs";
 import { expect, type Page, test } from "@playwright/test";
 
-const html = readFileSync(new URL("../../../index.html", import.meta.url), "utf8");
+const html = readFileSync(new URL("../../index.html", import.meta.url), "utf8");
 const OLD_SITE = "https://old-site.example/";
 
 async function openOldSite(page: Page, storage: Record<string, unknown>) {
