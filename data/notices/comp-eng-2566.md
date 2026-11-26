@@ -15,6 +15,6 @@
 - Individual Study : พูดง่ายๆ คือขอทำ Project ด้านที่สนใจกับอาจารย์ หรือได้ไปศึกษาอะไรมาซักอย่าง (อาจจะเป็นเก็บ Certificate อะไรประมาณนั้น)
 
 ## CP Elective Counting Condition (CEDT & Individual Study)
-- จริงๆ CEDT Elective สามารถนับเป็นวิชาเลือกของ CP ได้อีกด้วยย อ่านได้ที่[CEDT Elective 2569/2](https://docs.google.com/spreadsheets/d/1lCyngACXT5AOCLPiPYiqaOEAgLGVDc_j5YOWvoU7ZO0/edit?ouid=110061009608856499376&usp=sheets_home&ths=true)
+- จริงๆ CEDT Elective สามารถนับเป็นวิชาเลือกของ CP ได้อีกด้วยย อ่านได้ที่ [CEDT Elective 2569/2](https://docs.google.com/spreadsheets/d/1lCyngACXT5AOCLPiPYiqaOEAgLGVDc_j5YOWvoU7ZO0/edit?ouid=110061009608856499376&usp=sheets_home&ths=true)
 - Individual Study 3 ตัว นับเป็น 1 Elective
 - Free Elective เรียนเกินแบบตัดเกรด A-F ได้ ด้วยเงืิ่อนไข วิชาวิศวะฯ (21xxyyy) และ ภาษาเท่านั้น 
