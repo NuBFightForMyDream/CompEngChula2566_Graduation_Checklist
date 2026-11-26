@@ -95,7 +95,7 @@
     { "id": "2301107", "name": "CALCULUS I",         "credits": 3, "category": "sci",     "semester": "1/1", "prereq": [] },
     { "id": "2304103", "name": "GEN PHYS I",         "credits": 3, "category": "sci",     "semester": "1/1", "prereq": [] },
     { "id": "2304183", "name": "GEN PHYS LAB I",     "credits": 1, "category": "sci",     "semester": "1/1", "prereq": [] },
-    { "id": "5500111", "name": "EXP ENGlISH I",          "credits": 3, "category": "gened",   "semester": "1/1", "prereq": [] },
+    { "id": "5500111", "name": "EXP ENGLISH I",          "credits": 3, "category": "gened",   "semester": "1/1", "prereq": [] },
 
     { "id": "2110215", "group": "prog", "name": "PROG METH",  "credits": 3, "category": "core", "semester": "1/2", "offered": ["1","2"], "prereq": ["2110101"] },
     { "id": "2110221", "name": "COMP ENG ESS",        "credits": 3, "category": "gened",   "semester": "1/2", "offered": ["1","2"] , "prereq": [] },

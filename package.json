@@ -1,0 +1,28 @@
+{
+  "name": "cp-graduation-roadmap",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@12.18.0",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev": "pnpm --filter @cp/web dev",
+    "dev:emulator": "firebase emulators:exec --config firebase/firebase.json --only auth,firestore --project demo-cp \"pnpm --filter @cp/web dev:emulator\"",
+    "build": "pnpm --filter @cp/web build",
+    "preview": "pnpm --filter @cp/web preview",
+    "test": "pnpm -r --if-present test",
+    "test:e2e": "pnpm --filter @cp/web test:e2e",
+    "test:e2e:firebase": "E2E_FIREBASE=1 pnpm --filter @cp/web test:e2e",
+    "typecheck": "pnpm -r --if-present typecheck",
+    "lint": "biome check .",
+    "format": "biome check --write .",
+    "checklist": "python3 learning/python/cp52_checklist_graduation.py"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.6.5",
+    "firebase-tools": "^15.37.0",
+    "typescript": "^7.0.2",
+    "vitest": "^5.1.0"
+  }
+}

@@ -1,0 +1,133 @@
+/* พิมพ์ / PDF: A4 แนวนอน หน้าแรกเป็นตาราง หน้าถัดไปเป็นสรุปและแผน */
+@page {
+  size: A4 landscape;
+  margin: 8mm;
+}
+html.printing body {
+  background: #fff;
+  overflow: visible;
+}
+html.printing .topbar .top-actions,
+html.printing .tabs,
+html.printing .board-toolbar,
+html.printing .add-slot,
+html.printing .toast,
+html.printing .drawer,
+html.printing .welcome,
+html.printing .foot,
+html.printing .banner button,
+html.printing [data-panel="available"] {
+  display: none !important;
+}
+html.printing .topbar {
+  position: static;
+  padding: 0 0 8px;
+}
+html.printing .wrap {
+  max-width: none;
+  width: 1060px;
+  margin: 0;
+  padding: 0;
+  gap: 12px;
+  display: flex;
+  flex-direction: column;
+}
+html.printing .tab-panel[hidden] {
+  display: block !important;
+}
+html.printing [data-panel="board"] {
+  order: 1;
+  break-inside: avoid;
+}
+html.printing .overview {
+  order: 2;
+  break-before: page;
+}
+html.printing .banner {
+  order: 0;
+}
+html.printing [data-panel="plan"] {
+  order: 3;
+}
+html.printing [data-panel="notices"] {
+  order: 4;
+}
+html.printing .board-scroll {
+  overflow: visible;
+}
+html.printing .board {
+  min-width: 0;
+  grid-template-columns: repeat(var(--cols, 8), minmax(0, 1fr));
+}
+html.printing .col {
+  padding: 8px 5px 10px;
+  gap: 5px;
+}
+html.printing .col.empty-col {
+  display: none;
+}
+html.printing .col-head b {
+  font-size: 12px;
+}
+html.printing .col-head span {
+  font-size: 10.5px;
+}
+html.printing .card {
+  opacity: 1;
+}
+html.printing .card .sel {
+  padding: 3px 2px 3px 6px;
+}
+html.printing .card .nm {
+  font-size: 9.5px;
+}
+html.printing .card .cd {
+  font-size: 9px;
+}
+html.printing .card .slot-tag {
+  font-size: 8px;
+}
+html.printing .card .tick {
+  width: 18px;
+  font-size: 11px;
+}
+html.printing .card .tick::before {
+  width: 9px;
+  height: 9px;
+}
+html.printing .card .tick[data-grade]::before {
+  font-size: 9px;
+}
+html.printing .panel {
+  break-inside: avoid;
+}
+@media print {
+  :root:not([data-theme="light"]),
+  :root[data-theme="light"],
+  :root[data-theme="dark"] {
+    --bg: #ffffff;
+    --surface: #ffffff;
+    --surface-2: #f1efec;
+    --fg: #1d1b1a;
+    --muted: #68625e;
+    --line: #dddddd;
+    --accent: #a3001e;
+    --brand: #a3001e;
+    --ok: #17794a;
+    --warn: #b35f00;
+    --bad: #c9202a;
+    --year-band: #eeeeee;
+    --extra: #5f6b7a;
+    --ink: #111111;
+    color-scheme: light;
+  }
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
+
+/* ต้องอยู่หลังกฎที่ให้แท็บที่ซ่อนอยู่แสดงตอนพิมพ์ และเจาะจงกว่า ไม่งั้นรายการนี้จะขึ้นก่อนตาราง */
+html.printing .tab-panel[data-panel="available"] {
+  display: none !important;
+}
