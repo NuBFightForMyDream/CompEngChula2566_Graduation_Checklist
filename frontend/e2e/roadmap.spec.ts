@@ -186,7 +186,9 @@ test("the tabs reach every view", async ({ page }) => {
   await page.getByRole("tab", { name: /แผนแนะนำ/ }).click();
   await expect(page.locator('[data-panel="plan"]')).toContainText("ปี 1 เทอม 1");
   await page.getByRole("tab", { name: /ประกาศ/ }).click();
-  await expect(page.locator('[data-panel="notices"]')).toContainText("เงื่อนไขเพิ่มเติม");
+  // เนื้อหาประกาศแก้ได้อิสระใน data/notices จึงตรวจแค่ว่าทุกไฟล์ที่ระบุไว้แสดงครบ
+  const [first] = JSON.parse(readFileSync(new URL("../../data/index.json", import.meta.url), "utf8"));
+  await expect(page.locator('[data-panel="notices"] .notice')).toHaveCount(first.notices.length);
 });
 
 test.describe("on a phone", () => {
