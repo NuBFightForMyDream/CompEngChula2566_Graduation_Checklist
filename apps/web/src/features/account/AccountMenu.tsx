@@ -1,47 +1,46 @@
-import { useQuery } from "@tanstack/react-query";
 import { useRef, useState } from "react";
-import { accountsEnabled, deleteAccount, logout, meQuery } from "../../lib/account.ts";
+import { accountsEnabled } from "../../lib/firebaseConfig.ts";
 import { usePlan } from "../../stores/planStore.ts";
 import { useUi } from "../../stores/uiStore.ts";
 import { Modal } from "../common/Modal.tsx";
+import { download } from "../export/download.ts";
 
 export function AccountMenu() {
-  const { data } = useQuery(meQuery);
-  const ref = useRef<HTMLDetailsElement>(null);
-  const flushSaves = usePlan((s) => s.flushSaves);
-  const forgetLocalData = usePlan((s) => s.forgetLocalData);
+  const user = usePlan((s) => s.user);
+  const signIn = usePlan((s) => s.signIn);
+  const signOut = usePlan((s) => s.signOut);
+  const deleteAccount = usePlan((s) => s.deleteAccount);
+  const exportAccount = usePlan((s) => s.exportAccount);
   const showToast = useUi((s) => s.showToast);
+  const ref = useRef<HTMLDetailsElement>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [busy, setBusy] = useState(false);
 
-  if (!accountsEnabled || !data) return null;
-  if (!data.user) {
-    if (!data.loginAvailable) return null;
+  if (!accountsEnabled) return null;
+  if (!user) {
     return (
-      <a className="login-btn" href="/api/auth/google">
+      <button type="button" className="login-btn" onClick={() => void signIn()}>
         เข้าสู่ระบบด้วย Google
-      </a>
+      </button>
     );
   }
 
-  const signOut = async () => {
-    ref.current?.removeAttribute("open");
-    // ยังส่งไม่สำเร็จ ห้ามออก เพราะตอนออกจะล้างฉบับร่าง และข้อมูลจะหาย
-    if (!(await flushSaves())) {
-      showToast({ text: "ยังบันทึกไม่สำเร็จ กรุณาเชื่อมต่ออินเทอร์เน็ตก่อนออกจากระบบ", bad: true });
-      return;
+  const close = () => ref.current?.removeAttribute("open");
+
+  const downloadMyData = async () => {
+    close();
+    try {
+      const data = await exportAccount();
+      download(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }), "my-graduation-data.json");
+    } catch {
+      showToast({ text: "ดาวน์โหลดไม่สำเร็จ กรุณาลองใหม่", bad: true });
     }
-    await logout();
-    forgetLocalData();
-    window.location.assign("/");
   };
 
   const removeAccount = async () => {
     setBusy(true);
     try {
       await deleteAccount();
-      forgetLocalData();
-      window.location.assign("/");
     } catch {
       setBusy(false);
       setConfirmDelete(false);
@@ -53,21 +52,27 @@ export function AccountMenu() {
     <>
       <details ref={ref} className="menu" data-testid="account-menu">
         <summary className="btn">
-          <span className="account-name">{data.user.name}</span>
+          <span className="account-name">{user.name}</span>
         </summary>
         <div className="menu-list">
-          <p className="menu-email">{data.user.email}</p>
-          <a className="menu-link" href="/api/me/export" download="my-graduation-data.json">
+          <p className="menu-email">{user.email}</p>
+          <button type="button" onClick={downloadMyData}>
             ดาวน์โหลดข้อมูลของฉัน
-          </a>
-          <button type="button" onClick={signOut}>
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              close();
+              void signOut();
+            }}
+          >
             ออกจากระบบ
           </button>
           <button
             type="button"
             className="danger"
             onClick={() => {
-              ref.current?.removeAttribute("open");
+              close();
               setConfirmDelete(true);
             }}
           >
@@ -79,7 +84,8 @@ export function AccountMenu() {
         <Modal title="ลบบัญชีถาวร" onClose={() => setConfirmDelete(false)}>
           <div className="form">
             <p className="small">
-              ระบบจะลบบัญชี แผน เกรด และประวัติทั้งหมดของคุณทันที และกู้คืนไม่ได้ ถ้าต้องการเก็บข้อมูลไว้ ให้ดาวน์โหลดข้อมูลก่อน
+              ระบบจะลบบัญชีและแผนทั้งหมดของคุณทันที และกู้คืนไม่ได้ ถ้าต้องการเก็บข้อมูลไว้ ให้ดาวน์โหลดข้อมูลก่อน ระบบจะขอให้เลือกบัญชี Google
+              อีกครั้งเพื่อยืนยันตัวตน
             </p>
             <div className="actions end">
               <button type="button" onClick={() => setConfirmDelete(false)}>

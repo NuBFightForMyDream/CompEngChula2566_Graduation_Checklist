@@ -8,20 +8,12 @@
   },
   "scripts": {
     "dev": "pnpm --filter @cp/web dev",
-    "dev:full": "pnpm db:up && pnpm db:setup && pnpm --parallel --filter @cp/api --filter @cp/web dev:full",
-    "db:up": "docker compose up -d --wait",
-    "db:down": "docker compose down",
-    "db:setup": "pnpm --filter @cp/api db:setup",
-    "db:backup": "sh scripts/backup-db.sh",
-    "image:up": "docker compose --profile image up -d --build --wait",
-    "image:down": "docker compose --profile image down",
+    "dev:emulator": "firebase emulators:exec --only auth,firestore --project demo-cp \"pnpm --filter @cp/web dev:emulator\"",
     "build": "pnpm --filter @cp/web build",
     "preview": "pnpm --filter @cp/web preview",
-    "build:vercel": "node scripts/vercel-build.ts",
     "test": "pnpm -r --if-present test",
     "test:e2e": "pnpm --filter @cp/web test:e2e",
-    "test:e2e:image": "pnpm image:up && E2E_API=1 E2E_BASE_URL=http://localhost:8090 pnpm --filter @cp/web test:e2e",
-    "test:e2e:api": "pnpm db:up && pnpm db:setup && E2E_API=1 pnpm --filter @cp/web test:e2e",
+    "test:e2e:firebase": "E2E_FIREBASE=1 pnpm --filter @cp/web test:e2e",
     "typecheck": "pnpm -r --if-present typecheck",
     "lint": "biome check .",
     "format": "biome check --write .",
@@ -29,7 +21,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.6.5",
-    "esbuild": "^0.28.2",
+    "firebase-tools": "^15.37.0",
     "typescript": "^7.0.2",
     "vitest": "^5.1.0"
   }

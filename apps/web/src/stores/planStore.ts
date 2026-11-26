@@ -1,10 +1,9 @@
 // แผนของผู้ใช้: ทุกการเปลี่ยนแปลงผ่าน commit() ที่เดียว จึงมี undo และบันทึกอัตโนมัติครบทุกจุด
-// ไม่ได้ login บันทึกในเบราว์เซอร์ ถ้า login แล้วบันทึกขึ้นบัญชีผ่าน planSync
+// ไม่ได้ login บันทึกในเบราว์เซอร์ ถ้า login แล้วบันทึกลง Firestore ผ่าน lib/cloud.ts
 
 import {
   type CurriculumSummary,
   defaultSettings,
-  type PlanDetail,
   type PlanFile,
   type PlanSettings,
   planFileSchema,
@@ -21,35 +20,24 @@ import {
   samePlan,
 } from "@cp/core";
 import { create } from "zustand";
-import { accountsEnabled, createPlan, getPlan, listPlans, meQuery, queryClient } from "../lib/account.ts";
+import type { CloudPlan, CloudUser } from "../lib/cloud.ts";
 import { curriculumSource } from "../lib/curriculumSource.ts";
+import { accountsEnabled } from "../lib/firebaseConfig.ts";
 import { describeOutcome } from "../lib/messages.ts";
 import { localPlanRepository } from "../lib/planRepository.ts";
-import { clearDraft, createPlanSync, type PlanSync, readDraft, type SaveStatus } from "../lib/planSync.ts";
 import { useUi } from "./uiStore.ts";
 
 const HISTORY_LIMIT = 50;
-const DEFAULT_PLAN_NAME = "แผนหลัก";
+const SAVE_DELAY_MS = 800;
 const repository = localPlanRepository;
 
-export type { SaveStatus };
+export type SaveStatus = "local" | "pending" | "saved" | "offline" | "error";
 
-/**
- * มีแผนสองฉบับที่ต่างกัน ต้องให้ผู้ใช้เลือก
- *   local = แผนในเบราว์เซอร์ตอน login กับแผนในบัญชี
- *   draft = ฉบับร่างที่ยังส่งไม่สำเร็จ กับแผนที่เครื่องอื่นบันทึกหลังจากนั้น
- *   remote = กำลังแก้อยู่ แล้วเครื่องอื่นบันทึกไปก่อน
- */
+/** แผนในเบราว์เซอร์ตอน login ต่างจากแผนในบัญชี ต้องให้ผู้ใช้เลือก */
 export interface PlanConflict {
-  kind: "local" | "draft" | "remote";
   mine: PlanState;
   mineSettings: PlanSettings;
-  server: PlanDetail;
-}
-
-interface RemotePlan {
-  id: string;
-  name: string;
+  server: CloudPlan;
 }
 
 interface PlanStore {
@@ -60,7 +48,7 @@ interface PlanStore {
   notices: string[];
   past: PlanState[];
   future: PlanState[];
-  remote: RemotePlan | null;
+  user: CloudUser | null;
   saveStatus: SaveStatus;
   conflict: PlanConflict | null;
   init(): Promise<void>;
@@ -75,7 +63,10 @@ interface PlanStore {
   resolveConflict(choice: "mine" | "server"): void;
   /** ส่งที่ค้างให้หมด คืน false ถ้ายังบันทึกไม่สำเร็จ */
   flushSaves(): Promise<boolean>;
-  forgetLocalData(): void;
+  signIn(): Promise<void>;
+  signOut(): Promise<void>;
+  deleteAccount(): Promise<void>;
+  exportAccount(): Promise<object | null>;
 }
 
 const cache = new WeakMap<PlanState, PlanModel>();
@@ -88,84 +79,87 @@ export function modelOf(cur: Curriculum, state: PlanState) {
   return m;
 }
 
-let sync: PlanSync | null = null;
+const sameSettings = (a: PlanSettings, b: PlanSettings) =>
+  a.autoShift === b.autoShift &&
+  a.showEdges === b.showEdges &&
+  Object.keys(a.colors).length === Object.keys(b.colors).length &&
+  Object.entries(a.colors).every(([k, v]) => b.colors[k] === v);
+
+const ignoredSignInErrors = new Set(["auth/popup-closed-by-user", "auth/cancelled-popup-request"]);
+
+type Cloud = typeof import("../lib/cloud.ts");
+// โหลด Firebase เฉพาะเมื่อตั้งค่าไว้ เว็บที่ไม่มีระบบบัญชีจะได้ไม่ต้องดาวน์โหลด SDK
+let cloud: Cloud | null = null;
 let initOnce: Promise<void> | null = null;
+let saveTimer: ReturnType<typeof setTimeout> | undefined;
+let saveSeq = 0;
+let stopWatchingPlan: (() => void) | null = null;
+let stopWatchingUser: (() => void) | null = null;
 
 export const usePlan = create<PlanStore>((set, get) => {
-  const persist = () => {
-    const { curriculum, state, settings, remote } = get();
-    if (!curriculum || !state) return;
-    if (remote) sync?.schedule();
-    else void repository.save(curriculum.id, state, settings);
-  };
-
-  function startSync(planId: string, version: number) {
-    sync?.stop();
-    sync = createPlanSync({
-      planId,
-      version,
-      read: () => {
-        const { state, settings } = get();
-        return { state: state as PlanState, settings };
+  function saveNow() {
+    clearTimeout(saveTimer);
+    saveTimer = undefined;
+    const { curriculum, state, settings, user } = get();
+    if (!cloud || !curriculum || !state || !user) return;
+    const seq = ++saveSeq;
+    cloud.savePlan(user.uid, curriculum.id, state, settings).then(
+      () => {
+        if (seq === saveSeq && !saveTimer) set({ saveStatus: "saved" });
       },
-      onStatus: (saveStatus) => set({ saveStatus }),
-      onConflict: (server) => {
-        const { state, settings } = get();
-        set({ conflict: { kind: "remote", mine: state as PlanState, mineSettings: settings, server } });
-      },
-    });
-    return sync;
+      () => set({ saveStatus: "error" }),
+    );
   }
 
-  /** เปิดแผนในบัญชี และจัดการกรณีที่มีข้อมูลค้างอยู่ในเครื่องนี้ */
-  async function openRemote(curriculum: Curriculum) {
+  const persist = () => {
+    const { curriculum, state, settings, user } = get();
+    if (!curriculum || !state) return;
+    if (!user) {
+      void repository.save(curriculum.id, state, settings);
+      return;
+    }
+    set({ saveStatus: navigator.onLine ? "pending" : "offline" });
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(saveNow, SAVE_DELAY_MS);
+  };
+
+  function applyRemote(plan: CloudPlan) {
+    const { curriculum, state, settings, conflict } = get();
+    // ยังมีการแก้ในเครื่องนี้ที่รอส่ง หรือรอผู้ใช้เลือกฉบับ: ฉบับในเครื่องนี้จะถูกส่งทับอยู่แล้ว
+    if (!curriculum || !state || saveTimer || conflict) return;
+    const next = normalizePlan(curriculum, plan.state);
+    if (samePlan(next, state) && sameSettings(plan.settings, settings)) return;
+    set({ state: next, settings: plan.settings, past: [], future: [], saveStatus: "saved" });
+    useUi.getState().showToast({ text: "อัปเดตแผนจากเครื่องอื่นแล้ว" });
+  }
+
+  /** เปิดแผนในบัญชี และจัดการกรณีที่มีแผนค้างอยู่ในเบราว์เซอร์นี้ */
+  async function openCloud(c: Cloud, user: CloudUser, curriculum: Curriculum) {
     const stored = await repository.load(curriculum.id);
     const local = stored.plan ? normalizePlan(curriculum, stored.plan) : null;
     const localHasProgress = !!local && hasProgress(curriculum, local);
-    const existing = (await listPlans()).find((p) => p.curriculumId === curriculum.id);
+    const saved = await c.loadPlan(user.uid, curriculum.id);
 
-    if (!existing) {
-      const created = await createPlan({
-        curriculumId: curriculum.id,
-        name: DEFAULT_PLAN_NAME,
-        ...(localHasProgress ? { state: local, settings: stored.settings } : {}),
-      });
-      if (localHasProgress) {
-        await repository.clear(curriculum.id);
-        useUi.getState().showToast({ text: "ย้ายแผนจากเบราว์เซอร์นี้เข้าบัญชีแล้ว" });
-      }
-      return {
-        plan: created,
-        state: created.state as PlanState,
-        settings: created.settings,
-        conflict: null,
-        resume: false,
-      };
+    if (!saved) {
+      if (!local || !localHasProgress)
+        return { state: emptyPlan(curriculum), settings: defaultSettings, conflict: null };
+      // ลบจากเบราว์เซอร์เมื่อเซิร์ฟเวอร์รับแล้วเท่านั้น
+      c.savePlan(user.uid, curriculum.id, local, stored.settings).then(
+        () => repository.clear(curriculum.id),
+        () => {},
+      );
+      useUi.getState().showToast({ text: "ย้ายแผนจากเบราว์เซอร์นี้เข้าบัญชีแล้ว" });
+      return { state: local, settings: stored.settings, conflict: null };
     }
 
-    const server = await getPlan(existing.id);
-    const serverState = server.state as PlanState;
-    const base = { plan: server, state: serverState, settings: server.settings, conflict: null, resume: false };
-
-    const draft = readDraft(server.id);
-    if (draft) {
-      const mine = normalizePlan(curriculum, draft.state);
-      if (draft.baseVersion === server.version) return { ...base, state: mine, settings: draft.settings, resume: true };
-      if (samePlan(mine, serverState)) {
-        clearDraft(server.id);
-        return base;
-      }
-      return { ...base, conflict: { kind: "draft" as const, mine, mineSettings: draft.settings, server } };
+    const server = { ...saved, state: normalizePlan(curriculum, saved.state) };
+    const base = { state: server.state, settings: server.settings, conflict: null };
+    if (!local || !localHasProgress) return base;
+    if (samePlan(local, server.state)) {
+      await repository.clear(curriculum.id);
+      return base;
     }
-
-    if (localHasProgress && local) {
-      if (samePlan(local, serverState)) {
-        await repository.clear(curriculum.id);
-        return base;
-      }
-      return { ...base, conflict: { kind: "local" as const, mine: local, mineSettings: stored.settings, server } };
-    }
-    return base;
+    return { ...base, conflict: { mine: local, mineSettings: stored.settings, server } };
   }
 
   return {
@@ -176,19 +170,46 @@ export const usePlan = create<PlanStore>((set, get) => {
     notices: [],
     past: [],
     future: [],
-    remote: null,
+    user: null,
     saveStatus: "local",
     conflict: null,
 
     init() {
-      // StrictMode เรียก effect สองครั้งตอนพัฒนา ถ้าเรียกซ้ำจริงจะสร้างแผนซ้ำได้
+      // StrictMode เรียก effect สองครั้งตอนพัฒนา
       initOnce ??= (async () => {
-        const source = await curriculumSource();
-        const entries = await source.list();
+        const entries = curriculumSource.list();
         const first = entries[0];
         if (!first) throw new Error("ไม่พบรายชื่อหลักสูตร");
         set({ entries });
+        if (accountsEnabled) {
+          cloud ??= await import("../lib/cloud.ts");
+          set({ user: await cloud.currentUser() });
+        }
         await get().loadCurriculum(first.id);
+        if (cloud) {
+          stopWatchingUser = cloud.onUserChange((user) => {
+            const { curriculum } = get();
+            if (user?.uid === get().user?.uid || !curriculum) return;
+            // ที่รอส่งเป็นของบัญชีเดิม ห้ามส่งเข้าบัญชีใหม่
+            clearTimeout(saveTimer);
+            saveTimer = undefined;
+            // ซ่อนกระดานระหว่างโหลด ไม่อย่างนั้นสิ่งที่แก้ช่วงนี้จะถูกแผนที่โหลดมาทับ
+            set({ user, curriculum: null, state: null });
+            get()
+              .loadCurriculum(curriculum.id)
+              .catch(() => window.location.reload());
+          });
+        }
+        window.addEventListener("offline", () => {
+          if (get().saveStatus === "pending") set({ saveStatus: "offline" });
+        });
+        window.addEventListener("online", () => {
+          if (get().saveStatus === "offline") set({ saveStatus: "pending" });
+        });
+        // ปิดแท็บระหว่างรอส่ง: ให้ Firestore เก็บลงเครื่องไว้ก่อน แล้วส่งตอนเปิดครั้งหน้า
+        window.addEventListener("pagehide", () => {
+          if (saveTimer) saveNow();
+        });
       })().catch((err) => {
         initOnce = null;
         throw err;
@@ -197,15 +218,14 @@ export const usePlan = create<PlanStore>((set, get) => {
     },
 
     async loadCurriculum(id) {
-      await sync?.flush();
-      sync?.stop();
-      sync = null;
-      const source = await curriculumSource();
-      const [curriculum, notices] = await Promise.all([source.curriculum(id), source.notices(id)]);
-      const me = accountsEnabled ? await queryClient.fetchQuery(meQuery) : null;
+      if (saveTimer) saveNow();
+      stopWatchingPlan?.();
+      stopWatchingPlan = null;
+      const [curriculum, notices] = await Promise.all([curriculumSource.curriculum(id), curriculumSource.notices(id)]);
+      const { user } = get();
 
-      if (me?.user) {
-        const opened = await openRemote(curriculum);
+      if (cloud && user) {
+        const opened = await openCloud(cloud, user, curriculum);
         set({
           curriculum,
           notices,
@@ -213,12 +233,10 @@ export const usePlan = create<PlanStore>((set, get) => {
           settings: opened.settings,
           past: [],
           future: [],
-          remote: { id: opened.plan.id, name: opened.plan.name },
           saveStatus: "saved",
           conflict: opened.conflict,
         });
-        const started = startSync(opened.plan.id, opened.plan.version);
-        if (opened.resume) started.schedule();
+        stopWatchingPlan = cloud.watchPlan(user.uid, curriculum.id, applyRemote);
       } else {
         const stored = await repository.load(curriculum.id);
         const state = stored.plan ? normalizePlan(curriculum, stored.plan) : emptyPlan(curriculum);
@@ -229,7 +247,6 @@ export const usePlan = create<PlanStore>((set, get) => {
           settings: stored.settings,
           past: [],
           future: [],
-          remote: null,
           saveStatus: "local",
           conflict: null,
         });
@@ -306,36 +323,76 @@ export const usePlan = create<PlanStore>((set, get) => {
     },
 
     resolveConflict(choice) {
-      const { conflict, curriculum, remote } = get();
-      if (!conflict || !curriculum || !remote) return;
-      const { kind, mine, mineSettings, server } = conflict;
-      sync?.rebase(server.version);
-      if (kind === "local") void repository.clear(curriculum.id);
+      const { conflict, curriculum } = get();
+      if (!conflict || !curriculum) return;
       if (choice === "mine") {
-        set({ state: mine, settings: mineSettings, past: [], future: [], conflict: null });
-        sync?.schedule();
-      } else {
-        clearDraft(remote.id);
         set({
-          state: server.state as PlanState,
-          settings: server.settings,
+          state: conflict.mine,
+          settings: conflict.mineSettings,
           past: [],
           future: [],
           conflict: null,
-          saveStatus: "saved",
+          saveStatus: "pending",
+        });
+        saveNow();
+      } else {
+        set({
+          state: conflict.server.state,
+          settings: conflict.server.settings,
+          past: [],
+          future: [],
+          conflict: null,
+        });
+      }
+      void repository.clear(curriculum.id);
+    },
+
+    async flushSaves() {
+      if (!cloud || !get().user) return true;
+      if (saveTimer) saveNow();
+      return cloud.waitForSaves();
+    },
+
+    async signIn() {
+      try {
+        await cloud?.signIn();
+      } catch (err) {
+        const code = (err as { code?: string }).code ?? "";
+        if (ignoredSignInErrors.has(code)) return;
+        useUi.getState().showToast({
+          text:
+            code === "auth/popup-blocked"
+              ? "เบราว์เซอร์บล็อกหน้าต่างเข้าสู่ระบบ กรุณาอนุญาต popup แล้วลองใหม่"
+              : "เข้าสู่ระบบไม่สำเร็จ กรุณาลองใหม่",
+          bad: true,
         });
       }
     },
 
-    async flushSaves() {
-      return sync ? sync.flush() : true;
+    async signOut() {
+      if (!cloud) return;
+      if (!(await get().flushSaves())) {
+        useUi.getState().showToast({ text: "ยังบันทึกไม่สำเร็จ กรุณาเชื่อมต่ออินเทอร์เน็ตก่อนออกจากระบบ", bad: true });
+        return;
+      }
+      stopWatchingUser?.();
+      stopWatchingPlan?.();
+      await cloud.signOut();
+      window.location.reload();
     },
 
-    forgetLocalData() {
-      const { curriculum, remote } = get();
-      sync?.stop();
-      if (remote) clearDraft(remote.id);
-      if (curriculum) void repository.clear(curriculum.id);
+    async deleteAccount() {
+      if (!cloud) return;
+      // ส่งที่ค้างออกไปก่อนลบ Firestore เรียงการเขียนตามลำดับ แผนจึงไม่ถูกสร้างกลับหลังลบ
+      // และห้าม await ก่อนเปิดหน้าต่างยืนยันตัวตน ไม่อย่างนั้นเบราว์เซอร์จะบล็อก popup
+      if (saveTimer) saveNow();
+      await cloud.deleteAccount();
+      window.location.reload();
+    },
+
+    async exportAccount() {
+      const { user } = get();
+      return cloud && user ? cloud.exportMyData(user) : null;
     },
   };
 });

@@ -31,5 +31,5 @@ g++ -std=c++17 step1_basics.cpp -o step1
 
 ## ขั้นถัดไป (หลังผ่านทั้ง 5 ไฟล์)
 
-6. อ่าน `packages/curricula/data/comp-eng-2566.json` จริงด้วยไลบรารี [nlohmann/json](https://github.com/nlohmann/json) (ไฟล์ `json.hpp` ไฟล์เดียว)
+6. อ่าน `data/comp-eng-2566.json` จริงด้วยไลบรารี [nlohmann/json](https://github.com/nlohmann/json) (ไฟล์ `json.hpp` ไฟล์เดียว)
 7. ทำเป็นเซิร์ฟเวอร์ด้วย [cpp-httplib](https://github.com/yhirose/cpp-httplib) เช่น `GET /api/available?passed=2110101`

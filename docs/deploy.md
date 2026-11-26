@@ -1,113 +1,86 @@
-# คู่มือ deploy
+# คู่มือตั้งค่า Firebase และ deploy
 
-ใช้ Vercel รันหน้าเว็บกับ API และ Supabase เป็นฐานข้อมูล
-หน้าเว็บเสิร์ฟจาก CDN ส่วน API รันเป็น function เดียวใน origin เดียวกัน `scripts/vercel-build.ts` เป็นตัวสร้างทั้งสองส่วน
+เว็บนี้เป็นไฟล์ static ล้วน ไม่มีเซิร์ฟเวอร์ของตัวเอง
 
-ต้องใช้บัญชี Supabase, Vercel และ Google Cloud ใส่ค่าลับในหน้าตั้งค่าของแต่ละบริการเท่านั้น ห้าม commit ลง repo เพราะ repo นี้เป็น public
+- **Firebase Authentication** ทำหน้าที่ Google login
+- **Cloud Firestore** เก็บแผนของแต่ละคนที่ `users/{uid}/plans/{curriculumId}`
+- **Vercel** เสิร์ฟหน้าเว็บ จะย้ายไปที่อื่นที่เสิร์ฟไฟล์ static ได้ก็ได้ เช่น GitHub Pages หรือ Firebase Hosting
 
-## 1. สร้างฐานข้อมูลบน Supabase
+ทุกอย่างใช้ free plan ได้ ไม่ต้องผูกบัตร
 
-1. สร้างโปรเจกต์ใหม่ เลือก region Southeast Asia (Singapore) ให้ตรงกับ function ซึ่งตั้งไว้ที่ `sin1` แล้วเก็บรหัสผ่านฐานข้อมูลไว้
-2. เปิดหน้า Connect แล้วคัดลอก connection string 2 แบบ และเติม `?sslmode=require` ท้ายทั้งคู่
+## 1. สร้างโปรเจกต์ Firebase
 
-| แบบ | พอร์ต | ใช้เป็น | เหตุผล |
-|---|---|---|---|
-| Transaction pooler | 6543 | `DATABASE_URL` | เหมาะกับ serverless ที่เปิด connection สั้น ๆ จำนวนมาก |
-| Session pooler | 5432 | `MIGRATION_DATABASE_URL` | ใช้ตอน migrate และ seed ระหว่าง build |
+1. เข้า [Firebase console](https://console.firebase.google.com/) แล้วกด Create a project ไม่ต้องเปิด Google Analytics
+2. **Authentication** → Get started → Sign-in method → Google → Enable → เลือกอีเมลสำหรับ support → Save
+3. **Firestore Database** → Create database
+   - Location: `asia-southeast1 (Singapore)` เปลี่ยนทีหลังไม่ได้
+   - เลือก Start in **production mode**
+4. ในหน้า Firestore เปิดแท็บ **Rules** แล้ววางเนื้อหาทั้งหมดของ [`firestore.rules`](../firestore.rules) ทับของเดิม แล้วกด Publish
+   ถ้าไม่ทำข้อนี้ จะบันทึกแผนไม่ได้ เพราะ production mode ปฏิเสธทุกคำขอ
 
-3. แนะนำให้ปิด Data API ใน Project Settings เพราะแอปนี้ไม่ได้ใช้ ทุกตารางเปิด Row Level Security แบบไม่มี policy ไว้แล้ว การปิดเป็นการป้องกันอีกชั้น
+## 2. ใส่ค่าของโปรเจกต์ลงในโค้ด
 
-ตารางจะถูกสร้างเองตอน deploy production ไม่ต้องรัน SQL เอง
+1. กดรูปเฟือง → Project settings → Your apps → ไอคอน `</>` (Web) → ตั้งชื่อแอป → Register app ไม่ต้องติ๊ก Firebase Hosting
+2. คัดลอก 4 ค่าจาก `firebaseConfig` ที่ขึ้นมา ไปใส่ใน [`apps/web/src/lib/firebaseConfig.ts`](../apps/web/src/lib/firebaseConfig.ts)
 
-> Free plan จะ pause โปรเจกต์เมื่อไม่มีการใช้งานราว 1 สัปดาห์ ข้อมูลยังอยู่ แต่เว็บจะโหลดไม่ได้ และ deploy ใหม่จะล้มจนกว่าจะกด restore ในหน้า Supabase
+```ts
+const project = {
+  apiKey: "AIza...",
+  authDomain: "ชื่อโปรเจกต์.firebaseapp.com",
+  projectId: "ชื่อโปรเจกต์",
+  appId: "1:...:web:...",
+};
+```
 
-## 2. สร้างโปรเจกต์บน Vercel
+ค่าเหล่านี้ commit ลง repo ได้ เพราะไม่ใช่ความลับ ทุกคนที่เปิดเว็บก็เห็นอยู่แล้ว สิ่งที่กันไม่ให้คนอื่นอ่านข้อมูลคือ `firestore.rules`
 
-1. Add New → Project แล้ว import repo นี้ ไม่ต้องเปลี่ยน Root Directory ค่า install และ build อ่านจาก `vercel.json`
-2. ใส่ environment variables ตามตารางด้านล่าง โดยเลือก scope เป็น **Production เท่านั้น**
-3. ไปที่ Settings → Environments → Production แล้วเปลี่ยน branch เป็น `restructure`
-   ค่าเริ่มต้นคือ `main` ซึ่งยังเป็นเว็บเดิม deployment แรกจึงจะยังไม่ใช่เว็บใหม่
-4. กด Redeploy หรือ push ขึ้น `restructure` อีกครั้ง
+3. รัน `pnpm dev` แล้วเปิด http://localhost:5173 จะมีปุ่ม "เข้าสู่ระบบด้วย Google" ลอง login แล้วติ๊กวิชา แล้วดูว่าข้อมูลขึ้นใน Firestore → Data
+   `localhost` ได้รับอนุญาตให้ login อยู่แล้ว ไม่ต้องตั้งเพิ่ม
 
-| ตัวแปร | ค่า | จำเป็น |
-|---|---|---|
-| `DATABASE_URL` | Transaction pooler จากขั้นที่ 1 | ต้องมี |
-| `MIGRATION_DATABASE_URL` | Session pooler จากขั้นที่ 1 | แนะนำ |
-| `GOOGLE_CLIENT_ID` | จากขั้นที่ 3 | ถ้าต้องการ login |
-| `GOOGLE_CLIENT_SECRET` | จากขั้นที่ 3 | ถ้าต้องการ login |
-| `PUBLIC_ORIGIN` | เช่น `https://your-app.vercel.app` ไม่มี `/` ท้าย | ต้องตั้งเมื่อใช้โดเมนอื่น ถ้าไม่ตั้งจะใช้โดเมนหลักของโปรเจกต์ |
-| `VERCEL_FUNCTION_REGION` | region ของ function ค่าเริ่มต้น `sin1` | ตั้งเมื่อฐานข้อมูลอยู่ที่อื่น |
+## 3. Deploy บน Vercel
 
-Preview deployment จะไม่มีฐานข้อมูลเพราะตัวแปรตั้งไว้เฉพาะ Production หน้าเว็บจึงขึ้นว่าโหลดหลักสูตรไม่สำเร็จ และ build จะไม่ migrate ฐานข้อมูลจริง เป็นพฤติกรรมที่ตั้งใจไว้
-
-## 3. ตั้งค่า Google สำหรับเว็บจริง
-
-1. เพิ่ม Authorized redirect URI เป็น `https://ที่อยู่เว็บ/api/auth/google/callback`
-2. เปลี่ยนสถานะหน้า OAuth consent จาก Testing เป็น In production
-   ถ้ายังเป็น Testing จะ login ได้เฉพาะอีเมลที่เพิ่มเป็น test user
-
-แนะนำให้สร้าง OAuth client แยกจากที่ใช้ในเครื่อง หลังใส่ค่าใน Vercel แล้วต้อง Redeploy
+1. Add New → Project แล้ว import repo นี้ ไม่ต้องเปลี่ยน Root Directory และไม่ต้องตั้ง environment variable ค่า install และ build อ่านจาก [`vercel.json`](../vercel.json)
+2. ไปที่ Settings → Environments → Production แล้วเปลี่ยน branch เป็น `firebase` ค่าเริ่มต้นคือ `main` ซึ่งยังเป็นเว็บเดิม
+3. กด Redeploy แล้วจดที่อยู่เว็บไว้ เช่น `https://ชื่อโปรเจกต์.vercel.app`
+4. กลับไปที่ Firebase → Authentication → Settings → **Authorized domains** → Add domain แล้วใส่ที่อยู่เว็บโดยไม่ใส่ `https://`
+   ถ้าไม่เพิ่ม หน้าต่าง login จะขึ้น error ว่าโดเมนนี้ไม่ได้รับอนุญาต
 
 ## 4. ตรวจหลัง deploy
 
-- [ ] Build log มี `migrate: เรียบร้อย`
-- [ ] `https://ที่อยู่เว็บ/api/health` ตอบ `{"status":"ok"}`
-- [ ] หน้าเว็บเปิดได้ ฟอนต์และสีถูกต้อง และ Console ไม่มี error เรื่อง Content Security Policy
-- [ ] header `x-vercel-id` ของ `/api/health` ลงท้ายด้วย function ใน `sin1` ถ้าเป็น `iad1` แปลว่า region ไม่ถูกใช้ และเว็บจะช้า
+- [ ] หน้าเว็บเปิดได้ ฟอนต์และสีถูกต้อง และ Console ไม่มี error
 - [ ] login ด้วย Google ได้ ติ๊กวิชา แล้วเปิดจากอีกเครื่องเห็นข้อมูลเดียวกัน
-- [ ] cookie ชื่อ `__Host-session` มี Secure และ HttpOnly
-- [ ] ถ้าไม่ได้ปิด Data API ให้เรียก `GET https://โปรเจกต์.supabase.co/rest/v1/users` ด้วย anon key ต้องไม่เห็นข้อมูลผู้ใช้
-- [ ] ลองสำรองฐานข้อมูลตามหัวข้อด้านล่าง
+- [ ] เปิดสองเครื่องพร้อมกัน แก้จากเครื่องหนึ่ง อีกเครื่องเปลี่ยนตามโดยไม่ต้อง reload
+- [ ] ออกจากระบบแล้วกระดานกลับเป็นแผนว่าง
 
-## 5. เปลี่ยนจากเว็บเดิมบน GitHub Pages
+## แก้ข้อมูลหลักสูตรหรือประกาศ
 
-เว็บเดิมเก็บข้อมูลใน `localStorage` ของโดเมน `github.io` ซึ่งเว็บใหม่อ่านเองไม่ได้
+แก้ไฟล์ใน [`data/`](../data) แล้ว push ขึ้น branch ที่ Vercel ใช้ Vercel จะ build และเปิดเวอร์ชันใหม่ให้เอง
+
+## แก้ firestore.rules
+
+หลังแก้ไฟล์ ต้องวางเนื้อหาใหม่ในแท็บ Rules แล้วกด Publish อีกครั้ง
+หรือใช้คำสั่ง (ครั้งแรกต้อง login ก่อนด้วย `pnpm exec firebase login`)
+
+```bash
+pnpm exec firebase deploy --only firestore:rules --project ชื่อโปรเจกต์
+```
+
+ก่อนแก้ ควรรัน `pnpm test:e2e:firebase` เพราะมี test ที่ตรวจว่าบัญชีอื่นอ่านแผนของเราไม่ได้
+
+## ข้อจำกัดของ free plan (Spark)
+
+- Firestore มีโควตาต่อวัน ตอนที่เขียนคู่มือนี้คืออ่าน 50,000 ครั้ง เขียน 20,000 ครั้ง และเก็บได้ 1 GiB ถ้าเกินจะใช้งานไม่ได้จนถึงวันถัดไป ไม่มีการเก็บเงิน ควรตรวจตัวเลขล่าสุดที่หน้าราคาของ Firebase
+- เว็บรอหยุดแก้ 0.8 วินาทีก่อนบันทึก การติ๊กรัว ๆ จึงนับเป็นการเขียนครั้งเดียว
+- ไม่มี backup อัตโนมัติ ผู้ใช้ดาวน์โหลดข้อมูลของตัวเองได้จากเมนูบัญชี → "ดาวน์โหลดข้อมูลของฉัน"
+
+## เปลี่ยนจากเว็บเดิมบน GitHub Pages
+
+เว็บเดิมเก็บข้อมูลใน `localStorage` ของโดเมน `github.io` ซึ่งเว็บใหม่บน Vercel อ่านเองไม่ได้
 ไฟล์ `index.html` ที่ root ของ repo จึงเป็นหน้าที่ช่วยผู้ใช้เดิมดาวน์โหลดข้อมูลออกมา แล้วนำเข้าที่เว็บใหม่
 
 ทำเมื่อขั้นที่ 1–4 ผ่านหมดแล้วเท่านั้น เพราะการ merge จะแทนที่เว็บเดิมทันที
 
 1. ใส่ที่อยู่เว็บใหม่ใน `NEW_SITE_URL` ใน `index.html`
-2. merge `restructure` เข้า `main`
+2. merge `firebase` เข้า `main`
 3. เปิดเว็บเดิม แล้วตรวจว่าปุ่มดาวน์โหลดและลิงก์ไปเว็บใหม่ทำงาน
 4. เปลี่ยน Production branch บน Vercel กลับเป็น `main`
-
-## สำรองและกู้คืนฐานข้อมูล
-
-ใช้ Session pooler เพราะ `pg_dump` ต้องถือ connection ไว้ตลอดการทำงาน
-
-```bash
-# สำรองเป็นไฟล์ใน backups/ ซึ่ง git ไม่เก็บ
-DATABASE_URL='session pooler connection string' pnpm db:backup
-
-# กู้คืนไปยังฐานข้อมูลปลายทาง (เขียนทับข้อมูลเดิม) ต้องติดตั้ง pg_restore หรือรันผ่าน image postgres:17
-pg_restore --clean --if-exists --no-owner --no-privileges -d "$TARGET_DATABASE_URL" backups/ชื่อไฟล์.dump
-```
-
-ไฟล์สำรองมีอีเมลและเกรดของผู้ใช้ เก็บในที่ปลอดภัย และห้ามตั้ง backup อัตโนมัติผ่าน GitHub Actions แล้วเก็บเป็น artifact เพราะ repo นี้เป็น public
-
-## อัปเดตเวอร์ชันใหม่
-
-push ขึ้น Production branch ได้เลย build จะ migrate และนำเข้าหลักสูตรให้ก่อนเปิดเวอร์ชันใหม่
-ถ้า migration ล้ม build จะล้ม และเวอร์ชันเดิมยังทำงานต่อ
-
-- โค้ดเวอร์ชันเดิมยังทำงานอยู่ระหว่าง build จึงควร migrate แบบเพิ่มอย่างเดียวเมื่อทำได้ ถ้าต้องลบคอลัมน์หรือตาราง ให้สำรองข้อมูลก่อนเสมอ
-- ข้อมูลหลักสูตรถูกเก็บที่ CDN 5 นาที หลังแก้ JSON หน้าเว็บอาจเห็นของเดิมอีกสักครู่
-
-## ทางเลือกอื่น: Render
-
-Render รัน `Dockerfile` ของ repo นี้โดยตรง ไม่ต้องสร้าง build แยก เซิร์ฟเวอร์ทำงานต่อเนื่อง จึงเก็บ connection ไว้ได้
-
-| | Vercel | Render (free) |
-|---|---|---|
-| รูปแบบ | serverless + CDN | เซิร์ฟเวอร์เดียวใน Docker |
-| ต่อฐานข้อมูลด้วย | Transaction pooler | Session pooler |
-| Migration | ตอน build | ตอนเซิร์ฟเวอร์เริ่ม |
-| เมื่อไม่มีคนใช้ | หน้าเว็บยังเปิดเร็วจาก CDN | หลับหลัง 15 นาที คำขอแรกรอราว 1 นาที |
-
-1. ทำขั้นที่ 1 ของคู่มือนี้ แต่ใช้ connection string แบบ **Session pooler** เป็น `DATABASE_URL`
-2. บน Render เลือก New → Blueprint แล้วเลือก repo นี้ ระบบจะอ่าน `render.yaml` และถาม `DATABASE_URL`, `GOOGLE_CLIENT_ID` และ `GOOGLE_CLIENT_SECRET`
-   ถ้ายังไม่ใช้ Google ให้เว้นสองค่านี้ว่างไว้ ส่วน `PUBLIC_ORIGIN` ไม่ต้องตั้ง ระบบใช้ที่อยู่ที่ Render กำหนดให้
-3. ตั้งค่า Google ตามขั้นที่ 3 โดยใช้ที่อยู่ `https://ชื่อบริการ.onrender.com`
-4. ตรวจตามขั้นที่ 4 ยกเว้นข้อ `x-vercel-id` และตรวจเพิ่มว่า `TRUSTED_PROXY_HOPS` ถูกต้อง โดยเปิด `/api/auth/google` จากเครือข่ายสองแห่ง ต้องถูกนับเพดานแยกกัน
-
-ถ้าใช้ผู้ให้บริการอื่นที่รัน Docker ได้ ให้ตั้ง `DATABASE_URL`, `PUBLIC_ORIGIN` และ `TRUSTED_PROXY_HOPS` เอง

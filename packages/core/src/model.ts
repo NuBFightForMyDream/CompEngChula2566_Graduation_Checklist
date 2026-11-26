@@ -68,7 +68,7 @@ export function cleanPassed(g: Graph, order: string[], passed: Iterable<string>)
   return ok;
 }
 
-/** ทำความสะอาดแผนที่โหลดมา (จากเบราว์เซอร์ ไฟล์ หรือ API) ให้ตรงกับหลักสูตรปัจจุบัน */
+/** ทำความสะอาดแผนที่โหลดมา (จากเบราว์เซอร์ ไฟล์ หรือ Firestore) ให้ตรงกับหลักสูตรปัจจุบัน */
 export function normalizePlan(cur: Curriculum, raw: Partial<PlanState> | null | undefined): PlanState {
   const extras = (raw?.extras ?? [])
     .filter((e) => e?.id && isSem(e.semester))

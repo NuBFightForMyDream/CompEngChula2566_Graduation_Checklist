@@ -1,5 +1,5 @@
-import data from "@cp/curricula/data/comp-eng-2566.json";
 import { describe, expect, it } from "vitest";
+import data from "../../../data/comp-eng-2566.json";
 import {
   addExtra,
   importGrades,

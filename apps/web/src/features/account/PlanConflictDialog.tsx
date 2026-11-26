@@ -2,27 +2,6 @@ import type { Grade, PlanModel, PlanState } from "@cp/core";
 import { modelOf, usePlan } from "../../stores/planStore.ts";
 import { Modal } from "../common/Modal.tsx";
 
-const TEXT = {
-  local: {
-    title: "พบแผนสองฉบับ",
-    intro: "เบราว์เซอร์นี้มีแผนที่ทำไว้ก่อนเข้าสู่ระบบ และในบัญชีก็มีแผนอยู่แล้ว ฉบับที่ไม่ได้เลือกจะถูกลบ",
-    mine: "ใช้แผนในเบราว์เซอร์นี้",
-    server: "ใช้แผนในบัญชี",
-  },
-  draft: {
-    title: "แผนในบัญชีถูกแก้จากที่อื่น",
-    intro: "เครื่องนี้มีการแก้ไขที่ยังส่งไม่สำเร็จ แต่ระหว่างนั้นมีการบันทึกจากเครื่องอื่น ฉบับที่ไม่ได้เลือกจะถูกลบ",
-    mine: "ใช้ฉบับที่แก้ในเครื่องนี้",
-    server: "ใช้ฉบับล่าสุดในบัญชี",
-  },
-  remote: {
-    title: "แผนนี้ถูกแก้จากเครื่องอื่น",
-    intro: "มีการบันทึกจากเครื่องอื่นระหว่างที่คุณกำลังแก้ ฉบับที่ไม่ได้เลือกจะถูกลบ",
-    mine: "ใช้ฉบับที่แก้ในเครื่องนี้",
-    server: "ใช้ฉบับล่าสุดในบัญชี",
-  },
-};
-
 const MAX_LISTED = 4;
 
 const listed = (labels: string[]) =>
@@ -85,28 +64,24 @@ export function PlanConflictDialog() {
   const curriculum = usePlan((s) => s.curriculum);
   const resolve = usePlan((s) => s.resolveConflict);
   if (!conflict || !curriculum) return null;
-  const text = TEXT[conflict.kind];
-  const server = conflict.server.state as PlanState;
-  const savedAt = new Date(conflict.server.updatedAt).toLocaleString("th-TH", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  });
+  const server = conflict.server.state;
+  const savedAt = conflict.server.updatedAt?.toLocaleString("th-TH", { dateStyle: "medium", timeStyle: "short" });
   return (
-    <Modal title={text.title} onClose={() => {}} dismissible={false}>
+    <Modal title="พบแผนสองฉบับ" onClose={() => {}} dismissible={false}>
       <div className="form" data-testid="plan-conflict">
-        <p className="small">{text.intro}</p>
+        <p className="small">เบราว์เซอร์นี้มีแผนที่ทำไว้ก่อนเข้าสู่ระบบ และในบัญชีก็มีแผนอยู่แล้ว ฉบับที่ไม่ได้เลือกจะถูกลบ</p>
         <div className="conflict-options">
           <Option
-            title={text.mine}
+            title="ใช้แผนในเบราว์เซอร์นี้"
             model={modelOf(curriculum, conflict.mine)}
             other={server}
             onClick={() => resolve("mine")}
           />
           <Option
-            title={text.server}
+            title="ใช้แผนในบัญชี"
             model={modelOf(curriculum, server)}
             other={conflict.mine}
-            note={`บันทึกเมื่อ ${savedAt}`}
+            note={savedAt && `บันทึกเมื่อ ${savedAt}`}
             onClick={() => resolve("server")}
           />
         </div>

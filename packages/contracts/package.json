@@ -12,7 +12,6 @@
   },
   "dependencies": {
     "@cp/core": "workspace:*",
-    "@cp/curricula": "workspace:*",
     "zod": "^4.6.7"
   }
 }

@@ -1,7 +1,8 @@
 import { defineConfig, devices } from "@playwright/test";
 
-const useApi = !!process.env.E2E_API;
-// ทดสอบกับเซิร์ฟเวอร์ที่เปิดอยู่แล้ว เช่น Docker image ที่จะ deploy
+// E2E_FIREBASE=1 รันชุดเดิมทั้งหมดพร้อมชุดทดสอบบัญชี กับ Firebase Emulator (Google ปลอม + Firestore ในเครื่อง)
+const useFirebase = !!process.env.E2E_FIREBASE;
+// ทดสอบกับเว็บที่เปิดอยู่แล้ว เช่น เว็บที่ deploy แล้ว
 const externalUrl = process.env.E2E_BASE_URL;
 
 export default defineConfig({
@@ -12,26 +13,26 @@ export default defineConfig({
   expect: { timeout: externalUrl ? 15_000 : 5_000 },
   use: { baseURL: externalUrl ?? "http://localhost:5174", trace: "retain-on-failure" },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"], viewport: { width: 1440, height: 900 } } }],
-  // E2E_API=1 รันชุดเดิมทั้งหมดผ่าน API และ Postgres จริง พร้อมชุดทดสอบบัญชี
-  // ใช้พอร์ต 8081 แยกจาก pnpm dev:full และใช้ Google ปลอมจาก apps/api/test/e2e-server.ts
   webServer: externalUrl
     ? []
     : [
-        ...(useApi
+        ...(useFirebase
           ? [
               {
-                command: "pnpm --filter @cp/api start:e2e",
-                url: "http://localhost:8081/api/health",
+                command: "pnpm exec firebase emulators:start --only auth,firestore --project demo-cp",
+                cwd: "../..",
+                url: "http://127.0.0.1:8085",
                 reuseExistingServer: !process.env.CI,
-                env: { PORT: "8081", PUBLIC_ORIGIN: "http://localhost:5174", LOG_LEVEL: "silent" },
+                timeout: 120_000,
+                // ให้ firebase CLI ปิด Emulator เอง ถ้าถูก kill ทันที Java ของ Firestore จะค้างอยู่
+                gracefulShutdown: { signal: "SIGINT" as const, timeout: 15_000 },
               },
             ]
           : []),
         {
-          command: `pnpm exec vite build${useApi ? " --mode api" : ""} && pnpm exec vite preview --port 5174 --strictPort`,
+          command: `pnpm exec vite build${useFirebase ? " --mode emulator" : ""} && pnpm exec vite preview --port 5174 --strictPort`,
           url: "http://localhost:5174",
           reuseExistingServer: !process.env.CI,
-          env: { API_ORIGIN: "http://localhost:8081" },
         },
       ],
 });

@@ -2,7 +2,7 @@ packages:
   - "apps/*"
   - "packages/*"
 allowBuilds:
-  cpu-features: false
+  "@firebase/util": false
   esbuild: false
   protobufjs: false
-  ssh2: false
+  re2: false

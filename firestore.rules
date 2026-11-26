@@ -1,0 +1,17 @@
+rules_version = '2';
+
+// แต่ละคนอ่านและเขียนได้เฉพาะแผนของตัวเอง ที่ users/{uid}/plans/{curriculumId}
+// ทุกอย่างที่ไม่ได้อนุญาตไว้ในไฟล์นี้ถูกปฏิเสธทั้งหมด
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{uid}/plans/{curriculumId} {
+      allow read, delete: if request.auth != null && request.auth.uid == uid;
+      allow create, update: if request.auth != null
+        && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(["state", "settings", "updatedAt"])
+        && request.resource.data.state is map
+        && request.resource.data.settings is map
+        && request.resource.data.updatedAt == request.time;
+    }
+  }
+}

@@ -7,7 +7,7 @@ coverage/
 .env
 .env.*
 !.env.example
-!apps/web/.env.api
+!apps/web/.env.emulator
 
 # Playwright
 test-results/

@@ -29,7 +29,7 @@ import json
 from collections import deque
 from pathlib import Path
 
-DEFAULT_CURRICULUM = Path(__file__).resolve().parents[2] / "packages" / "curricula" / "data" / "comp-eng-2566.json"
+DEFAULT_CURRICULUM = Path(__file__).resolve().parents[2] / "data" / "comp-eng-2566.json"
 
 
 # ---------------------------------------------------------------------------

@@ -10,7 +10,7 @@
 #include <vector>
 using namespace std;
 
-// วิชาปี 1 เทอม 1 (ดูได้ใน packages/curricula/data/comp-eng-2566.json)
+// วิชาปี 1 เทอม 1 (ดูได้ใน data/comp-eng-2566.json)
 vector<string> codes   = {"2110101", "2110111", "2301107", "2304103", "2304183", "5500111"};
 vector<string> names   = {"COMP PROG", "EXPL ENG WORLD", "CALCULUS I", "GEN PHYS I", "GEN PHYS LAB I", "EXP ENG I"};
 vector<int>    credits = {3, 3, 3, 3, 1, 3};

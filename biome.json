@@ -2,7 +2,7 @@
   "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
   "vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
   "files": {
-    "includes": ["**", "!**/*.md", "!packages/curricula/data", "!pnpm-lock.yaml", "!.vscode"]
+    "includes": ["**", "!**/*.md", "!data", "!pnpm-lock.yaml", "!.vscode"]
   },
   "formatter": { "indentStyle": "space", "indentWidth": 2, "lineWidth": 120 },
   "linter": {

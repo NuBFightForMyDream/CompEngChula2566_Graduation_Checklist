@@ -1,4 +1,4 @@
-// ที่เก็บแผนของผู้ใช้ เป็น interface แบบ async เพื่อให้เฟส 4 เพิ่มตัวที่บันทึกผ่าน API ได้โดยไม่แก้ store
+// แผนของผู้ใช้ที่ยังไม่ได้เข้าสู่ระบบ เก็บใน localStorage ของเบราว์เซอร์นี้
 
 import { defaultSettings, type PlanSettings, planSettingsSchema, planStateSchema } from "@cp/contracts";
 import type { PlanState } from "@cp/core";

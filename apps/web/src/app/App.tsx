@@ -149,19 +149,6 @@ export function App() {
 
   useEffect(start, [start]);
 
-  // ขากลับจากหน้า login: แจ้งผล แล้วล้าง query ออกจาก URL
-  useEffect(() => {
-    const url = new URL(window.location.href);
-    const login = url.searchParams.get("login");
-    if (!login) return;
-    url.searchParams.delete("login");
-    window.history.replaceState(null, "", url);
-    useUi.getState().showToast({
-      text: login === "unavailable" ? "ระบบเข้าสู่ระบบยังไม่เปิดใช้งาน" : "เข้าสู่ระบบไม่สำเร็จ กรุณาลองใหม่",
-      bad: true,
-    });
-  }, []);
-
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape" && !document.querySelector("dialog[open]")) {

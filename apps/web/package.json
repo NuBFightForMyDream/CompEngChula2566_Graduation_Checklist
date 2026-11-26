@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "dev:full": "vite --mode api",
+    "dev:emulator": "vite --mode emulator",
     "build": "tsc -p tsconfig.json && vite build",
     "preview": "vite preview",
     "typecheck": "tsc -p tsconfig.json",
@@ -14,9 +14,8 @@
   "dependencies": {
     "@cp/contracts": "workspace:*",
     "@cp/core": "workspace:*",
-    "@cp/curricula": "workspace:*",
     "@dnd-kit/core": "^6.3.1",
-    "@tanstack/react-query": "^5.106.1",
+    "firebase": "^13.4.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "react-markdown": "^10.1.0",
