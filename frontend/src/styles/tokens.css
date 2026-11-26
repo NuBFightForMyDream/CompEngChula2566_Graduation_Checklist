@@ -1,0 +1,61 @@
+/* สีและตัวอักษรทั้งหมดของระบบ โหมดมืดเลือกค่าเองแยกจากโหมดสว่าง */
+:root {
+  --bg: #f6f5f3;
+  --surface: #ffffff;
+  --surface-2: #f1efec;
+  --fg: #1d1b1a;
+  --muted: #68625e;
+  --line: #e2dfdb;
+  --accent: #a3001e;
+  --brand: #a3001e;
+  --brand-fg: #ffffff;
+  --ok: #17794a;
+  --warn: #b35f00;
+  --bad: #c9202a;
+  --year-band: #f3f1ee;
+  --extra: #5f6b7a;
+  --ink: #111111;
+  --shadow: 0 1px 2px rgb(30 20 15 / 0.06), 0 8px 24px rgb(30 20 15 / 0.08);
+  --font-display: "Anuphan", "IBM Plex Sans Thai", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans Thai", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #141312;
+    --surface: #1e1c1b;
+    --surface-2: #282624;
+    --fg: #eeeae6;
+    --muted: #a9a29c;
+    --line: #36322f;
+    --accent: #ff7088;
+    --brand: #8c0019;
+    --ok: #4cc67e;
+    --warn: #ffa53a;
+    --bad: #ff6a6a;
+    --year-band: #232120;
+    --extra: #8d9aab;
+    --ink: #6a6a6a;
+    --shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 8px 24px rgb(0 0 0 / 0.4);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #141312;
+  --surface: #1e1c1b;
+  --surface-2: #282624;
+  --fg: #eeeae6;
+  --muted: #a9a29c;
+  --line: #36322f;
+  --accent: #ff7088;
+  --brand: #8c0019;
+  --ok: #4cc67e;
+  --warn: #ffa53a;
+  --bad: #ff6a6a;
+  --year-band: #232120;
+  --extra: #8d9aab;
+  --ink: #6a6a6a;
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 8px 24px rgb(0 0 0 / 0.4);
+  color-scheme: dark;
+}

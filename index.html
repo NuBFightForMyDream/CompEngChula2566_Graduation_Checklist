@@ -2,115 +2,128 @@
 <html lang="th">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>CP Graduation Roadmap</title>
-<meta name="claude:viewport-fit-sides" content="cover">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anuphan:wght@500;700&family=IBM+Plex+Sans+Thai:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
-<link rel="stylesheet" href="css/style.css?v=202610201310">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Graduation Roadmap ย้ายไปเว็บใหม่แล้ว</title>
+<!--
+  หน้านี้แทนเว็บเดิมบน GitHub Pages เมื่อ merge เข้า main
+  ข้อมูลของผู้ใช้เดิมอยู่ใน localStorage ของโดเมนนี้ เว็บใหม่อยู่คนละโดเมนจึงอ่านเองไม่ได้
+  หน้านี้จึงช่วยดาวน์โหลดข้อมูลออกมาเป็นไฟล์ เพื่อนำเข้าที่เว็บใหม่
+
+  ก่อน merge ให้ใส่ที่อยู่เว็บใหม่ใน NEW_SITE_URL ด้านล่าง
+-->
+<style>
+  :root { --bg: #f6f5f3; --surface: #fff; --fg: #1d1b1a; --muted: #68625e; --line: #e2dfdb; --brand: #a3001e; color-scheme: light; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #141312; --surface: #1e1c1b; --fg: #eeeae6; --muted: #a9a29c; --line: #36322f; --brand: #8c0019; color-scheme: dark; }
+  }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.6 system-ui, sans-serif; padding: 32px 16px; }
+  main { max-width: 560px; margin: 0 auto; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 24px; }
+  h1 { font-size: 1.4rem; margin: 0 0 8px; }
+  p { margin: 8px 0; }
+  ol { padding-left: 22px; }
+  .muted { color: var(--muted); font-size: 14px; }
+  .actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0 8px; }
+  button, .link { font: inherit; display: inline-block; padding: 9px 16px; border-radius: 9px; border: 1px solid var(--line); background: var(--surface); color: var(--fg); text-decoration: none; cursor: pointer; }
+  .primary { background: var(--brand); border-color: var(--brand); color: #fff; }
+  [hidden] { display: none !important; }
+</style>
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <div class="titlebar">
-      <h1>Graduation Roadmap</h1>
-      <div id="cur-name">กำลังโหลดหลักสูตร…</div>
-    </div>
-    <div class="controls">
-      <label class="muted" for="cur-select">หลักสูตร</label>
-      <select id="cur-select"></select>
-      <button id="btn-sample" type="button">ตัวอย่าง: จบปี 1</button>
-      <button id="btn-demo-move" type="button">ตัวอย่าง: ย้าย Data Struct ไป 3/1</button>
-      <button id="btn-reset-plan" type="button">คืนแผนเดิม</button>
-      <button id="btn-reset" type="button">ล้างทั้งหมด</button>
-      <label class="check"><input type="checkbox" id="auto-shift"> ย้ายแล้วเลื่อนวิชาที่ต่อเนื่องตามอัตโนมัติ</label>
-      <button id="btn-png" type="button">บันทึกรูป PNG</button>
-      <button id="btn-pdf" type="button">บันทึก PDF</button>
-      <button id="btn-palette" type="button" aria-expanded="false" aria-controls="palette">ปรับสีวิชา</button>
-      <button id="btn-grades" type="button" aria-expanded="false" aria-controls="grade-import">กรอกเกรดหลายวิชา</button>
-    </div>
-  </header>
+<main>
+  <h1>เว็บนี้ย้ายไปที่ใหม่แล้ว</h1>
+  <p>เว็บใหม่เข้าสู่ระบบด้วย Google และบันทึกแผนการเรียนข้ามเครื่องได้</p>
 
-  <section class="summary" aria-label="สรุปหน่วยกิต">
-    <div class="total">
-      <span class="muted">หน่วยกิตที่ผ่านแล้ว</span>
-      <div class="big"><span id="total-got">0</span> <small>/ <span id="total-need">0</span></small></div>
-      <div class="meter"><i id="total-bar" style="width:0"></i></div>
-      <span class="muted" id="total-note"></span>
-      <span class="extra-note" id="extra-note" hidden></span>
-      <span class="gpax" id="gpax" hidden></span>
-    </div>
-    <div class="cats" id="cats"></div>
-    <form class="palette grade-import" id="grade-import" hidden>
-      <div class="palette-head"><b>กรอกเกรดหลายวิชา</b><span class="muted">วางรหัสวิชาตามด้วยเกรด บรรทัดละวิชา หรือวางรูปแบบ {"2110101","A"} จากโค้ด C++ ก็ได้</span></div>
-      <textarea id="grade-text" rows="5" aria-label="รหัสวิชาและเกรด" placeholder="2110101 A&#10;2301107 C+&#10;2304103 B&#10;2100301 S"></textarea>
-      <div class="actions"><button type="submit">ใส่เกรด</button><span id="grade-result" role="status"></span></div>
-    </form>
-    <div class="palette" id="palette" hidden>
-      <div class="palette-head"><b>ปรับสีวิชา</b><span class="muted">เลือกสีของแต่ละหมวด/กลุ่ม บันทึกไว้ในเบราว์เซอร์นี้</span>
-        <button type="button" id="btn-palette-reset">คืนสีตามตารางหลักสูตร</button></div>
-      <div class="palette-grid" id="palette-grid"></div>
+  <section id="has-data" hidden>
+    <p>พบแผนที่คุณเคยบันทึกไว้ในเบราว์เซอร์นี้: <b id="summary"></b> ข้อมูลนี้จะไม่ย้ายไปเอง ให้ทำตามนี้</p>
+    <ol>
+      <li>กด "ดาวน์โหลดแผนของฉัน"</li>
+      <li>เปิดเว็บใหม่ แล้วไปที่ ตั้งค่า → นำเข้าไฟล์สำรอง</li>
+    </ol>
+    <div class="actions">
+      <button type="button" class="primary" id="download">ดาวน์โหลดแผนของฉัน</button>
+      <a class="link" href="./" data-new-site hidden>ไปเว็บใหม่</a>
     </div>
   </section>
 
-  <details class="notices" id="notices" open hidden>
-    <summary><h2>ประกาศและเงื่อนไขเพิ่มเติม</h2><span class="muted">เขียนเองในไฟล์ <code>data/notices/</code></span></summary>
-    <div class="notice-list" id="notice-list"></div>
-  </details>
+  <section id="no-data" hidden>
+    <p>ไม่พบแผนที่บันทึกไว้ในเบราว์เซอร์นี้ ถ้าเคยใช้จากเครื่องอื่น ให้เปิดหน้านี้จากเครื่องนั้น</p>
+    <div class="actions"><a class="link primary" href="./" data-new-site hidden>ไปเว็บใหม่</a></div>
+  </section>
 
-  <div class="banner" id="banner" hidden>
-    <p id="banner-text"></p>
-    <button class="primary" id="btn-shift-all" type="button">เลื่อนวิชาที่ต่อเนื่องตามไปอัตโนมัติ</button>
-  </div>
+  <p class="muted" id="not-ready" hidden>เว็บใหม่กำลังจะเปิดให้ใช้งาน</p>
+</main>
+<script>
+  "use strict";
+  const NEW_SITE_URL = "";
+  const CURRICULUM_ID = "comp-eng-2566";
 
-  <div class="legend">
-    <span><i class="chip p"></i>ผ่านแล้ว</span>
-    <span><i class="chip"></i>ลงได้ตอนนี้</span>
-    <span><i class="chip l"></i>ยังล็อก</span>
-    <span><i class="chip x"></i>ลงก่อนวิชาบังคับก่อน</span>
-    <span>คลิกที่ว่างหรือกด Esc = ยกเลิกการเลือก · วงกลมขวา = ติ๊กผ่าน (วิชาที่ล็อกติ๊กไม่ได้) · คลิกชื่อ = เลือกดู/ย้ายเทอม · ลากการ์ดไปวางเทอมอื่นได้ · "+ เพิ่มวิชา" = เรียนเพิ่ม (เลือกได้ว่านับเข้าหมวดไหน) · วิชาแกนสาขาเลื่อนข้ามปีได้ แต่ข้ามเทอมไม่ได้</span>
-  </div>
+  const read = (key) => {
+    try { return JSON.parse(localStorage.getItem(key)); } catch { return null; }
+  };
 
-  <p class="toast" id="toast" role="status" aria-live="polite"></p>
+  // รับเฉพาะค่าที่ถูกต้อง ข้อมูลเก่าเพียงจุดเดียวต้องไม่ทำให้นำเข้าที่เว็บใหม่ไม่สำเร็จทั้งไฟล์
+  const isSem = (s) => typeof s === "string" && /^[1-5]\/[12]$/.test(s);
+  const GRADES = new Set(["A", "B+", "B", "C+", "C", "D+", "D", "F", "S", "U", "W"]);
+  const isCredits = (n) => Number.isInteger(n) && n >= 1 && n <= 6;
+  const text = (s, max) => typeof s === "string" && s.length > 0 && s.length <= max;
+  const pick = (record, keep) =>
+    Object.fromEntries(Object.entries(record && typeof record === "object" ? record : {}).filter(keep));
 
-  <div class="board-scroll">
-    <div class="board" id="board"><svg id="edges" aria-hidden="true"></svg></div>
-  </div>
+  function buildBackup() {
+    const passed = read(`passed:${CURRICULUM_ID}`);
+    const place = read(`place:${CURRICULUM_ID}`);
+    const grades = read(`grade:${CURRICULUM_ID}`);
+    const choices = read(`choice:${CURRICULUM_ID}`);
+    const extras = read(`extra:${CURRICULUM_ID}`);
+    if ([passed, place, grades, choices, extras].every((v) => v === null)) return null;
+    const autoShift = read("autoShift");
+    return {
+      app: "cp-graduation-roadmap",
+      version: 1,
+      curriculumId: CURRICULUM_ID,
+      exportedAt: new Date().toISOString(),
+      plan: {
+        passed: (Array.isArray(passed) ? passed : []).filter((id) => text(id, 64)),
+        place: pick(place, ([, sem]) => isSem(sem)),
+        grades: pick(grades, ([, grade]) => GRADES.has(grade)),
+        choices: Object.fromEntries(
+          Object.entries(pick(choices, ([, c]) => c && text(c.code, 20) && text(c.name, 120) && isCredits(c.credits)))
+            .map(([slot, c]) => [slot, { id: typeof c.id === "string" ? c.id : null, code: c.code, name: c.name, credits: c.credits }]),
+        ),
+        extras: (Array.isArray(extras) ? extras : [])
+          .filter((e) => e && text(e.id, 64) && text(e.code, 20) && text(e.name, 120) && isCredits(e.credits) && typeof e.category === "string" && isSem(e.semester))
+          .slice(0, 50)
+          .map(({ id, code, name, credits, category, semester }) => ({ id, code, name, credits, category, semester })),
+      },
+      settings: {
+        autoShift: typeof autoShift === "boolean" ? autoShift : true,
+        showEdges: true,
+        colors: pick(read(`colors:${CURRICULUM_ID}`), ([, hex]) => typeof hex === "string" && /^#[0-9a-f]{6}$/i.test(hex)),
+      },
+    };
+  }
 
-  <div class="panels">
-    <section class="panel">
-      <h2>วิชาที่เลือก</h2>
-      <div class="info" id="info"><span class="muted">คลิกชื่อวิชาบนการ์ด เพื่อดูวิชาบังคับก่อน วิชาที่จะกระทบ และย้ายเทอม</span></div>
-      <p class="algo">DFS ย้อนกลับหาวิชาที่ต้องผ่านก่อน · BFS ไปข้างหน้าหาวิชาที่จะโดนล็อก · ย้ายเทอมแล้วเช็กว่า prereq ทุกตัวยังอยู่เทอมก่อนหน้า</p>
-    </section>
-    <section class="panel">
-      <h2>ลงได้ตอนนี้ <span class="muted" id="avail-count"></span></h2>
-      <ul class="list" id="avail"></ul>
-      <p class="algo">วิชาที่ยังไม่ผ่าน และ prereq ทุกตัวผ่านแล้ว (in-degree ที่เหลือ = 0)</p>
-    </section>
-    <section class="panel">
-      <h2>แผนแนะนำเทอมที่เหลือ</h2>
-      <div id="plan"></div>
-      <p class="algo">เริ่มจากเทอมถัดจากวิชาที่ผ่านล่าสุด แต่ละเทอมหยิบเฉพาะวิชาที่เปิดสอน · Topological sort + Greedy ด้วย priority queue: เทอมบนกระดานก่อน แล้วตามความยาวสาย prereq ที่ต่อจากวิชานั้น (DP บน DAG)</p>
-    </section>
-  </div>
-
-  <p class="note"><span id="cur-note"></span> <span class="version">· เวอร์ชันเว็บ 202610201310</span></p>
-</div>
-
-<!-- ?v=... = เวอร์ชันไฟล์ แก้ไฟล์ใน css/ หรือ js/ แล้วต้องเปลี่ยนเลขนี้ทุกบรรทัด (ใช้ tools/bump-version.sh)
-     เบราว์เซอร์จะได้โหลดไฟล์ชุดใหม่ทั้งชุด ไม่ใช้ไฟล์เก่าในแคชปนกับไฟล์ใหม่
-     สคริปต์แบบธรรมดา (ไม่ใช่ module) ใช้ตัวแปรร่วมกันได้ ต้องเรียงตามลำดับนี้:
-     graph → state → grades → board → panels → notices → export → animate → main -->
-<script src="js/graph.js?v=202610201310"></script>
-<script src="js/state.js?v=202610201310"></script>
-<script src="js/grades.js?v=202610201310"></script>
-<script src="js/board.js?v=202610201310"></script>
-<script src="js/panels.js?v=202610201310"></script>
-<script src="js/notices.js?v=202610201310"></script>
-<script src="js/export.js?v=202610201310"></script>
-<script src="js/animate.js?v=202610201310"></script>
-<script src="js/main.js?v=202610201310"></script>
+  const backup = buildBackup();
+  document.getElementById(backup ? "has-data" : "no-data").hidden = false;
+  document.getElementById("not-ready").hidden = !!NEW_SITE_URL;
+  for (const link of document.querySelectorAll("[data-new-site]")) {
+    link.hidden = !NEW_SITE_URL;
+    if (NEW_SITE_URL) link.href = NEW_SITE_URL;
+  }
+  if (backup) {
+    const count = backup.plan.passed.length;
+    const graded = Object.keys(backup.plan.grades).length;
+    document.getElementById("summary").textContent = `ผ่านแล้ว ${count} วิชา มีเกรด ${graded} วิชา`;
+    document.getElementById("download").addEventListener("click", () => {
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" }));
+      a.download = `graduation-plan-${CURRICULUM_ID}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+    });
+  }
+</script>
 </body>
 </html>
