@@ -2,7 +2,7 @@
 
 **Plan your Computer Engineering degree at Chulalongkorn University and check every graduation requirement in one view.**
 
-![CoverPage](https://github.com/NuBFightForMyDream/CompEngChula2566_Graduation_Checklist/blob/main/CompEngChulaGradChecklist_CoverPage.jpg)
+![CoverPage](https://github.com/NuBFightForMyDream/CompEngChula2566_Graduation_Checklist/blob/main/CompEngChulaGradChecklist_Coverpage.jpg)
 
 [**Open the app →**](https://graduationchecklist.vercel.app/)
 
@@ -12,8 +12,6 @@
 ![Firebase](https://img.shields.io/badge/Firebase-DD2C00?logo=firebase&logoColor=white)
 ![Vercel](https://img.shields.io/badge/Vercel-000000?logo=vercel&logoColor=white)
 ![Playwright](https://img.shields.io/badge/Playwright-2EAD33?logo=playwright&logoColor=white)
-
-![The roadmap board with a prerequisite chain highlighted](docs/images/screenshot.png)
 
 ## What it is
 
@@ -25,6 +23,8 @@ The app shows the CP curriculum (B.Eng. Computer Engineering, 2022 / B.E. 2566) 
 - whether you meet the graduation requirements yet
 
 It needs no account. Sign in with Google if you want your plan saved to the cloud and synced across devices.
+
+![The roadmap board with a prerequisite chain highlighted](docs/images/screenshot.png)
 
 ## Features
 

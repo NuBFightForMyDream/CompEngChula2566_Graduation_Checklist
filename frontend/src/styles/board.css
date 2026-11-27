@@ -343,6 +343,12 @@ marker path {
   padding: 12px 10px 14px;
   border-top: 1px solid var(--line);
 }
+.gened-main {
+  display: contents;
+}
+.print-summary {
+  display: none;
+}
 .gened-head {
   display: flex;
   flex-wrap: wrap;
@@ -385,7 +391,7 @@ marker path {
 }
 
 /* มือถือ: ปัดทีละเทอม */
-@media (max-width: 720px) {
+@media screen and (max-width: 720px) {
   .board-scroll {
     scroll-snap-type: x proximity;
   }

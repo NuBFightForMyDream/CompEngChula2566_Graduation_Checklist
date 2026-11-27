@@ -4,8 +4,8 @@ import { graduationText } from "../../lib/messages.ts";
 import { useModel, usePlan } from "../../stores/planStore.ts";
 import { useUi } from "../../stores/uiStore.ts";
 import { download } from "./download.ts";
-import { exportPdf } from "./exportPdf.ts";
 import { exportPng } from "./exportPng.ts";
+import { printPage } from "./print.ts";
 
 const nextFrame = () => new Promise((res) => requestAnimationFrame(() => requestAnimationFrame(res)));
 
@@ -53,17 +53,11 @@ export function ExportMenu() {
     }
   };
 
-  /** PDF แนวนอน 2 หน้า สร้างไฟล์เองเพื่อให้ได้แนวนอนทุกเบราว์เซอร์ */
+  /** PDF ผ่านหน้าต่างพิมพ์ของเบราว์เซอร์: A4 แนวนอน 2 หน้า ตาม print.css */
   const pdf = async () => {
     close();
     await showBoard();
-    const ui = useUi.getState();
-    try {
-      await exportPdf({ ...header(), fileName: `roadmap-${m.curriculum.id}.pdf` });
-      ui.showToast({ text: "บันทึก PDF แล้ว" });
-    } catch (err) {
-      ui.showToast({ text: `สร้าง PDF ไม่สำเร็จ: ${(err as Error).message}`, bad: true });
-    }
+    printPage();
   };
 
   return (
