@@ -9,6 +9,19 @@ export const requestEdgeRedraw = () => window.dispatchEvent(new Event(REDRAW_EVE
 
 const MARKER = `<defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z"/></marker></defs>`;
 
+/** ตำแหน่งของการ์ดเทียบกับตาราง จาก offsetLeft/Top ไม่ขึ้นกับ transform หรือ zoom ของบรรพบุรุษ */
+function layoutRect(el: HTMLElement, board: HTMLElement) {
+  let x = 0;
+  let y = 0;
+  let node: HTMLElement | null = el;
+  while (node && node !== board) {
+    x += node.offsetLeft;
+    y += node.offsetTop;
+    node = node.offsetParent as HTMLElement | null;
+  }
+  return new DOMRect(x, y, el.offsetWidth, el.offsetHeight);
+}
+
 export function useEdges(
   boardRef: RefObject<HTMLDivElement | null>,
   svgRef: RefObject<SVGSVGElement | null>,
@@ -21,12 +34,14 @@ export function useEdges(
     const board = boardRef.current;
     const svg = svgRef.current;
     if (!board || !svg || !visible) return;
-    const box = board.getBoundingClientRect();
-    // ตอนพิมพ์ตารางถูกย่อด้วย CSS zoom ตำแหน่งจากเบราว์เซอร์จึงต้องหารกลับ เพราะ SVG ข้างในก็ถูกย่อด้วย
-    const zoom = board.currentCSSZoom || 1;
+    const printing = document.documentElement.classList.contains("printing");
+    const box = printing ? new DOMRect() : board.getBoundingClientRect();
     const rect = (id: string) => {
-      const r = board.querySelector(`.card[data-id="${CSS.escape(id)}"]`)?.getBoundingClientRect();
-      return r && new DOMRect(r.x / zoom, r.y / zoom, r.width / zoom, r.height / zoom);
+      const el = board.querySelector<HTMLElement>(`.card[data-id="${CSS.escape(id)}"]`);
+      if (!el) return undefined;
+      // ตอนพิมพ์ตารางถูกย่อ (zoom) และอาจถูกหมุน ตำแหน่งบนจอจึงใช้ไม่ได้ ใช้ตำแหน่งใน layout ของตารางแทน
+      // ปกติใช้ตำแหน่งบนจอ เพื่อให้ลูกศรตามการ์ดระหว่างแอนิเมชัน
+      return printing ? layoutRect(el, board) : el.getBoundingClientRect();
     };
     const bad = new Set(m.conflicts.map(([p, c]) => `${p}>${c}`));
     let out = MARKER;
@@ -38,8 +53,8 @@ export function useEdges(
         const a = rect(p);
         const b = rect(c.id);
         if (!a || !b) continue;
-        const left = box.left / zoom;
-        const top = box.top / zoom;
+        const left = box.left;
+        const top = box.top;
         let x1 = a.right - left;
         const y1 = a.top + a.height / 2 - top;
         let x2 = b.left - left - 2;

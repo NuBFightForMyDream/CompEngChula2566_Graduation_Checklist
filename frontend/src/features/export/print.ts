@@ -1,19 +1,21 @@
-// พิมพ์จากเบราว์เซอร์ (Ctrl/Cmd+P): จัดหน้าเป็น A4 แนวนอน 2 หน้าก่อนพิมพ์ แล้ววาดลูกศรใหม่ให้ตรงกับตำแหน่งการ์ดตอนพิมพ์
+// บันทึก PDF / พิมพ์: หน้าเดียว เนื้อหาแนวนอนหมุนลงกระดาษแนวตั้ง แล้ววาดลูกศรใหม่ให้ตรงกับตำแหน่งการ์ดตอนพิมพ์
 
 import { requestEdgeRedraw } from "../board/useEdges.ts";
 
-/** ความกว้างของเนื้อหาตอนพิมพ์ ตรงกับ .wrap ใน print.css */
-const PAGE_W = 1060;
-/** ความสูงที่ใช้ได้ใน A4 แนวนอนหลังหักขอบ 8mm (ประมาณ 733px) เผื่อไว้นิดหน่อย */
-const PAGE_H = 715;
+/** ความกว้างของเนื้อหาหลังหมุน (= ความสูงของกล่องหน้าใน print.css) */
+const PAGE_W = 950;
+/** ความสูงของเนื้อหาหลังหมุน (= ความกว้างของกล่องหน้าใน print.css 690px) เผื่อไว้นิดหน่อย */
+const PAGE_H = 675;
 
-let catsWasOpen: boolean | null = null;
-
-/** ย่อตารางให้อยู่ในหน้าเดียว และขยายความกว้างก่อนย่อ เพื่อให้ตารางยังเต็มความกว้างกระดาษ */
-function fitBoard(panel: HTMLElement) {
+/**
+ * ย่อตารางให้อยู่ในหน้าเดียว และขยายความกว้างก่อนย่อ เพื่อให้ตารางยังเต็มความกว้างกระดาษ
+ * ย่อที่ .board-scroll ไม่ใช่ที่ตัว panel เพราะ panel อาจถูกหมุนตอนพิมพ์แนวตั้ง และ zoom จะไปย่อระยะของ transform ด้วย
+ */
+function fitBoard(el: HTMLElement) {
   const heightAt = (width: number) => {
-    panel.style.width = `${width}px`;
-    return panel.getBoundingClientRect().height;
+    el.style.width = `${width}px`;
+    // offsetHeight คือความสูงใน layout ไม่โดนการหมุนของหน้า
+    return el.offsetHeight;
   };
   let width = PAGE_W;
   let zoom = 1;
@@ -23,7 +25,7 @@ function fitBoard(panel: HTMLElement) {
     width = PAGE_W / zoom;
   }
   zoom = Math.min(1, PAGE_H / heightAt(width), PAGE_W / width);
-  panel.style.zoom = String(zoom);
+  el.style.zoom = String(zoom);
 }
 
 export function enterPrint() {
@@ -37,27 +39,26 @@ export function enterPrint() {
     }
     board.style.setProperty("--cols", String(cols.filter((c) => !c.classList.contains("empty-col")).length));
   }
-  // หน้าแรกต้องเห็นทุกหมวด แม้บนมือถือจะยุบไว้
-  const cats = document.querySelector<HTMLDetailsElement>(".cats-box");
-  if (cats) {
-    catsWasOpen = cats.open;
-    cats.open = true;
-  }
   root.classList.add("printing");
-  const panel = document.querySelector<HTMLElement>('[data-panel="board"]');
-  if (panel) fitBoard(panel);
+  const scroll = document.querySelector<HTMLElement>('[data-panel="board"] .board-scroll');
+  if (scroll) fitBoard(scroll);
   requestEdgeRedraw();
 }
 
 export function exitPrint() {
   document.documentElement.classList.remove("printing");
-  const panel = document.querySelector<HTMLElement>('[data-panel="board"]');
-  if (panel) {
-    panel.style.zoom = "";
-    panel.style.width = "";
+  const scroll = document.querySelector<HTMLElement>('[data-panel="board"] .board-scroll');
+  if (scroll) {
+    scroll.style.zoom = "";
+    scroll.style.width = "";
   }
-  const cats = document.querySelector<HTMLDetailsElement>(".cats-box");
-  if (cats && catsWasOpen !== null) cats.open = catsWasOpen;
-  catsWasOpen = null;
   requestEdgeRedraw();
+}
+
+export function printPage() {
+  enterPrint();
+  requestAnimationFrame(() => {
+    window.print();
+    setTimeout(exitPrint, 500);
+  });
 }

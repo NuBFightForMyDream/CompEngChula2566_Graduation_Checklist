@@ -1,5 +1,4 @@
 // บันทึกรูป PNG: วาดตาราง roadmap ลง canvas จากตำแหน่งจริงบนหน้าจอ
-// renderBoard ใช้ซ้ำเป็นหน้า 2 ของ PDF
 
 import { type Grade, PASSING } from "@cp/core";
 import { download } from "./download.ts";

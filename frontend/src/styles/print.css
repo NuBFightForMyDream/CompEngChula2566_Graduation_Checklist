@@ -1,14 +1,18 @@
-/* พิมพ์ / PDF: A4 แนวนอน 2 หน้า · หน้า 1 สรุปหน่วยกิตและหมวด · หน้า 2 ตารางเรียนกับแถว GenEd
-   print.ts ย่อตารางให้พอดีหน้าเดียว */
+/* กฎสำหรับจอแคบในไฟล์อื่นเขียนเป็น @media screen เพราะตอนพิมพ์ความกว้างกระดาษแคบพอจะถูกนับเป็นจอมือถือ
+   ทำให้แถว GenEd เลื่อนแนวนอนและถูกกล่องสรุปทับ */
+/* พิมพ์ / PDF: หน้าเดียว · ตารางเรียน แถว GenEd และสรุปย่อในที่ว่างข้างแถว GenEd
+   print.ts ย่อตารางให้พอดีหน้า
+   กระดาษเป็นแนวตั้ง แล้วหมุนเนื้อหา 90° ให้เต็มหน้า (ท้ายไฟล์) */
 @page {
-  size: A4 landscape;
+  size: A4 portrait;
   margin: 8mm;
 }
 html.printing body {
   background: #fff;
   overflow: visible;
 }
-html.printing .topbar .top-actions,
+html.printing .topbar,
+html.printing .banner,
 html.printing .tabs,
 html.printing .board-toolbar,
 html.printing .add-slot,
@@ -16,47 +20,19 @@ html.printing .toast,
 html.printing .drawer,
 html.printing .welcome,
 html.printing .foot,
-html.printing .banner button,
 html.printing [data-panel="available"],
 html.printing [data-panel="plan"],
-html.printing [data-panel="notices"] {
+html.printing [data-panel="notices"],
+html.printing .overview {
   display: none !important;
-}
-html.printing .topbar {
-  position: static;
-  padding: 0 0 8px;
 }
 html.printing .wrap {
   max-width: none;
-  width: 1060px;
   margin: 0;
   padding: 0;
-  gap: 12px;
-  display: flex;
-  flex-direction: column;
 }
 html.printing .tab-panel[hidden] {
   display: block !important;
-}
-html.printing .banner {
-  order: 0;
-}
-html.printing .overview {
-  order: 1;
-}
-html.printing [data-panel="board"] {
-  order: 2;
-  break-before: page;
-  break-inside: avoid;
-}
-html.printing .tiles {
-  grid-template-columns: minmax(0, 2fr) repeat(3, minmax(0, 1fr));
-}
-html.printing .tile-main {
-  grid-column: auto;
-}
-html.printing .cats-box {
-  break-inside: avoid;
 }
 html.printing .board-scroll {
   overflow: visible;
@@ -146,4 +122,110 @@ html.printing .tab-panel[data-panel="available"],
 html.printing .tab-panel[data-panel="plan"],
 html.printing .tab-panel[data-panel="notices"] {
   display: none !important;
+}
+
+/* สรุปย่อข้างแถว GenEd */
+html.printing .gened-strip {
+  grid-template-columns: minmax(0, 1fr) 380px;
+  align-items: start;
+  gap: 8px 16px;
+}
+html.printing .gened-main {
+  display: grid;
+  gap: 8px;
+}
+html.printing .print-summary {
+  display: grid;
+  gap: 6px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  font-size: 10.5px;
+}
+html.printing .ps-title {
+  display: grid;
+}
+html.printing .ps-title b {
+  font-family: var(--font-display);
+  font-size: 13px;
+  color: var(--accent);
+}
+html.printing .ps-title span,
+html.printing .ps-stats small {
+  color: var(--muted);
+}
+html.printing .ps-stats {
+  display: grid;
+  grid-template-columns: repeat(3, auto);
+  justify-content: start;
+  gap: 16px;
+}
+html.printing .ps-stats span {
+  display: grid;
+}
+html.printing .ps-stats b {
+  font-family: var(--font-display);
+  font-size: 14px;
+}
+html.printing .ps-status {
+  font-weight: 600;
+}
+html.printing .ps-status.done {
+  color: var(--ok);
+}
+html.printing .ps-cats {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px 14px;
+}
+html.printing .ps-cats li {
+  display: grid;
+  grid-template-columns: 8px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 5px;
+}
+html.printing .ps-cats i {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+}
+html.printing .ps-cats span {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+html.printing .ps-cats b {
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+html.printing .ps-cats .done b {
+  color: var(--ok);
+}
+
+/* หมุนหน้าทวนเข็ม 90° ให้เนื้อหาแนวนอนเต็มกระดาษแนวตั้ง ขอบบนของเนื้อหาอยู่ด้านซ้ายของกระดาษ
+   หน้าเป็นกล่อง 690 × 950px ข้างในมีตารางกว้าง 950px ที่หมุนแล้ว
+   ขนาดนี้เผื่อให้พอดีทั้ง A4 และ Letter แม้เบราว์เซอร์ไม่ทำตาม @page และใช้ขอบกระดาษกว้างถึงประมาณ 14mm
+   ตรงกับ PAGE_W / PAGE_H ใน print.ts
+   กล่องนอกต้อง overflow: hidden ไม่งั้นเบราว์เซอร์เห็นว่าเนื้อหากว้างเกินกระดาษแล้วย่อทั้งหน้า */
+html.printing .wrap {
+  width: 690px;
+  display: block;
+}
+html.printing .tab-panel[data-panel="board"] {
+  position: relative;
+  width: 690px;
+  height: 950px;
+  overflow: hidden;
+  break-before: auto;
+  break-inside: avoid;
+}
+html.printing .tab-panel[data-panel="board"] .board-scroll {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: top left;
+  transform: rotate(-90deg) translateX(-100%);
 }
