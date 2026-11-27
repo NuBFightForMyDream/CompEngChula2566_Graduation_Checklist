@@ -397,16 +397,21 @@ marker path {
   }
   .board {
     min-width: 0;
-    grid-template-columns: repeat(10, 72vw);
+    /* จอละ 1 ปี (2 เทอม) · 34px = ขอบซ้ายขวาของ .wrap + เส้นขอบ .board-scroll */
+    grid-template-columns: repeat(10, calc((100vw - 34px) / 2));
   }
   .col {
+    padding-inline: 8px;
+  }
+  /* svg เป็นลูกตัวแรก คอลัมน์ลำดับคู่จึงเป็นเทอม 1 ของแต่ละปี */
+  .col:nth-child(even) {
     scroll-snap-align: start;
   }
   .card .nm {
-    font-size: 13.5px;
+    font-size: 13px;
   }
   .card .tick {
-    width: 44px;
+    width: 36px;
   }
   /* ตารางกว้างหลายจอ ให้แถว GenEd ค้างอยู่ในจอแล้วเลื่อนแนวนอนในแถวเอง */
   .gened-strip {
