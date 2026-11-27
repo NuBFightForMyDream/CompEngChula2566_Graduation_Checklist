@@ -2,6 +2,8 @@
 
 **Plan your Computer Engineering degree at Chulalongkorn University and check every graduation requirement in one view.**
 
+![CoverPage](https://github.com/NuBFightForMyDream/CompEngChula2566_Graduation_Checklist/blob/main/CompEngChulaGradChecklist_CoverPage.jpg)
+
 [**Open the app →**](https://graduationchecklist.vercel.app/)
 
 ![React](https://img.shields.io/badge/React_19-20232A?logo=react&logoColor=61DAFB)
