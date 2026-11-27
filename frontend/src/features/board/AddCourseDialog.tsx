@@ -1,4 +1,4 @@
-import { addExtra, EXTRA_CATEGORY, extraCategories } from "@cp/core";
+import { addExtra, EXTRA_CATEGORY, extraCategories, SEMS } from "@cp/core";
 import { type FormEvent, useState } from "react";
 import { semName } from "../../lib/messages.ts";
 import { useModel, usePlan } from "../../stores/planStore.ts";
@@ -10,21 +10,27 @@ export const categoryLabel = (m: ReturnType<typeof useModel>, key: string) =>
 
 export function AddCourseDialog() {
   const m = useModel();
-  const sem = useUi((s) => s.addingSem);
+  const startSem = useUi((s) => s.addingSem);
+  const startCategory = useUi((s) => s.addingCategory);
   const setAdding = useUi((s) => s.setAdding);
   const select = useUi((s) => s.select);
   const dispatch = usePlan((s) => s.dispatch);
   const [code, setCode] = useState("");
   const [name, setName] = useState("");
   const [credits, setCredits] = useState(3);
-  const [category, setCategory] = useState("free");
-  if (!sem) return null;
+  const [pickedCategory, setCategory] = useState<string | null>(null);
+  const [pickedSem, setSem] = useState<string | null>(null);
+  if (!startSem) return null;
+  const sem = pickedSem ?? startSem;
+  const category = pickedCategory ?? startCategory ?? "free";
 
   const close = () => {
     setAdding(null);
     setCode("");
     setName("");
     setCredits(3);
+    setCategory(null);
+    setSem(null);
   };
 
   const submit = (e: FormEvent) => {
@@ -39,7 +45,7 @@ export function AddCourseDialog() {
   };
 
   return (
-    <Modal title={`เพิ่มวิชาใน${semName(sem)}`} onClose={close}>
+    <Modal title={category === "gened" ? "เพิ่มวิชา GenEd" : `เพิ่มวิชาใน${semName(sem)}`} onClose={close}>
       <form className="form" onSubmit={submit}>
         <label>
           รหัสวิชา
@@ -59,6 +65,16 @@ export function AddCourseDialog() {
             onChange={(e) => setCredits(Math.max(1, Math.min(6, Number(e.target.value) || 1)))}
             required
           />
+        </label>
+        <label>
+          เทอมที่เรียน
+          <select value={sem} onChange={(e) => setSem(e.target.value)}>
+            {SEMS.map((s) => (
+              <option key={s} value={s}>
+                {semName(s)}
+              </option>
+            ))}
+          </select>
         </label>
         <label>
           นับเข้าหมวด

@@ -63,6 +63,13 @@ html.printing .col {
   padding: 8px 5px 10px;
   gap: 5px;
 }
+html.printing .gened-item select,
+html.printing .gened-add {
+  display: none;
+}
+html.printing .gened-item {
+  width: 150px;
+}
 html.printing .col.empty-col {
   display: none;
 }

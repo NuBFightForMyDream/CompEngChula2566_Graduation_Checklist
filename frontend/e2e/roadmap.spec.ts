@@ -207,3 +207,57 @@ test.describe("on a phone", () => {
     await expect(page.getByLabel("ย้ายไปเทอม")).toBeVisible();
   });
 });
+
+test("a finished plan shows the graduation status and honours", async ({ page }) => {
+  const cur = JSON.parse(readFileSync(new URL("../../data/comp-eng-2566.json", import.meta.url), "utf8"));
+  const ids: string[] = cur.courses.map((c: { id: string }) => c.id);
+  const seed = async (grade: string) => {
+    const plan = {
+      passed: ids,
+      place: {},
+      choices: {},
+      extras: [],
+      grades: Object.fromEntries(ids.map((id) => [id, grade])),
+    };
+    await page.evaluate(
+      ([key, body]) => localStorage.setItem(key as string, body as string),
+      [`cp:plan:v1:${cur.id}`, JSON.stringify({ plan })],
+    );
+    await page.reload();
+  };
+  await seed("A");
+  await expect(page.getByTestId("grad-status")).toHaveText("🎓 จบได้ · เกียรตินิยมอันดับ 1");
+  await seed("B+");
+  await expect(page.getByTestId("grad-status")).toHaveText("🎓 จบได้ · เกียรตินิยมอันดับ 2");
+  await seed("B");
+  await expect(page.getByTestId("grad-status")).toHaveText("🎓 จบได้");
+  await expect(page.getByText("ไม่ได้เกียรตินิยม: GPAX ต่ำกว่า 3.25")).toBeVisible();
+});
+
+test("GenEd picks sit in their own row and take a typed-in course and term", async ({ page }) => {
+  const strip = page.getByTestId("gened-strip");
+  await expect(strip.getByTestId("card-GENED-1")).toBeVisible();
+  await expect(page.getByTestId("col-2/1").getByTestId("card-GENED-1")).toHaveCount(0);
+
+  await strip.getByTestId("card-GENED-1").locator(".sel").click();
+  const form = page.locator(".choose form");
+  await form.getByLabel("รหัสวิชา").fill("0201101");
+  await form.getByLabel("ชื่อวิชา").fill("MAN AND SOCIETY");
+  await form.getByRole("button", { name: "บันทึก" }).click();
+  await expect(strip.getByTestId("card-GENED-1")).toContainText("MAN AND SOCIETY");
+
+  const head = page.getByTestId("col-1/2").locator(".col-head span");
+  const before = Number.parseInt((await head.textContent()) as string, 10);
+  await strip.getByLabel("เทอมที่เรียน 0201101 MAN AND SOCIETY").selectOption("1/2");
+  await expect(strip.getByTestId("card-GENED-1").locator(".slot-tag")).toHaveText("ปี 1 เทอม 2");
+  // หน่วยกิตของ GenEd ยังนับรวมในเทอมที่เลือก
+  await expect(head).toContainText(`${before + 3} หน่วยกิต`);
+
+  await strip.getByRole("button", { name: "+ เพิ่ม GenEd" }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByLabel("รหัสวิชา").fill("0201102");
+  await dialog.getByLabel("ชื่อวิชา").fill("HUMAN VALUES");
+  await dialog.getByLabel("เทอมที่เรียน").selectOption("2/2");
+  await dialog.getByRole("button", { name: "เพิ่มวิชา" }).click();
+  await expect(strip.locator(".card", { hasText: "HUMAN VALUES" })).toContainText("ปี 2 เทอม 2");
+});

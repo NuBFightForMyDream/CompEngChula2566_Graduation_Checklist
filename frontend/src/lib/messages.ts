@@ -1,6 +1,20 @@
 // แปลงผลลัพธ์จาก core เป็นข้อความภาษาไทย
 
-import type { Outcome, PlanModel, Sem } from "@cp/core";
+import type { GraduationStatus, Outcome, PlanModel, Sem } from "@cp/core";
+
+/** สถานะการจบ แสดงเมื่อผ่านครบทุกหมวดแล้ว */
+export function graduationText(g: GraduationStatus) {
+  if (g.honors === 1) return { title: "🎓 จบได้ · เกียรตินิยมอันดับ 1", note: "" };
+  if (g.honors === 2) return { title: "🎓 จบได้ · เกียรตินิยมอันดับ 2", note: "" };
+  const why = !g.noFail
+    ? "เคยได้ F หรือ U"
+    : !g.onTime
+      ? "จบเกิน 4 ปี"
+      : g.gpa === null
+        ? "ยังไม่ได้ใส่เกรด"
+        : "GPAX ต่ำกว่า 3.25";
+  return { title: "🎓 จบได้", note: `จบตามเงื่อนไขปกติ (ไม่ได้เกียรตินิยม: ${why})` };
+}
 
 export const semName = (s: Sem) => `ปี ${s.charAt(0)} เทอม ${s.charAt(2)}`;
 

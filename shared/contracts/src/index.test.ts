@@ -23,7 +23,8 @@ describe("comp-eng-2566.json", () => {
   });
 
   it("gives every elective slot options to choose from", () => {
-    for (const c of cur.courses.filter((x) => x.pool)) {
+    // pool ที่ไม่มีรายการคือช่องให้กรอกวิชาเอง ตั้งใจใช้กับ GenEd เท่านั้น
+    for (const c of cur.courses.filter((x) => x.pool && x.category !== "gened")) {
       expect(cur.pools?.[c.pool as string]?.options.length, c.id).toBeGreaterThan(0);
     }
   });

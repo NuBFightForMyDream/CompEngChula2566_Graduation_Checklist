@@ -18,6 +18,8 @@ interface UiStore {
   hoverId: string | null;
   dragId: string | null;
   addingSem: string | null;
+  /** หมวดที่เลือกไว้ก่อนตอนเปิดหน้าต่างเพิ่มวิชา */
+  addingCategory: string | null;
   search: string;
   dialog: DialogName;
   toast: Toast | null;
@@ -25,7 +27,7 @@ interface UiStore {
   select(id: string | null): void;
   setHover(id: string | null): void;
   setDrag(id: string | null): void;
-  setAdding(sem: string | null): void;
+  setAdding(sem: string | null, category?: string): void;
   setSearch(q: string): void;
   openDialog(d: DialogName): void;
   showToast(t: Omit<Toast, "id"> | null): void;
@@ -39,6 +41,7 @@ export const useUi = create<UiStore>((set) => ({
   hoverId: null,
   dragId: null,
   addingSem: null,
+  addingCategory: null,
   search: "",
   dialog: null,
   toast: null,
@@ -46,7 +49,7 @@ export const useUi = create<UiStore>((set) => ({
   select: (selectedId) => set({ selectedId, hoverId: null }),
   setHover: (hoverId) => set({ hoverId }),
   setDrag: (dragId) => set({ dragId, hoverId: null }),
-  setAdding: (addingSem) => set({ addingSem }),
+  setAdding: (addingSem, category) => set({ addingSem, addingCategory: category ?? null }),
   setSearch: (search) => set({ search }),
   openDialog: (dialog) => set({ dialog }),
   showToast: (t) => set({ toast: t ? { ...t, id: ++toastId } : null }),

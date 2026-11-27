@@ -303,6 +303,10 @@ textarea {
   font-weight: 500;
   color: var(--muted);
 }
+.grad-status {
+  color: var(--ok);
+  font-size: 15px;
+}
 .big-text {
   font-size: 1.3rem;
   line-height: 1.75;

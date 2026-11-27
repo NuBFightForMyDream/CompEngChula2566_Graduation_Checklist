@@ -8,7 +8,7 @@
   "categories": {
     "gened":    { "label": "General Education",                 "required": 30, "color": "#ee1d8f" },
     "sci":      { "label": "Basic Math - Science",            "required": 21, "color": "#a3121c" },
-    "engfund":  { "label": "Basic Enginnering",              "required": 11, "color": "#c86ee6" },
+    "engfund":  { "label": "Basic Engineering",              "required": 11, "color": "#c86ee6" },
     "core":     { "label": "Fundamental Courses",            "required": 40, "color": "#9a2be2" },
     "approved":       { "label": "CP Approved Elective (7 Choose 2)", "required": 6,  "color": "#4b7d16" },
     "21st":      { "label": "21st Century",                    "required": 6,  "color": "#0d3c96" },
@@ -23,6 +23,11 @@
     "gened-free": { "label": "GenEd Self Choose (12 Credit)",  "color": "#f27ab8" }
   },
   "pools": {
+    "gened": {
+      "label": "GenEd Self Choose (12 Credit)",
+      "note": "กรอกรหัส ชื่อวิชา และหน่วยกิตของวิชา GenEd ที่เรียนเอง",
+      "options": []
+    },
     "21st": {
       "label": "21st Elective (2100xxx)",
       "note": "Choose 2 Courses (6 Credits) from lists below (Referred from Reg Chula & CP Curriculum Board)",
@@ -115,7 +120,7 @@
     { "id": "2603284", "name": "STAT PHYS SCIENCE",  "credits": 3, "category": "sci",     "semester": "2/1", "prereq": [] },
     { "id": "2110251", "group": "hw", "name": "DIGITAL LOGIC",      "credits": 3, "category": "core",    "semester": "2/1", "offered": ["1"], "prereq": [] },
     { "id": "2110263", "group": "hw", "name": "DIGITAL LOGIC LAB",    "credits": 1, "category": "core",    "semester": "2/1", "offered": ["1"], "prereq": [] },
-    { "id": "GENED-1", "group": "gened-free", "code": "xxx", "name": "GENERAL ED", "credits": 3, "category": "gened", "semester": "2/1", "offered": ["1","2"] , "prereq": [] },
+    { "id": "GENED-1", "group": "gened-free", "pool": "gened", "code": "xxx", "name": "GENERAL ED", "credits": 3, "category": "gened", "semester": "2/1", "offered": ["1","2"] , "prereq": [] },
 
     { "id": "2110201", "name": "COMP ENG MATH I",     "credits": 3, "category": "engfund", "semester": "2/2", "prereq": [] },
     { "id": "2110327", "group": "prog", "name": "ALGORITHM DESIGN",        "credits": 3, "category": "core",    "semester": "2/2", "offered": ["2"], "prereq": ["2110200", "2110211"] },
@@ -132,7 +137,7 @@
     { "id": "2110471", "group": "sys", "name": "COMP NETWORK",       "credits": 3, "category": "core",    "semester": "3/1", "offered": ["1"], "prereq": ["2110221"] },
     { "id": "2110366", "group": "hw", "name": "EMBEDDED SYSTEM LAB", "credits": 1, "category": "core",    "semester": "3/1", "offered": ["1"], "prereq": ["2110263"] },
     { "id": "ELEC-1", "pool": "elective",  "code": "2110xxx", "name": "ELECTIVE",   "credits": 3, "category": "elective", "semester": "3/1", "prereq": [] , "offered": ["1","2"]},
-    { "id": "GENED-2", "group": "gened-free", "code": "xxx",     "name": "GENERAL ED", "credits": 3, "category": "gened",    "semester": "3/1", "prereq": [] },
+    { "id": "GENED-2", "group": "gened-free", "pool": "gened", "code": "xxx",     "name": "GENERAL ED", "credits": 3, "category": "gened",    "semester": "3/1", "prereq": [] },
 
     { "id": "APPR-1", "pool": "approved",  "code": "2110yyy", "name": "APPROVED ELEC.", "credits": 3, "category": "approved", "offered": ["2"] , "semester": "3/2", "prereq": [] },
     { "id": "C21-1", "pool": "21st",   "code": "2100xxx", "name": "21st CENTURY",   "credits": 3, "category": "21st", "semester": "3/2", "prereq": [] , "offered": ["1","2"] },
@@ -145,8 +150,8 @@
     { "id": "APPR-2", "pool": "approved",  "code": "2110yyy", "name": "APPROVED ELEC.", "credits": 3, "category": "approved",     "semester": "4/1", "prereq": [] },
     { "id": "ELEC-3", "pool": "elective",  "code": "2110xxx", "name": "ELECTIVE",       "credits": 3, "category": "elective", "semester": "4/1", "prereq": [] },
     { "id": "ELEC-4", "pool": "elective",  "code": "2110xxx", "name": "ELECTIVE",       "credits": 3, "category": "elective", "semester": "4/1", "prereq": [] },
-    { "id": "GENED-3", "group": "gened-free", "code": "xxx",     "name": "GENERAL ED",     "credits": 3, "category": "gened",    "semester": "4/1", "prereq": [] },
-    { "id": "GENED-4", "group": "gened-free", "code": "xxx",     "name": "GENERAL ED",     "credits": 3, "category": "gened",    "semester": "4/1", "prereq": [] },
+    { "id": "GENED-3", "group": "gened-free", "pool": "gened", "code": "xxx",     "name": "GENERAL ED",     "credits": 3, "category": "gened",    "semester": "4/1", "prereq": [] },
+    { "id": "GENED-4", "group": "gened-free", "pool": "gened", "code": "xxx",     "name": "GENERAL ED",     "credits": 3, "category": "gened",    "semester": "4/1", "prereq": [] },
 
     { "id": "2110489", "group": "prog", "name": "CAPSTONE PROJ II",        "credits": 3, "category": "core",    "semester": "4/2", "offered": ["2"], "prereq": ["2110488"] },
     { "id": "C21-2", "pool": "21st",   "code": "2100xxx", "name": "21st CENTURY",   "credits": 3, "category": "21st",    "semester": "4/2", "prereq": [] , "offered": ["1","2"] },

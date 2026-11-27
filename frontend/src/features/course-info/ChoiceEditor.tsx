@@ -31,7 +31,9 @@ export function ChoiceEditor({ course }: { course: Course }) {
     const taken = used.has(o.id) ? " · เลือกในช่องอื่นแล้ว" : "";
     return `${o.code} ${o.name} (${o.credits}) · ${offeredText(o.offered)}${prereq}${taken}`;
   };
-  const value = showCustom || isCustom ? CUSTOM : (choice?.id ?? "");
+  // pool ที่ไม่มีรายการให้เลือก เช่น GenEd ให้กรอกเองอย่างเดียว
+  const typeOnly = pool.options.length === 0;
+  const value = typeOnly || showCustom || isCustom ? CUSTOM : (choice?.id ?? "");
 
   const onSelect = (v: string) => {
     if (v === CUSTOM) {
@@ -50,18 +52,24 @@ export function ChoiceEditor({ course }: { course: Course }) {
 
   return (
     <section className="choose">
-      <label htmlFor="choice-sel">
-        <b>เลือกวิชาสำหรับช่องนี้</b>
-      </label>
-      <select id="choice-sel" value={value} onChange={(e) => onSelect(e.target.value)}>
-        <option value="">— ยังไม่เลือก —</option>
-        {pool.options.map((o) => (
-          <option key={o.id} value={o.id} disabled={used.has(o.id)}>
-            {optionText(o)}
-          </option>
-        ))}
-        <option value={CUSTOM}>กรอกรหัสและชื่อวิชาเอง…</option>
-      </select>
+      {typeOnly ? (
+        <b>กรอกวิชาที่เรียนในช่องนี้</b>
+      ) : (
+        <>
+          <label htmlFor="choice-sel">
+            <b>เลือกวิชาสำหรับช่องนี้</b>
+          </label>
+          <select id="choice-sel" value={value} onChange={(e) => onSelect(e.target.value)}>
+            <option value="">— ยังไม่เลือก —</option>
+            {pool.options.map((o) => (
+              <option key={o.id} value={o.id} disabled={used.has(o.id)}>
+                {optionText(o)}
+              </option>
+            ))}
+            <option value={CUSTOM}>กรอกรหัสและชื่อวิชาเอง…</option>
+          </select>
+        </>
+      )}
       {value === CUSTOM && (
         <form className="form compact" onSubmit={onCustom}>
           <label>
@@ -83,7 +91,14 @@ export function ChoiceEditor({ course }: { course: Course }) {
               required
             />
           </label>
-          <button type="submit">บันทึก</button>
+          <div className="actions">
+            <button type="submit">บันทึก</button>
+            {isCustom && (
+              <button type="button" onClick={() => apply(null)}>
+                ล้างวิชา
+              </button>
+            )}
+          </div>
         </form>
       )}
       <p className="muted small">
