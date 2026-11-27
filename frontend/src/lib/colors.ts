@@ -19,16 +19,20 @@ export function courseColor(cur: Curriculum, s: PlanSettings, c: Course) {
   return ink(rawCategoryColor(cur, s, c.category));
 }
 
-/** สีตัวอักษรบนพื้นการ์ดที่ผ่านแล้ว เลือกขาวหรือดำตามความสว่างของพื้น */
-export function textOn(color: string) {
+const luminance = (r: number, g: number, b: number) => {
+  const lin = (v: number) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4);
+  return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+};
+
+/** พื้นการ์ดที่ผ่านแล้ว ตัวอักษรเป็นสีขาวเสมอ สีอ่อนจะถูกผสมดำจนตัวขาวอ่านได้ (contrast อย่างน้อย 4.5:1) */
+export function passedFill(color: string) {
   const m = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(color);
-  if (!m) return "#ffffff";
-  const [r, g, b] = [m[1], m[2], m[3]].map((h) => {
-    const v = Number.parseInt(h as string, 16) / 255;
-    return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
-  }) as [number, number, number];
-  const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-  return 1.05 / (luminance + 0.05) >= 4.5 ? "#ffffff" : "#111111";
+  // สีที่เป็นตัวแปร CSS เปลี่ยนตามโหมดมืด คำนวณล่วงหน้าไม่ได้ จึงเข้มลงเท่ากันทุกครั้ง
+  if (!m) return `color-mix(in srgb, ${color} 75%, #000)`;
+  const [r, g, b] = [m[1], m[2], m[3]].map((h) => Number.parseInt(h as string, 16) / 255) as [number, number, number];
+  let keep = 100;
+  while (keep > 0 && 1.05 / (luminance((r * keep) / 100, (g * keep) / 100, (b * keep) / 100) + 0.05) < 4.5) keep -= 2;
+  return keep === 100 ? color : `color-mix(in srgb, ${color} ${keep}%, #000)`;
 }
 
 /** แถบสีของหมวด ถ้าหมวดมีหลายกลุ่มย่อยจะแสดงสีทุกกลุ่ม */

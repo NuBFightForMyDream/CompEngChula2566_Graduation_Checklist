@@ -1,7 +1,7 @@
 import { type Course, type PlanModel, togglePassed } from "@cp/core";
 import { useDraggable } from "@dnd-kit/core";
 import type { CSSProperties } from "react";
-import { courseColor, textOn } from "../../lib/colors.ts";
+import { courseColor, passedFill } from "../../lib/colors.ts";
 import { modelOf, usePlan } from "../../stores/planStore.ts";
 import { useUi } from "../../stores/uiStore.ts";
 
@@ -30,7 +30,7 @@ interface FaceProps {
 function cardStyle(m: PlanModel, course: Course): CSSProperties {
   const settings = usePlan.getState().settings;
   const color = courseColor(m.curriculum, settings, course);
-  return { "--c": color, "--on-c": textOn(color) } as CSSProperties;
+  return { "--c": color, "--c-fill": passedFill(color) } as CSSProperties;
 }
 
 /** เนื้อหาการ์ด ใช้ทั้งบนกระดานและตอนกำลังลาก */

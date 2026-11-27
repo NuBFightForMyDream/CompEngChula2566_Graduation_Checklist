@@ -49,8 +49,8 @@
 .board {
   position: relative;
   display: grid;
-  min-width: 1392px;
-  grid-template-columns: repeat(8, minmax(148px, 1fr)) repeat(2, minmax(104px, 0.65fr));
+  min-width: 1480px;
+  grid-template-columns: repeat(10, minmax(148px, 1fr));
 }
 .board svg {
   position: absolute;
@@ -213,8 +213,9 @@
 }
 
 .card.passed {
-  background: var(--c);
-  color: var(--on-c, #fff);
+  background: var(--c-fill);
+  border-color: var(--c-fill);
+  color: #fff;
 }
 .card.locked {
   border-style: dashed;
