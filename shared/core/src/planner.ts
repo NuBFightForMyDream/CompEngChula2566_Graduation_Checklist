@@ -22,7 +22,7 @@ export function planRemaining(
   const depth = chainDepth(order, g.unlocks, remaining);
   const semOf = (id: string) => semIdx(place[id] as Sem);
   const plan: PlannedTerm[] = [];
-  let now = passed.size ? Math.max(...[...passed].map(semOf)) + 1 : 0;
+  let now = passed.size ? Math.floor(Math.max(...[...passed].map(semOf))) + 1 : 0;
 
   while (remaining.size) {
     const sem = semAt(now++);

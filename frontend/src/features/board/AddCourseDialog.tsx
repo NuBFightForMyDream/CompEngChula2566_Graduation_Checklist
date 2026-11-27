@@ -1,4 +1,4 @@
-import { addExtra, EXTRA_CATEGORY, extraCategories, SEMS } from "@cp/core";
+import { ALL_TERMS, addExtra, EXTRA_CATEGORY, extraCategories, isSummer, SEMS } from "@cp/core";
 import { type FormEvent, useState } from "react";
 import { semName } from "../../lib/messages.ts";
 import { useModel, usePlan } from "../../stores/planStore.ts";
@@ -21,8 +21,10 @@ export function AddCourseDialog() {
   const [pickedCategory, setCategory] = useState<string | null>(null);
   const [pickedSem, setSem] = useState<string | null>(null);
   if (!startSem) return null;
-  const sem = pickedSem ?? startSem;
   const category = pickedCategory ?? startCategory ?? "free";
+  // ภาคฤดูร้อนใช้ได้เฉพาะ GenEd
+  const terms = category === "gened" ? ALL_TERMS : SEMS;
+  const sem = pickedSem && (category === "gened" || !isSummer(pickedSem)) ? pickedSem : startSem;
 
   const close = () => {
     setAdding(null);
@@ -69,7 +71,7 @@ export function AddCourseDialog() {
         <label>
           เทอมที่เรียน
           <select value={sem} onChange={(e) => setSem(e.target.value)}>
-            {SEMS.map((s) => (
+            {terms.map((s) => (
               <option key={s} value={s}>
                 {semName(s)}
               </option>

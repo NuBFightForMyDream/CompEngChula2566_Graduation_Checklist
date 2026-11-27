@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
 import data from "../../../data/comp-eng-2566.json";
-import { setChoice } from "./actions.ts";
-import { createModel, emptyPlan, isGenEdPick, normalizePlan } from "./model.ts";
-import { graduationStatus } from "./summary.ts";
+import { moveCourse, setChoice, togglePassed } from "./actions.ts";
+import { semIdx } from "./graph.ts";
+import { createModel, emptyPlan, inGenEdRow, isGenEdPick, normalizePlan } from "./model.ts";
+import { finishSem, graduationStatus, remainingPlan } from "./summary.ts";
 import type { Curriculum, Grade, PlanState } from "./types.ts";
 
 const cur = data as unknown as Curriculum;
@@ -75,5 +76,34 @@ describe("GenEd picks", () => {
     );
     const again = createModel(cur, normalizePlan(cur, JSON.parse(JSON.stringify(state))));
     expect(again.label("GENED-1")).toBe("0201101 MAN AND SOCIETY");
+  });
+});
+
+describe("summer terms", () => {
+  it("sit between the second term and the next year", () => {
+    expect(semIdx("1/2")).toBeLessThan(semIdx("1/3"));
+    expect(semIdx("1/3")).toBeLessThan(semIdx("2/1"));
+  });
+
+  it("take a GenEd pick and keep it after a reload", () => {
+    const { outcome, state } = moveCourse(createModel(cur, emptyPlan(cur)), "GENED-1", "1/3", { autoShift: true });
+    expect(outcome.type).not.toBe("notOffered");
+    const again = normalizePlan(cur, JSON.parse(JSON.stringify(state)));
+    expect(again.place["GENED-1"]).toBe("1/3");
+    expect(inGenEdRow(createModel(cur, again).course("GENED-1"), again.place)).toBe(true);
+  });
+
+  it("year-4 summer still counts as finishing in four years", () => {
+    const base = finished("A");
+    const s = status({ ...base, place: { ...base.place, "GENED-4": "4/3" } });
+    expect(s).toMatchObject({ onTime: true, honors: 1 });
+  });
+
+  it("show up as the expected finishing term and do not break the planner", () => {
+    let s = moveCourse(createModel(cur, emptyPlan(cur)), "GENED-4", "5/3", { autoShift: true }).state;
+    expect(finishSem(createModel(cur, s))).toBe("5/3");
+    s = togglePassed(createModel(cur, s), "GENED-4").state;
+    const plan = remainingPlan(createModel(cur, s));
+    expect(plan.every((t) => /^[1-9]\/[12]$/.test(t.sem))).toBe(true);
   });
 });

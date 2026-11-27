@@ -120,7 +120,7 @@
     { "id": "2603284", "name": "STAT PHYS SCIENCE",  "credits": 3, "category": "sci",     "semester": "2/1", "prereq": [] },
     { "id": "2110251", "group": "hw", "name": "DIGITAL LOGIC",      "credits": 3, "category": "core",    "semester": "2/1", "offered": ["1"], "prereq": [] },
     { "id": "2110263", "group": "hw", "name": "DIGITAL LOGIC LAB",    "credits": 1, "category": "core",    "semester": "2/1", "offered": ["1"], "prereq": [] },
-    { "id": "GENED-1", "group": "gened-free", "pool": "gened", "code": "xxx", "name": "GENERAL ED", "credits": 3, "category": "gened", "semester": "2/1", "offered": ["1","2"] , "prereq": [] },
+    { "id": "GENED-1", "group": "gened-free", "pool": "gened", "code": "xxx", "name": "GENERAL ED", "credits": 3, "category": "gened", "semester": "2/1", "prereq": [] },
 
     { "id": "2110201", "name": "COMP ENG MATH I",     "credits": 3, "category": "engfund", "semester": "2/2", "prereq": [] },
     { "id": "2110327", "group": "prog", "name": "ALGORITHM DESIGN",        "credits": 3, "category": "core",    "semester": "2/2", "offered": ["2"], "prereq": ["2110200", "2110211"] },

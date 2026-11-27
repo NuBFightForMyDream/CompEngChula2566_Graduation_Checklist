@@ -1,7 +1,7 @@
 // สรุปหน่วยกิต: นับรายหมวด เพราะหน่วยกิตส่วนเกินของหมวดหนึ่งชดเชยหมวดอื่นไม่ได้
 
 import { gpaOf } from "./grades.ts";
-import { SEMS, semIdx } from "./graph.ts";
+import { ALL_TERMS } from "./graph.ts";
 import type { PlanModel } from "./model.ts";
 import { planRemaining } from "./planner.ts";
 import type { Sem } from "./types.ts";
@@ -50,7 +50,7 @@ export function creditsInSem(m: PlanModel, sem: Sem) {
 
 /** เทอมสุดท้ายที่มีวิชาวางอยู่ */
 export const finishSem = (m: PlanModel) =>
-  SEMS.filter((s) => m.courses.some((c) => m.state.place[c.id] === s)).at(-1) ?? null;
+  ALL_TERMS.filter((s) => m.courses.some((c) => m.state.place[c.id] === s)).at(-1) ?? null;
 
 export const gpax = (m: PlanModel) => gpaOf(Object.keys(m.state.grades), m.state.grades, m.creditsOf);
 
@@ -66,8 +66,8 @@ export const availableCourses = (m: PlanModel) => m.courses.filter((c) => m.stat
 export const remainingPlan = (m: PlanModel) =>
   planRemaining(m.graph, m.order, m.passed, m.state.place, m.curriculum.maxCreditsPerSemester, m.creditsOf);
 
-/** ภาคการศึกษาสุดท้ายของปี 4 เรียนจบภายในเทอมนี้ถือว่าจบใน 4 ปี */
-const LAST_ON_TIME_SEM = "4/2";
+/** จบภายในปีการศึกษาที่ 4 (รวมภาคฤดูร้อนของปี 4) ถือว่าจบใน 4 ปี */
+const ON_TIME_YEARS = 4;
 
 export interface GraduationStatus {
   /** ผ่านครบทุกหมวดตามหลักสูตร */
@@ -91,7 +91,7 @@ export function graduationStatus(m: PlanModel): GraduationStatus {
   const gpa = raw === null ? null : Math.floor(raw * 100 + 1e-9) / 100;
   const onTime = [...m.passed].every((id) => {
     const sem = m.state.place[id];
-    return sem === undefined || semIdx(sem) <= semIdx(LAST_ON_TIME_SEM);
+    return sem === undefined || Number(sem.charAt(0)) <= ON_TIME_YEARS;
   });
   const noFail = Object.values(m.state.grades).every((g) => g !== "F" && g !== "U");
   const canGraduate = creditSummary(m).complete;

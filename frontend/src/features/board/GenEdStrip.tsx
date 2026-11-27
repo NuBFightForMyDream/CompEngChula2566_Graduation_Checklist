@@ -1,7 +1,7 @@
 // แถว GenEd ที่เลือกเรียนเอง แยกจากคอลัมน์เทอมเพื่อไม่ให้ตารางหลักรก
 // ยังอยู่ใน #board จึงติดไปกับรูปที่ export และหน้าที่พิมพ์ด้วย
 
-import { isGenEdPick, moveCourse, offeredIn, SEMS, semIdx, togglePassed } from "@cp/core";
+import { ALL_TERMS, inGenEdRow, moveCourse, offeredIn, semIdx, togglePassed } from "@cp/core";
 import { semName } from "../../lib/messages.ts";
 import { useModel, usePlan } from "../../stores/planStore.ts";
 import { useUi } from "../../stores/uiStore.ts";
@@ -20,7 +20,7 @@ export function GenEdStrip({ focusId, query }: Props) {
   const setAdding = useUi((s) => s.setAdding);
   const semOf = (id: string) => m.state.place[id] ?? "1/1";
   const picks = m.courses
-    .filter(isGenEdPick)
+    .filter((c) => inGenEdRow(c, m.state.place))
     .map((c, i) => ({ c, i }))
     .sort((a, b) => semIdx(semOf(a.c.id)) - semIdx(semOf(b.c.id)) || a.i - b.i)
     .map(({ c }) => c);
@@ -32,9 +32,10 @@ export function GenEdStrip({ focusId, query }: Props) {
     <section className="gened-strip" aria-label="GenEd ที่เลือกเรียน" data-testid="gened-strip">
       <div className="gened-head">
         <b>GenEd ที่เลือกเรียน</b>
-        <span>
-          ผ่านแล้ว {passedCredits}/{totalCredits} หน่วยกิต · กดการ์ดเพื่อกรอกวิชา · หน่วยกิตนับรวมในเทอมที่เลือก
+        <span className="gened-count">
+          ผ่านแล้ว {passedCredits}/{totalCredits} หน่วยกิต
         </span>
+        <span className="gened-hint">กดการ์ดเพื่อกรอกวิชา · หน่วยกิตนับรวมในเทอมที่เลือก</span>
       </div>
       <div className="gened-row">
         {picks.map((c) => {
@@ -86,7 +87,7 @@ export function GenEdStrip({ focusId, query }: Props) {
                 value={semOf(id)}
                 onChange={(e) => dispatch((model) => moveCourse(model, id, e.target.value, { autoShift }))}
               >
-                {SEMS.map((s) => (
+                {ALL_TERMS.map((s) => (
                   <option key={s} value={s} disabled={!offeredIn(c, s)}>
                     {semName(s)}
                   </option>

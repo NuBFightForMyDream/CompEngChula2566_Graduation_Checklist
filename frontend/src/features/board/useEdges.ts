@@ -22,7 +22,12 @@ export function useEdges(
     const svg = svgRef.current;
     if (!board || !svg || !visible) return;
     const box = board.getBoundingClientRect();
-    const rect = (id: string) => board.querySelector(`.card[data-id="${CSS.escape(id)}"]`)?.getBoundingClientRect();
+    // ตอนพิมพ์ตารางถูกย่อด้วย CSS zoom ตำแหน่งจากเบราว์เซอร์จึงต้องหารกลับ เพราะ SVG ข้างในก็ถูกย่อด้วย
+    const zoom = board.currentCSSZoom || 1;
+    const rect = (id: string) => {
+      const r = board.querySelector(`.card[data-id="${CSS.escape(id)}"]`)?.getBoundingClientRect();
+      return r && new DOMRect(r.x / zoom, r.y / zoom, r.width / zoom, r.height / zoom);
+    };
     const bad = new Set(m.conflicts.map(([p, c]) => `${p}>${c}`));
     let out = MARKER;
     for (const c of m.courses) {
@@ -33,14 +38,16 @@ export function useEdges(
         const a = rect(p);
         const b = rect(c.id);
         if (!a || !b) continue;
-        let x1 = a.right - box.left;
-        const y1 = a.top + a.height / 2 - box.top;
-        let x2 = b.left - box.left - 2;
-        const y2 = b.top + b.height / 2 - box.top;
+        const left = box.left / zoom;
+        const top = box.top / zoom;
+        let x1 = a.right - left;
+        const y1 = a.top + a.height / 2 - top;
+        let x2 = b.left - left - 2;
+        const y2 = b.top + b.height / 2 - top;
         if (x2 < x1) {
           // ลูกศรย้อนกลับเมื่อลำดับเทอมผิด
-          x1 = a.left - box.left;
-          x2 = b.right - box.left + 2;
+          x1 = a.left - left;
+          x2 = b.right - left + 2;
         }
         const dx = Math.max(30, Math.abs(x2 - x1) / 2) * Math.sign(x2 - x1 || 1);
         const cls = `edge${isBad ? " bad" : ""}${on ? " on" : ""}`;
