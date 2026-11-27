@@ -27,7 +27,7 @@ interface FaceProps {
   style?: CSSProperties;
 }
 
-function cardStyle(m: PlanModel, course: Course): CSSProperties {
+export function cardStyle(m: PlanModel, course: Course): CSSProperties {
   const settings = usePlan.getState().settings;
   const color = courseColor(m.curriculum, settings, course);
   return { "--c": color, "--c-fill": passedFill(color) } as CSSProperties;

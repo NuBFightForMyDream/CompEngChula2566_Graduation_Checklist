@@ -125,11 +125,13 @@ describe("every state the app can produce is accepted", () => {
         else if (action === 3) s = moveCourse(m, id, pick(SEMS), { autoShift }).state;
         else if (action === 4) s = shiftCourses(m, null).state;
         else if (action === 5) {
-          const slot = pick(cur.courses.filter((c) => c.pool));
+          // pool ที่ไม่มีรายการ (GenEd) กรอกเองได้อย่างเดียว
+          const slot = pick(cur.courses.filter((c) => c.pool && pools[c.pool]?.options.length));
           const o = pick(pools[slot.pool as string]?.options ?? []);
           s = setChoice(m, slot.id, { id: o.id, code: o.code, name: o.name, credits: o.credits }, { autoShift }).state;
         } else if (action === 6) {
-          s = setChoice(m, pick(cur.courses.filter((c) => c.pool)).id, null, { autoShift }).state;
+          const custom = rnd(2) === 0 ? { id: null, code: "0201101", name: "MY GENED", credits: 3 } : null;
+          s = setChoice(m, pick(cur.courses.filter((c) => c.pool)).id, custom, { autoShift }).state;
         } else if (action === 7) {
           const semester = pick(SEMS);
           s = addExtra(m, {
@@ -137,7 +139,7 @@ describe("every state the app can produce is accepted", () => {
             code: "X",
             name: "X",
             credits: 3,
-            category: pick(["free", "21st", "extra"]),
+            category: pick(["free", "21st", "gened", "extra"]),
             semester,
           }).state;
         } else if (action === 8 && m.state.extras.length) {

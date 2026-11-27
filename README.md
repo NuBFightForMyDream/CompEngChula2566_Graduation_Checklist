@@ -1,108 +1,179 @@
 # CompEngChula Graduation Roadmap
 
-เว็บวางแผนการเรียนและเช็กเงื่อนไขจบการศึกษา วิศวกรรมคอมพิวเตอร์ จุฬาฯ
-มองหลักสูตรเป็นกราฟ: วิชา = node, วิชาบังคับก่อน = edge โดยใช้แนวคิดจาก 2110211 Data Structure และ 2110327 Algorithm Design
+**Plan your Computer Engineering degree at Chulalongkorn University and check every graduation requirement in one view.**
 
-> เวอร์ชันนี้เป็นเว็บ static ล้วน ใช้ Firebase ทำ Google login และเก็บแผน ยังไม่ได้ขึ้นออนไลน์ ดู[คู่มือตั้งค่าและ deploy](docs/deploy.md)
-> เวอร์ชันที่ใช้ Hono API + Postgres อยู่ใน branch `restructure`
+[**Open the app →**](https://graduationchecklist.vercel.app/)
 
-## เริ่มใช้งาน
+![React](https://img.shields.io/badge/React_19-20232A?logo=react&logoColor=61DAFB)
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-646CFF?logo=vite&logoColor=white)
+![Firebase](https://img.shields.io/badge/Firebase-DD2C00?logo=firebase&logoColor=white)
+![Vercel](https://img.shields.io/badge/Vercel-000000?logo=vercel&logoColor=white)
+![Playwright](https://img.shields.io/badge/Playwright-2EAD33?logo=playwright&logoColor=white)
 
-ต้องมี Node 24 ขึ้นไป
+![The roadmap board with a prerequisite chain highlighted](docs/images/screenshot.png)
 
-```bash
-corepack enable        # ครั้งแรกครั้งเดียว ให้ใช้คำสั่ง pnpm ตามเวอร์ชันของโปรเจกต์ได้
-pnpm install
-pnpm dev               # เปิดหน้าเว็บที่ http://localhost:5173
-```
+## What it is
 
-ถ้ายังไม่ได้ใส่ค่า Firebase ใน `frontend/src/lib/firebaseConfig.ts` เว็บจะบันทึกในเบราว์เซอร์อย่างเดียวและไม่มีปุ่มเข้าสู่ระบบ
+The app shows the CP curriculum (B.Eng. Computer Engineering, 2022 / B.E. 2566) as a board: 10 semester columns with one card per course. It treats the curriculum as a graph. Courses are nodes and prerequisites are edges, so the app can tell you:
 
-ลองระบบบัญชีโดยไม่ต้องมีโปรเจกต์ Firebase จริง (ต้องมี Java 21 ขึ้นไป):
+- what you can register for now
+- what each course unlocks
+- what breaks if you move or fail a course
+- whether you meet the graduation requirements yet
 
-```bash
-pnpm dev:emulator      # เปิด Firebase Emulator (Google ปลอม + Firestore ในเครื่อง) และหน้าเว็บที่ http://localhost:5173
-```
+It needs no account. Sign in with Google if you want your plan saved to the cloud and synced across devices.
 
-กดเข้าสู่ระบบแล้วจะได้หน้าต่าง Google ปลอม กด Add new account แล้วใส่อีเมลอะไรก็ได้ ข้อมูลหายเมื่อปิด Emulator
+## Features
 
-| คำสั่ง | ใช้ทำอะไร |
+- **Drag-and-drop planning.** Move courses between semesters. Dependent courses shift along with them, and the board refuses semesters where a course is not offered.
+- **Prerequisite map.** Hover or tap a course to highlight what it needs (red) and what it unlocks (orange). Arrows show the whole chain.
+- **Credit check by category.** Progress bars for each category (GenEd, Math & Science, Core, Electives…). Surplus credits in one category never hide a gap in another.
+- **Grades and GPAX.** Enter grades course by course, or paste a whole transcript at once. The app shows GPA per term and an overall GPAX.
+- **Graduation and honours status.** When every category is complete, the app says you can graduate and checks honours:
+  - first-class: GPAX ≥ 3.60
+  - second-class: GPAX ≥ 3.25
+  - both also require finishing within 4 years with no F or U
+- **Electives and GenEd.**
+  - Pick electives from the official lists, or type in any course yourself.
+  - Self-chosen GenEd courses have their own row under the board, each with its own term picker.
+- **Auto-plan.** Suggests a semester-by-semester plan for the remaining courses. It respects prerequisites, the terms each course is offered and the credit limit per term.
+- **Cloud sync.** Sign in with Google to save your plan. Changes appear on your other devices in real time and survive going offline.
+- **Export.** Save the board as a PNG or a landscape PDF, or download a JSON backup.
+- **Thai UI, light and dark themes, mobile friendly.**
+
+## How to use the app
+
+1. **Open** [graduationchecklist.vercel.app](https://graduationchecklist.vercel.app/). Every course starts in the semester the official plan suggests.
+2. **Mark what you have passed.** Click the circle on the right of a card, or click the course name and choose a grade. To enter many grades at once, use **กรอกเกรด** (enter grades) and paste lines in either of these formats:
+   - `2110101 A`
+   - `{"2110101","A"}`
+3. **Fill in your electives.** Click any card that says **ยังไม่ได้เลือกวิชา** ("no course chosen yet") and pick a course or type one in. For GenEd, use the row below the board: click a card, type the course, then choose the term under it.
+4. **Plan ahead.** Drag cards to the semesters you intend to take them. On mobile, long-press a card before dragging it. Watch the credit total in each column header.
+5. **Check your status.** The summary at the top shows the following. When everything is complete, it shows **จบได้** (ready to graduate) and your honours level.
+   - credits remaining
+   - GPAX
+   - your expected graduation term
+   - how many courses you can take now
+6. **Save it.**
+   - Without signing in, the plan stays in this browser.
+   - Click **เข้าสู่ระบบด้วย Google** (sign in with Google) to keep it in your account. Any plan you already made in the browser moves into your account.
+   - **บันทึก** (save) exports a PNG, a PDF or a backup file.
+
+> Course data was transcribed from the official curriculum diagram. Always confirm with the official documents and your faculty before you register.
+
+## Tech stack
+
+| Layer | Tools |
 |---|---|
-| `pnpm test` | unit test ของ `core` และ `contracts` รวมถึงตรวจไฟล์หลักสูตร |
-| `pnpm test:e2e` | ทดสอบหน้าเว็บจริงด้วย Playwright (ครั้งแรกรัน `pnpm --filter @cp/web exec playwright install chromium`) |
-| `pnpm test:e2e:firebase` | รัน E2E กับ Firebase Emulator รวมชุดทดสอบบัญชี การบันทึก และ `firebase/firestore.rules` |
-| `pnpm typecheck` | ตรวจ TypeScript |
-| `pnpm lint` / `pnpm format` | ตรวจ / จัดรูปแบบโค้ดด้วย Biome |
-| `pnpm build` | build หน้าเว็บไปที่ `frontend/dist` |
-| `pnpm checklist --why 2110327` | รันเวอร์ชัน Python |
+| Frontend | React 19, TypeScript, Vite, Zustand (state and undo), dnd-kit (drag and drop), react-markdown (notices) |
+| Domain logic | `@cp/core`: pure TypeScript functions for graph algorithms (topological sort, prerequisite chains), credit rules, grades and the planner |
+| Data contracts | Zod schemas that validate the curriculum file, saved plans and backups |
+| Auth and database | Firebase Authentication (Google sign-in) and Cloud Firestore with offline persistence |
+| Hosting | Vercel (static build). The legacy site on GitHub Pages now only helps old users move their data. |
+| Quality | Vitest (unit), Playwright (end-to-end, including against the Firebase Emulator), Biome (lint and format), GitHub Actions CI |
 
-## โครงสร้าง
+### Architecture
+
+```mermaid
+flowchart LR
+    subgraph Repo["GitHub repository"]
+        DATA["data/<br/>curriculum JSON<br/>notices (Markdown)"]
+        CORE["shared/core<br/>graph + rules<br/>(pure functions)"]
+        CONTRACTS["shared/contracts<br/>Zod schemas"]
+        WEB["frontend/<br/>React + Vite"]
+        RULES["firebase/<br/>firestore.rules"]
+    end
+
+    DATA -->|bundled at build| WEB
+    CORE --> WEB
+    CONTRACTS --> WEB
+
+    WEB -->|static build| VERCEL["Vercel<br/>static hosting"]
+    VERCEL --> BROWSER["Browser"]
+
+    BROWSER -->|Google sign-in| AUTH["Firebase<br/>Authentication"]
+    BROWSER <-->|realtime sync| FS[("Cloud Firestore<br/>users/{uid}/plans/{curriculumId}")]
+    BROWSER -->|guest mode| LS[("localStorage")]
+    RULES -. protects .-> FS
+```
+
+- **There is no backend server of our own.** The site is fully static, and Firebase handles login and storage.
+- **All the logic runs in the browser.** The curriculum and the planning rules ship with the site, so the board works offline and only plan data goes over the network.
+- **Access control lives in [`firebase/firestore.rules`](firebase/firestore.rules).** Each user can read and write only their own plans.
+- **Saving is quick and cheap.**
+  - Edits are saved 0.8 s after you stop editing, so rapid clicks count as one write.
+  - Firestore keeps the edit locally until it reaches the server.
+  - Other open devices update immediately.
+
+## Development
+
+You need Node 24 or later.
+
+```bash
+corepack enable      # once, so the pinned pnpm version is used
+pnpm install
+pnpm dev             # http://localhost:5173
+```
+
+To try accounts without a real Firebase project, use the emulator (requires Java 21+):
+
+```bash
+pnpm dev:emulator    # Firebase Emulator (fake Google sign-in + local Firestore) + the site
+```
+
+| Command | What it does |
+|---|---|
+| `pnpm test` | Unit tests for `core` and `contracts`, including checks on the curriculum file |
+| `pnpm test:e2e` | Browser tests with Playwright. The first time, run `pnpm --filter @cp/web exec playwright install chromium`. |
+| `pnpm test:e2e:firebase` | Browser tests against the Firebase Emulator: accounts, sync and security rules |
+| `pnpm typecheck` | TypeScript check |
+| `pnpm lint` / `pnpm format` | Biome lint / auto-format |
+| `pnpm build` | Production build into `frontend/dist` |
+| `pnpm checklist --why 2110327` | Python version of the checker (see `learning/`) |
+
+Deployment and Firebase setup are covered step by step in [docs/deploy.md](docs/deploy.md).
+
+### Project structure
 
 ```text
-data/               ข้อมูลหลักสูตรและประกาศ แก้ที่นี่ที่เดียว
-  index.json          รายชื่อหลักสูตร
-  comp-eng-2566.json  รายวิชา หมวด และวิชาบังคับก่อน
-  notices/            ประกาศ เขียนเป็น Markdown
-frontend/           หน้าเว็บ React + Vite
-  src/app/            จุดเริ่มต้นและโครงหน้า
-  src/features/       หน้าจอแยกตามเรื่อง: board, course-info, summary, grades, planner, notices, export, settings, account
-  src/stores/         planStore (แผน + undo + บันทึก), uiStore (สถานะหน้าจอ)
-  src/lib/            cloud (Firebase), firebaseConfig, planRepository, curriculumSource, messages, colors
-  src/styles/         tokens, layout, board, panels, print
-  e2e/                ทดสอบหน้าเว็บด้วย Playwright
-firebase/           ฝั่งเซิร์ฟเวอร์ ซึ่งเป็นของ Firebase ทั้งหมด เราดูแลแค่ไฟล์ตั้งค่า
-  firestore.rules     ใครอ่านหรือเขียนข้อมูลไหนได้บ้าง
-  firebase.json       ตั้งค่า Firebase Emulator
-shared/             โค้ดที่ไม่ผูกกับหน้าเว็บ
-  core/               กราฟ กฎ เกรด สรุปหน่วยกิต ฟังก์ชันล้วน
-  contracts/          Zod schema ของไฟล์หลักสูตร แผน และไฟล์สำรอง
-docs/deploy.md      คู่มือตั้งค่า Firebase และ deploy
-learning/
-  python/             เวอร์ชัน Python อ่านง่าย มีคำอธิบายทุกอัลกอริทึม
-  cpp/                แบบฝึก C++ ทีละขั้น พร้อมตัวตรวจ PASS / FAIL
-index.html          หน้าที่จะแทนเว็บเดิมบน GitHub Pages ช่วยผู้ใช้เดิมนำข้อมูลออก (ต้องอยู่ที่ root)
+data/               Curriculum and notices. Edit these files to update the site.
+  index.json          List of curricula and their notices
+  comp-eng-2566.json  Courses, categories, prerequisites, elective pools
+  notices/            Announcements written in Markdown
+frontend/           React app
+  src/features/       One folder per area: board, summary, grades, planner, account, export…
+  src/stores/         planStore (plan, undo, saving) and uiStore (screen state)
+  src/lib/            Firebase access, local storage, colours, Thai messages
+  e2e/                Playwright tests
+shared/
+  core/               Graph algorithms and degree rules (no UI code)
+  contracts/          Zod schemas
+firebase/           Firestore security rules and emulator config
+docs/               Deployment guide and images
+learning/           Python reference version and step-by-step C++ exercises
+index.html          Legacy GitHub Pages page that helps old users export their data
 ```
 
-กฎของระบบอยู่ใน `shared/core` ที่เดียว หน้าเว็บเรียกใช้โดยตรง
+### Updating the curriculum
 
-## การบันทึกแผน
+- **Courses:** edit `data/comp-eng-2566.json`. Each course has `id`, `credits`, `category` and `semester`. Optional fields:
+  - `prereq`
+  - `offered`: `["1"]` for first semester only, `["2"]` for second semester only
+  - `pool`: an elective slot
+- **Notices:** write Markdown in `data/notices/` and list the file in `data/index.json`. Links work as normal Markdown links.
+- **Another curriculum:** add a JSON file to `data/` and list it in `index.json`. The site will show a curriculum picker.
+- **Validate:** run `pnpm test`. It checks that every course reference exists, that prerequisites have no cycles and that category credits add up.
+- **Publish:** push to the deployed branch and Vercel rebuilds the site.
 
-- **ไม่เข้าสู่ระบบ:** บันทึกใน `localStorage` ของเบราว์เซอร์นี้
-- **เข้าสู่ระบบครั้งแรก:** ย้ายแผนในเบราว์เซอร์เข้าบัญชีให้ ถ้าบัญชีมีแผนที่ต่างกันอยู่แล้วจะให้เลือกฉบับที่จะเก็บ
-- **ระหว่างแก้:** รอหยุดแก้ 0.8 วินาทีแล้วบันทึกลง Firestore ซึ่งเก็บไว้ในเบราว์เซอร์ก่อน ถ้าเน็ตหลุดหรือปิดแท็บ จะส่งให้เมื่อกลับมาออนไลน์
-- **เปิดหลายเครื่อง:** แก้จากเครื่องหนึ่ง เครื่องอื่นเปลี่ยนตามทันทีโดยไม่ต้อง reload ถ้าแก้สองเครื่องในเวลาเดียวกันจริง ๆ ฉบับที่บันทึกทีหลังจะชนะ
-- **ความปลอดภัย:** `firebase/firestore.rules` ให้แต่ละคนอ่านและเขียนได้เฉพาะแผนของตัวเอง
+## Rules the planner enforces
 
-## เงื่อนไขที่ระบบตรวจ
-
-- **วิชาบังคับก่อน (`prereq`)** ติ๊กผ่านไม่ได้ถ้า prereq ยังไม่ผ่าน และ prereq ต้องอยู่เทอมก่อนหน้าเสมอ
-- **เทอมที่เปิดสอน (`offered`)** `["1"]` เทอมต้น, `["2"]` เทอมปลาย, ไม่ระบุ = ทุกเทอม เลื่อนข้ามปีได้ แต่ข้ามเทอมไม่ได้
-- **เลื่อนตามอัตโนมัติ** ย้ายวิชาแล้ว วิชาที่ต่อเนื่องเลื่อนไปเทอมถัดจาก prereq ที่ช้าที่สุด ปิดได้ในหน้าตั้งค่า
-- **วิชาเลือก (`pool`)** เลือกวิชาลงช่องแล้ว ช่องจะได้ `prereq` และ `offered` ของวิชานั้น ถ้าเทอมเดิมไม่เปิดสอนจะย้ายให้ และเลือกวิชาเดียวกันซ้ำในหลายช่องไม่ได้ แม้อยู่คนละ pool
-- **วิชาเรียนเพิ่ม** นับเข้า GenEd, 21st Century, Approved, CP Elective หรือ Free Elective ได้ หรือเลือกไม่นับ และนับเป็นภาระหน่วยกิตต่อเทอมเสมอ
-- **หน่วยกิตครบ** ต้องครบทุกหมวด หน่วยกิตส่วนเกินของหมวดหนึ่งไม่ชดเชยอีกหมวด
-
-## เกรดและ GPAX
-
-- กดชื่อวิชาแล้วเลือกเกรด A–D และ S นับว่าผ่าน ส่วน F, U, W ไม่ผ่าน และวิชาที่ต่อจากนี้จะถูกยกเลิกผ่านตามด้วย
-- GPA คิด Σ(แต้มเกรด × หน่วยกิต) ÷ Σหน่วยกิต เฉพาะเกรด A–F และแสดง 2 ตำแหน่งโดยตัดทศนิยมที่เหลือทิ้ง
-- **กรอกเกรดหลายวิชา** วาง `2110101 A` บรรทัดละวิชา หรือรูปแบบ `{"2110101","A"}` จากโค้ด C++
-
-## แก้ข้อมูลหลักสูตร
-
-- รายวิชาอยู่ที่ `data/comp-eng-2566.json` รายชื่อหลักสูตรอยู่ที่ `data/index.json`
-- ประกาศเขียนเป็น Markdown ใน `data/notices/` แล้วระบุไฟล์ใน `index.json`
-- เพิ่มหลักสูตรใหม่: สร้าง JSON ใน `data/` แล้วเพิ่มรายการใน `index.json` หน้าเว็บจะมีตัวเลือกหลักสูตรให้เอง
-- `pnpm test` ตรวจไฟล์หลักสูตรให้ว่ารหัสอ้างอิงครบ ไม่มี prereq วน และหน่วยกิตแต่ละหมวดรวมกันถูกต้อง
-- แก้แล้ว push ขึ้น branch ที่ deploy ไว้ เว็บจะอัปเดตเอง
-
-> ข้อมูลถอดจากแผนภาพหลักสูตร ควรตรวจกับเอกสารทางการอีกครั้ง
-
-## แผนถัดไป
-
-| เฟส | งาน | สถานะ |
-|---|---|---|
-| 0–2 | Monorepo, `core` + test, React + UI ใหม่ | เสร็จแล้ว |
-| 3–5 | Hono API + Postgres + Google OAuth + Vercel/Supabase | เสร็จแล้ว อยู่ใน branch `restructure` |
-| 6 | เปลี่ยนเป็น Firebase Auth + Firestore เว็บ static ล้วน | โค้ดเสร็จ ทดสอบกับ Emulator แล้ว รอสร้างโปรเจกต์ Firebase จริง |
-| 7 | หลายแผน, ประวัติ, ลิงก์แชร์, admin, สถิติ | ยังไม่เริ่ม |
+- **Prerequisites:** you can't mark a course as passed before its prerequisites, and each prerequisite must be planned in an earlier term.
+- **Offered terms:** a course may move to another year but never into a term in which it isn't offered.
+- **Auto-shift:** moving a course pushes the courses that depend on it later. You can turn this off in Settings.
+- **Elective slots:** a chosen course brings its own prerequisites and offered terms, and the same course can't fill two slots.
+- **Grades:**
+  - A–D and S count as passed; F, U and W do not.
+  - Failing a course also un-passes everything that depends on it.
+  - GPA uses only A–F grades and is truncated, not rounded, to 2 decimals.
+- **Honours history:** the app stores only your latest grade for each course. If you failed a course and retook it, check the honours requirement yourself.

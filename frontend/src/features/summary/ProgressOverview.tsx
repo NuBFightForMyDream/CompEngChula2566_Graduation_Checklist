@@ -1,7 +1,7 @@
-import { availableCourses, creditSummary, finishSem, fmtGpa, gpax } from "@cp/core";
+import { availableCourses, creditSummary, finishSem, fmtGpa, gpax, graduationStatus } from "@cp/core";
 import { useState } from "react";
 import { categorySwatch, coreGroups, rawGroupColor } from "../../lib/colors.ts";
-import { semName } from "../../lib/messages.ts";
+import { graduationText, semName } from "../../lib/messages.ts";
 import { useModel, usePlan } from "../../stores/planStore.ts";
 import { useUi } from "../../stores/uiStore.ts";
 
@@ -16,6 +16,7 @@ export function ProgressOverview() {
   const gpa = gpax(m);
   const finish = finishSem(m);
   const groups = coreGroups(cur);
+  const grad = graduationText(graduationStatus(m));
   const percent = Math.min(100, (100 * sum.counted) / cur.totalCredits);
   return (
     <section className="overview" aria-label="สรุปความคืบหน้า">
@@ -35,9 +36,18 @@ export function ProgressOverview() {
           >
             <i style={{ width: `${percent}%` }} />
           </div>
-          <span className="muted small" data-testid="remaining-note">
-            {sum.complete ? "✓ ครบทุกหมวดตามหลักสูตรแล้ว" : `เหลืออีก ${sum.remaining} หน่วยกิต ตามที่แต่ละหมวดกำหนด`}
-          </span>
+          {sum.complete ? (
+            <>
+              <strong className="grad-status" data-testid="grad-status">
+                {grad.title}
+              </strong>
+              {grad.note && <span className="muted small">{grad.note}</span>}
+            </>
+          ) : (
+            <span className="muted small" data-testid="remaining-note">
+              เหลืออีก {sum.remaining} หน่วยกิต ตามที่แต่ละหมวดกำหนด
+            </span>
+          )}
           {sum.extrasOutside > 0 && <span className="muted small">นอกหลักสูตร {sum.extrasOutside} หน่วยกิต</span>}
         </div>
         <div className="tile">

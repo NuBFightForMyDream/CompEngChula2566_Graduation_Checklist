@@ -2,6 +2,7 @@ import {
   affected,
   creditsInSem,
   fmtGpa,
+  isGenEdPick,
   moveCourse,
   offeredIn,
   type PlanModel,
@@ -26,6 +27,7 @@ import { semName } from "../../lib/messages.ts";
 import { useModel, usePlan } from "../../stores/planStore.ts";
 import { useUi } from "../../stores/uiStore.ts";
 import { CourseCard, DragPreview } from "./CourseCard.tsx";
+import { GenEdStrip } from "./GenEdStrip.tsx";
 import { useEdges } from "./useEdges.ts";
 import { useFlip } from "./useFlip.ts";
 
@@ -46,7 +48,7 @@ function Column({ sem, index, m, pre, post, focusId, badIds, query }: ColumnProp
   const dragging = dragId ? m.courses.find((c) => c.id === dragId) : undefined;
   const allowed = !dragging || offeredIn(dragging, sem);
   const { setNodeRef, isOver } = useDroppable({ id: sem });
-  const list = m.courses.filter((c) => m.state.place[c.id] === sem);
+  const list = m.courses.filter((c) => m.state.place[c.id] === sem && !isGenEdPick(c));
   const credits = creditsInSem(m, sem);
   const max = m.curriculum.maxCreditsPerSemester;
   const gpa = termGpa(m, sem).gpa;
@@ -152,7 +154,7 @@ export function Board({ visible }: { visible: boolean }) {
           className={`board${focusId ? " focusing" : ""}${dragId ? " is-dragging" : ""}`}
           id="board"
           onClick={(e) => {
-            if (!(e.target as HTMLElement).closest(".card, .add-slot")) useUi.getState().select(null);
+            if (!(e.target as HTMLElement).closest(".card, .add-slot, .gened-strip")) useUi.getState().select(null);
           }}
         >
           <svg ref={svgRef} id="edges" aria-hidden="true" />
@@ -169,6 +171,7 @@ export function Board({ visible }: { visible: boolean }) {
               query={query}
             />
           ))}
+          <GenEdStrip focusId={focusId} query={query} />
         </div>
       </div>
       <DragOverlay dropAnimation={null}>{dragId ? <DragPreview id={dragId} /> : null}</DragOverlay>

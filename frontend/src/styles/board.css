@@ -333,6 +333,57 @@ marker path {
   }
 }
 
+/* แถว GenEd ที่เลือกเรียน ใต้คอลัมน์เทอม */
+.gened-strip {
+  grid-column: 1 / -1;
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 8px;
+  padding: 12px 10px 14px;
+  border-top: 1px solid var(--line);
+}
+.gened-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 12px;
+}
+.gened-head b {
+  font-family: var(--font-display);
+  font-size: 15px;
+}
+.gened-head span {
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.gened-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 10px;
+}
+.gened-item {
+  flex: none;
+  width: 170px;
+  display: grid;
+  gap: 7px;
+}
+.gened-item select {
+  width: 100%;
+  min-height: 28px;
+  padding: 2px 6px;
+  font-size: 12px;
+}
+.card.gened-card {
+  cursor: default;
+}
+.add-slot.gened-add {
+  flex: none;
+  width: 170px;
+  opacity: 1;
+}
+
 /* มือถือ: ปัดทีละเทอม */
 @media (max-width: 720px) {
   .board-scroll {
@@ -350,6 +401,16 @@ marker path {
   }
   .card .tick {
     width: 44px;
+  }
+  /* ตารางกว้างหลายจอ ให้แถว GenEd ค้างอยู่ในจอแล้วเลื่อนแนวนอนในแถวเอง */
+  .gened-strip {
+    position: sticky;
+    left: 0;
+    width: calc(100vw - 34px);
+  }
+  .gened-row {
+    flex-wrap: nowrap;
+    overflow-x: auto;
   }
   .search {
     max-width: none;

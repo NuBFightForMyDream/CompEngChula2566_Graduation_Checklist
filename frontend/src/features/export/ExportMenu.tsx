@@ -1,5 +1,6 @@
-import { creditSummary } from "@cp/core";
+import { creditSummary, graduationStatus } from "@cp/core";
 import { useRef } from "react";
+import { graduationText } from "../../lib/messages.ts";
 import { useModel, usePlan } from "../../stores/planStore.ts";
 import { useUi } from "../../stores/uiStore.ts";
 import { download } from "./download.ts";
@@ -37,7 +38,7 @@ export function ExportMenu() {
       const sum = creditSummary(m);
       await exportPng({
         title: `Graduation Roadmap · ${m.curriculum.name}`,
-        subtitle: `ผ่านแล้ว ${sum.earned}/${m.curriculum.totalCredits} หน่วยกิต · เหลืออีก ${sum.remaining} · บันทึกเมื่อ ${new Date().toLocaleDateString("th-TH")}`,
+        subtitle: `ผ่านแล้ว ${sum.earned}/${m.curriculum.totalCredits} หน่วยกิต · ${sum.complete ? graduationText(graduationStatus(m)).title.replace("🎓 ", "") : `เหลืออีก ${sum.remaining}`} · บันทึกเมื่อ ${new Date().toLocaleDateString("th-TH")}`,
         fileName: `roadmap-${m.curriculum.id}.png`,
       });
       ui.showToast({ text: "บันทึกรูปแล้ว" });

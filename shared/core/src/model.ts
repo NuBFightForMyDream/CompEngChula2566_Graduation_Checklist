@@ -25,6 +25,9 @@ export const extraCategories = (cur: Curriculum) => [
   EXTRA_CATEGORY,
 ];
 
+/** วิชา GenEd ที่นักศึกษาเลือกเรียนเอง (ช่อง GenEd ที่มี pool และวิชาเรียนเพิ่มในหมวด GenEd) แสดงแยกเป็นแถวใต้ตาราง */
+export const isGenEdPick = (c: Course) => c.category === "gened" && (!!c.pool || !!c.extra);
+
 export const optionOf = (cur: Curriculum, slot: Course, optionId: string | null): PoolOption | undefined =>
   optionId === null || !slot.pool ? undefined : cur.pools?.[slot.pool]?.options.find((o) => o.id === optionId);
 
