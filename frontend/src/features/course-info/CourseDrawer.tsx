@@ -1,8 +1,10 @@
 import {
+  ALL_TERMS,
   affected,
   defaultSemOf,
   extraCategories,
   GRADES,
+  inGenEdRow,
   moveCourse,
   offeredIn,
   prereqChain,
@@ -137,7 +139,7 @@ export function CourseDrawer() {
               value={place}
               onChange={(e) => dispatch((model) => moveCourse(model, id, e.target.value, { autoShift }))}
             >
-              {SEMS.map((s) => (
+              {(inGenEdRow(course, m.state.place) ? ALL_TERMS : SEMS).map((s) => (
                 <option key={s} value={s} disabled={!offeredIn(course, s)}>
                   {semName(s)}
                   {offeredIn(course, s) ? "" : " · ไม่เปิดสอน"}

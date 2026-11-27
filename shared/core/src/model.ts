@@ -2,7 +2,7 @@
 // จุดสำคัญ: ช่องวิชาเลือกที่เลือกวิชาแล้ว จะได้ prereq และ offered ของวิชาที่เลือก ตาม JSON หลักสูตร
 
 import { isGrade, PASSING } from "./grades.ts";
-import { buildGraph, findConflicts, type Graph, isSem, offeredIn, SEMS, semIdx, topoSort } from "./graph.ts";
+import { buildGraph, findConflicts, type Graph, isSem, isSummer, offeredIn, SEMS, semIdx, topoSort } from "./graph.ts";
 import type {
   Choice,
   Course,
@@ -27,6 +27,10 @@ export const extraCategories = (cur: Curriculum) => [
 
 /** วิชา GenEd ที่นักศึกษาเลือกเรียนเอง (ช่อง GenEd ที่มี pool และวิชาเรียนเพิ่มในหมวด GenEd) แสดงแยกเป็นแถวใต้ตาราง */
 export const isGenEdPick = (c: Course) => c.category === "gened" && (!!c.pool || !!c.extra);
+
+/** วิชาที่อยู่ในแถว GenEd: GenEd ที่เลือกเรียนเอง และทุกวิชาที่วางไว้ภาคฤดูร้อน ซึ่งไม่มีคอลัมน์บนตาราง */
+export const inGenEdRow = (c: Course, place: Record<string, Sem>) =>
+  isGenEdPick(c) || (place[c.id] !== undefined && isSummer(place[c.id] as Sem));
 
 export const optionOf = (cur: Curriculum, slot: Course, optionId: string | null): PoolOption | undefined =>
   optionId === null || !slot.pool ? undefined : cur.pools?.[slot.pool]?.options.find((o) => o.id === optionId);

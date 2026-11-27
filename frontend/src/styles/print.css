@@ -1,4 +1,5 @@
-/* พิมพ์ / PDF: A4 แนวนอน หน้าแรกเป็นตาราง หน้าถัดไปเป็นสรุปและแผน */
+/* พิมพ์ / PDF: A4 แนวนอน 2 หน้า · หน้า 1 สรุปหน่วยกิตและหมวด · หน้า 2 ตารางเรียนกับแถว GenEd
+   print.ts ย่อตารางให้พอดีหน้าเดียว */
 @page {
   size: A4 landscape;
   margin: 8mm;
@@ -16,7 +17,9 @@ html.printing .drawer,
 html.printing .welcome,
 html.printing .foot,
 html.printing .banner button,
-html.printing [data-panel="available"] {
+html.printing [data-panel="available"],
+html.printing [data-panel="plan"],
+html.printing [data-panel="notices"] {
   display: none !important;
 }
 html.printing .topbar {
@@ -35,22 +38,25 @@ html.printing .wrap {
 html.printing .tab-panel[hidden] {
   display: block !important;
 }
-html.printing [data-panel="board"] {
-  order: 1;
-  break-inside: avoid;
-}
-html.printing .overview {
-  order: 2;
-  break-before: page;
-}
 html.printing .banner {
   order: 0;
 }
-html.printing [data-panel="plan"] {
-  order: 3;
+html.printing .overview {
+  order: 1;
 }
-html.printing [data-panel="notices"] {
-  order: 4;
+html.printing [data-panel="board"] {
+  order: 2;
+  break-before: page;
+  break-inside: avoid;
+}
+html.printing .tiles {
+  grid-template-columns: minmax(0, 2fr) repeat(3, minmax(0, 1fr));
+}
+html.printing .tile-main {
+  grid-column: auto;
+}
+html.printing .cats-box {
+  break-inside: avoid;
 }
 html.printing .board-scroll {
   overflow: visible;
@@ -63,6 +69,7 @@ html.printing .col {
   padding: 8px 5px 10px;
   gap: 5px;
 }
+html.printing .gened-hint,
 html.printing .gened-item select,
 html.printing .gened-add {
   display: none;
@@ -134,7 +141,9 @@ html.printing .panel {
   }
 }
 
-/* ต้องอยู่หลังกฎที่ให้แท็บที่ซ่อนอยู่แสดงตอนพิมพ์ และเจาะจงกว่า ไม่งั้นรายการนี้จะขึ้นก่อนตาราง */
-html.printing .tab-panel[data-panel="available"] {
+/* ต้องอยู่หลังกฎที่ให้แท็บที่ซ่อนอยู่แสดงตอนพิมพ์ และเจาะจงกว่า */
+html.printing .tab-panel[data-panel="available"],
+html.printing .tab-panel[data-panel="plan"],
+html.printing .tab-panel[data-panel="notices"] {
   display: none !important;
 }

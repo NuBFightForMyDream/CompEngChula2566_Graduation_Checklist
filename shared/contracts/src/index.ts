@@ -1,11 +1,13 @@
 // Zod schema ของข้อมูลที่ข้ามขอบเขตระบบ: ไฟล์หลักสูตร และแผนที่โหลดจากเบราว์เซอร์ ไฟล์สำรอง หรือ Firestore
 
-import { buildGraph, GRADES, type Grade, SEMS, topoSort } from "@cp/core";
+import { ALL_TERMS, buildGraph, GRADES, type Grade, SEMS, topoSort } from "@cp/core";
 import { z } from "zod";
 
-const offered = z.array(z.enum(["1", "2"])).min(1);
+const offered = z.array(z.enum(["1", "2", "3"])).min(1);
 const hexColor = z.string().regex(/^#[0-9a-f]{6}$/i);
 const semester = z.enum(SEMS);
+/** แผนของผู้ใช้วางวิชาไว้ภาคฤดูร้อนได้ด้วย (แถว GenEd) */
+const planTerm = z.enum(ALL_TERMS);
 
 export const courseSchema = z.object({
   id: z.string().min(1),
@@ -99,14 +101,14 @@ const extraSchema = z.object({
   name: z.string().min(1).max(120),
   credits: z.number().int().min(1).max(6),
   category: z.string(),
-  semester,
+  semester: planTerm,
 });
 
 export const gradeSchema = z.enum(GRADES as [Grade, ...Grade[]]);
 
 export const planStateSchema = z.object({
   passed: z.array(z.string().max(64)).max(500),
-  place: z.record(z.string(), semester),
+  place: z.record(z.string(), planTerm),
   choices: z.record(z.string(), choiceSchema),
   extras: z.array(extraSchema).max(50),
   grades: z.record(z.string(), gradeSchema),

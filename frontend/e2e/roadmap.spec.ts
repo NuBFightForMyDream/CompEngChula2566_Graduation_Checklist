@@ -165,13 +165,17 @@ test("PNG export downloads a file", async ({ page }) => {
   expect((await downloadPromise).suggestedFilename()).toBe("roadmap-comp-eng-2566.png");
 });
 
-test("printing puts the board first and includes the plan", async ({ page }) => {
+test("printing is two pages: the summary, then the board with GenEd", async ({ page }) => {
   await page.evaluate(() => window.dispatchEvent(new Event("beforeprint")));
-  await expect(page.locator('[data-panel="available"]')).toBeHidden();
-  await expect(page.locator('[data-panel="plan"]')).toBeVisible();
+  for (const panel of ["available", "plan", "notices"]) {
+    await expect(page.locator(`[data-panel="${panel}"]`)).toBeHidden();
+  }
   const top = (selector: string) => page.locator(selector).evaluate((el) => el.getBoundingClientRect().top);
-  expect(await top('[data-panel="board"]')).toBeLessThan(await top(".overview"));
-  expect(await top(".overview")).toBeLessThan(await top('[data-panel="plan"]'));
+  expect(await top(".overview")).toBeLessThan(await top('[data-panel="board"]'));
+  await expect(page.locator('[data-panel="board"]').getByTestId("gened-strip")).toBeVisible();
+  await page.emulateMedia({ media: "print" });
+  const pdf = await page.pdf({ preferCSSPageSize: true, printBackground: true });
+  expect(pdf.toString("latin1").match(/\/Type\s*\/Page[^s]/g)).toHaveLength(2);
 });
 
 test("search dims courses that do not match", async ({ page }) => {
@@ -253,6 +257,11 @@ test("GenEd picks sit in their own row and take a typed-in course and term", asy
   // หน่วยกิตของ GenEd ยังนับรวมในเทอมที่เลือก
   await expect(head).toContainText(`${before + 3} หน่วยกิต`);
 
+  await strip.getByLabel("เทอมที่เรียน 0201101 MAN AND SOCIETY").selectOption("2/3");
+  await expect(strip.getByTestId("card-GENED-1").locator(".slot-tag")).toHaveText("ปี 2 Summer");
+  await page.reload();
+  await expect(strip.getByTestId("card-GENED-1").locator(".slot-tag")).toHaveText("ปี 2 Summer");
+
   await strip.getByRole("button", { name: "+ เพิ่ม GenEd" }).click();
   const dialog = page.getByRole("dialog");
   await dialog.getByLabel("รหัสวิชา").fill("0201102");
@@ -260,4 +269,15 @@ test("GenEd picks sit in their own row and take a typed-in course and term", asy
   await dialog.getByLabel("เทอมที่เรียน").selectOption("2/2");
   await dialog.getByRole("button", { name: "เพิ่มวิชา" }).click();
   await expect(strip.locator(".card", { hasText: "HUMAN VALUES" })).toContainText("ปี 2 เทอม 2");
+});
+
+test("the PDF export is two landscape A4 pages", async ({ page }) => {
+  await page.getByText("บันทึก", { exact: true }).click();
+  const downloadPromise = page.waitForEvent("download");
+  await page.getByRole("button", { name: "เอกสาร (PDF)" }).click();
+  const download = await downloadPromise;
+  expect(download.suggestedFilename()).toMatch(/\.pdf$/);
+  const body = readFileSync(await download.path(), "latin1");
+  expect(body.startsWith("%PDF-")).toBe(true);
+  expect(body.match(/\/MediaBox \[0 0 842 595\]/g)).toHaveLength(2);
 });

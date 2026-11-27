@@ -1,18 +1,18 @@
 // บันทึกรูป PNG: วาดตาราง roadmap ลง canvas จากตำแหน่งจริงบนหน้าจอ
+// renderBoard ใช้ซ้ำเป็นหน้า 2 ของ PDF
 
 import { type Grade, PASSING } from "@cp/core";
 import { download } from "./download.ts";
 
-interface Header {
+export interface Header {
   title: string;
   subtitle: string;
-  fileName: string;
 }
 
-type Rel = (el: Element) => { x: number; y: number; w: number; h: number };
+export type Rel = (el: Element) => { x: number; y: number; w: number; h: number };
 
 /** วาดข้อความของ element ตัดบรรทัดตามความกว้างจริง ใช้ฟอนต์และสีจาก CSS */
-function drawText(ctx: CanvasRenderingContext2D, el: Element | null, rel: Rel, alpha: number) {
+export function drawText(ctx: CanvasRenderingContext2D, el: Element | null, rel: Rel, alpha: number) {
   if (!el?.textContent?.trim()) return;
   const cs = getComputedStyle(el);
   const r = rel(el);
@@ -37,7 +37,15 @@ function drawText(ctx: CanvasRenderingContext2D, el: Element | null, rel: Rel, a
   ctx.globalAlpha = 1;
 }
 
-export async function exportPng({ title, subtitle, fileName }: Header) {
+export async function exportPng({ fileName, ...header }: Header & { fileName: string }) {
+  const canvas = await renderBoard(header);
+  const blob = await new Promise<Blob | null>((res) => canvas.toBlob(res, "image/png"));
+  if (!blob) throw new Error("เบราว์เซอร์สร้างไฟล์ไม่สำเร็จ");
+  download(blob, fileName);
+}
+
+/** วาดหัวเรื่องและตาราง รวมแถว GenEd ลง canvas ขนาด 2 เท่าของหน้าจอ */
+export async function renderBoard({ title, subtitle }: Header) {
   await document.fonts.ready;
   const board = document.getElementById("board") as HTMLElement;
   const box = board.getBoundingClientRect();
@@ -87,6 +95,13 @@ export async function exportPng({ title, subtitle, fileName }: Header) {
     }
     drawText(ctx, col.querySelector(".col-head b"), rel, 1);
     drawText(ctx, col.querySelector(".col-head span"), rel, 1);
+  }
+  const strip = board.querySelector(".gened-strip");
+  if (strip) {
+    const r = rel(strip);
+    ctx.fillStyle = tok("--line");
+    ctx.fillRect(r.x, r.y, r.w, 1);
+    for (const el of strip.querySelectorAll(".gened-head b, .gened-head .gened-count")) drawText(ctx, el, rel, 1);
   }
   ctx.restore();
 
@@ -165,8 +180,5 @@ export async function exportPng({ title, subtitle, fileName }: Header) {
     }
     ctx.globalAlpha = 1;
   }
-
-  const blob = await new Promise<Blob | null>((res) => canvas.toBlob(res, "image/png"));
-  if (!blob) throw new Error("เบราว์เซอร์สร้างไฟล์ไม่สำเร็จ");
-  download(blob, fileName);
+  return canvas;
 }

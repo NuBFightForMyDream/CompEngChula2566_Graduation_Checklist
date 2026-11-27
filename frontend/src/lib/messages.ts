@@ -16,7 +16,8 @@ export function graduationText(g: GraduationStatus) {
   return { title: "🎓 จบได้", note: `จบตามเงื่อนไขปกติ (ไม่ได้เกียรตินิยม: ${why})` };
 }
 
-export const semName = (s: Sem) => `ปี ${s.charAt(0)} เทอม ${s.charAt(2)}`;
+export const semName = (s: Sem) =>
+  s.charAt(2) === "3" ? `ปี ${s.charAt(0)} Summer` : `ปี ${s.charAt(0)} เทอม ${s.charAt(2)}`;
 
 const termWord: Record<string, string> = { "1": "เทอมต้น", "2": "เทอมปลาย" };
 export const offeredText = (offered?: string[]) =>

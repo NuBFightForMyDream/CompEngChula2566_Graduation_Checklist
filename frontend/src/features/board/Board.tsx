@@ -2,7 +2,7 @@ import {
   affected,
   creditsInSem,
   fmtGpa,
-  isGenEdPick,
+  inGenEdRow,
   moveCourse,
   offeredIn,
   type PlanModel,
@@ -48,7 +48,7 @@ function Column({ sem, index, m, pre, post, focusId, badIds, query }: ColumnProp
   const dragging = dragId ? m.courses.find((c) => c.id === dragId) : undefined;
   const allowed = !dragging || offeredIn(dragging, sem);
   const { setNodeRef, isOver } = useDroppable({ id: sem });
-  const list = m.courses.filter((c) => m.state.place[c.id] === sem && !isGenEdPick(c));
+  const list = m.courses.filter((c) => m.state.place[c.id] === sem && !inGenEdRow(c, m.state.place));
   const credits = creditsInSem(m, sem);
   const max = m.curriculum.maxCreditsPerSemester;
   const gpa = termGpa(m, sem).gpa;
